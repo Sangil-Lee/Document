@@ -1,0 +1,71 @@
+% !TeX spellcheck = en_US
+%\documentclass[11pt,a4paper]{article}
+\documentclass[11pt
+  , a4paper
+  , article
+  , oneside
+%  , twoside
+%  , draft
+]{memoir}
+
+\usepackage{control}
+\usepackage[numbers]{natbib}
+
+
+\begin{document}
+
+\newcommand{\technumber}{
+  RAON Control-Document Series\\
+  Revision : v1.0,   Release : 2016-03-14 fixed date}
+\title{\textbf{Timing System Evaluation}}
+
+\author{이상일\thanks{silee7103@ibs.re.kr},장효재, 손창욱 \\
+
+  Rare Isotope Science Project\\
+  Institute for Basic Science, Daejeon, South Korea
+}
+\date{\today}
+
+\renewcommand{\maketitlehooka}{\begin{flushright}\textsf{\technumber}\end{flushright}}
+%\renewcommand{\maketitlehookb}{\centering\textsf{\subtitle}}
+%\renewcommand{\maketitlehookc}{C}
+%\renewcommand{\maketitlehookd}{D}
+
+\maketitle
+
+\begin{abstract}
+RAON 가속기의 전체 제어 시스템들은 넓은 범위로 분산 구성되어 있으며 이러한 분산 제어환경 아래서 하나의 통합 제어시스템을 운영하기 위하여는 정밀한 타임 동기화가 필요하다. 이를 위하여 별도의 Timing System을 운영하고 있으며, 현재 Timing System은 외국 MRF 사의 VME-base의 EVG/EVR 시스템을 사용한다. 본 문서는 MRF Timing System\cite{mrf}에 대한 특성 파악 및 그 구성 내용을 기술하기 위함이며, 또한 추가적으로 향 후 Timing System에 대한 국내기술 자립 가능성을 점검하고, 해당 기술력을 확보하여 전체비용(양산 및 유지보수) 절감효과를 판단하기 위한 근거를 제시한다.
+\end{abstract}
+Timing System의 주 목적은 
+현재 RAON Timing System은 MRF사의 VME-base의 Event Generator(EVG)\cite{evg}/Event Receiver (EVR)\cite{evr} 을 사용한다. MRF사는 핀란드에 위치한 회사이며, 많은 가속기 사이트에 대한 reference를 가지고 있어 그 성능 및 안정성이 검증되었다. 본 문서를 통하여 MRF Timing System의 장/단점에 대한 특성 및 그 구성에 대한 내용을 살펴본다.
+
+\chapter{MRF EVG/EVR Timing System}
+타이밍 시스템은 타이밍 모듈과 네트워크로 구성되어 있다. 타이밍 모듈은 MRF 사의 EVG, EVR 제품을 사용하며 폼펙터는 VME이다. 이 모듈들은 VME crate에 설치되며 VME 모듈을 제어하기 위해서 VME controller인 Emerson 사의 MVME6100을 사용한다. MVME6100에는 VxWorks 6.9를 OS로 사용한다. EPICS의 모듈 중의 하나인 mrfIoc2를 사용하여 EVG와 EVR을 제어한다. 네트워크는 광케이블로 구성한다. 
+\section{Event Generator / Receiver}
+EVG/EVR Timing System에 대한 특징은 아래와 같다.
+
+\begin{itemize}
+	\item Event driven system, 255 event codes
+	\item 외부 RF reference clock을 이용한 event 신호 생성
+	\item 50 ~ 125MHz Event clock rate
+	\item Events generated
+	\begin{itemize}
+		\item From external HW inputs
+		\item Two sequencers (up to 2048 events/sequencer)
+		\item Multi counters
+	\end{itemize}
+	\item Cascaded Event Generators
+	\item Different Clock Synchronization
+\end{itemize}
+EVG/EVR Timing System은 크게 VME 또는 cPCI interface 상에서 동작하며, RAON에서는 VME interface 상에서 운영되는 플랫폼 구조를 채택하였다. Timing System을 구성하는 항목은 크게 아래와 같다.
+
+
+
+
+
+\clearpage
+\bibliographystyle{unsrtnat}
+\bibliography{./refs}
+
+\end{document}
+
