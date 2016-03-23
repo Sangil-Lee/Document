@@ -1,0 +1,125 @@
+
+임베디드 타깃 실습을 위한 설정
+
+타깃 시스템용 소스 준비
+--------------------------
+$ cd /DATA1
+$ cd HSV210_Kernel_CD
+$ ls
+
+
+크로스 컴파일러 설치
+--------------------------
+$ su -
+
+# cd /DATA1/HSV210_Kernel_CD/TOOLCHAIN
+# tar zxvf arm-2009q3.tgz -C /usr/local
+
+# vi ~/.bashrc
+  export PATH=$PATH:/usr/local/arm-2009q3/bin:.
+# source ~/.bashrc
+
+
+
+부트로더 컴파일
+---------------------
+# mkdir /work_kernel
+# cd /DATA1/HSV210_Kernel_CD/BOOTLOAD
+# tar zxvf UBOOT_SV.tgz -C /work_kernel
+
+# cd /work_kernel/uboot_sv210
+# make mrproper
+# make clean
+# make h-androsv210_config
+# make
+# ls u-boot.bin
+
+
+부트로더 타깃 설치
+-------------------------
+# minicom
+
+sv210# dnw c0008000
+
+USB D/D Select
+# smdk-usbdl -f u-boot.bin
+
+sv210# nand erase 0 80000
+sv210# nand write c0008000 0 80000
+
+- 타깃 보드 전원 off -> on
+
+
+
+커널 컴파일
+-----------------------------------------
+
+# cd /DATA1/HSV210_Kernel_CD/KERNEL
+# tar zxvf LINUX_KE.tgz -C /work_kernel
+
+# make mrproper
+# make v210_linux_defconfig 
+# make clean
+# make zImage
+# ls -l arch/arm/boot/zImage
+# cp arch/arm/boot/zImage /work_kernel
+
+
+
+arch,arm,plat-s5p,irq.c 수정 후 Kernel Bild
+-----------------------------------------------
+void __init s5p_init_irq(u32 *vic, u32 num_vic)
+{
+	int irq;
+
+	/* initialize the VICs */
+	for (irq = 0; irq < num_vic; irq++)
+		vic_init(VA_VIC(irq), VIC_BASE(irq), vic[irq], 0);
+
+#ifdef SOO
+	s3c_init_vic_timer_irq(IRQ_TIMER0_VIC, IRQ_TIMER0);
+	s3c_init_vic_timer_irq(IRQ_TIMER1_VIC, IRQ_TIMER1);
+	s3c_init_vic_timer_irq(IRQ_TIMER2_VIC, IRQ_TIMER2);
+	s3c_init_vic_timer_irq(IRQ_TIMER3_VIC, IRQ_TIMER3);
+	s3c_init_vic_timer_irq(IRQ_TIMER4_VIC, IRQ_TIMER4);
+#endif
+
+	s3c_init_uart_irqs(uart_irqs, ARRAY_SIZE(uart_irqs));
+}
+
+
+
+
+커널 타깃 설치
+-------------------------
+# minicom
+[
+sv210# nand scrub
+sv210# nand erase 80000 FF80000
+]
+
+sv210# dnw c0008000
+
+USB D/D Select
+# smdk-usbdl -f zImage
+
+
+sv210# nand erase 600000 500000
+sv210# nand write c0008000 600000 500000
+
+
+root file system 타깃 설치
+-------------------------
+# cd /DATA1/HSV210_Kernel_CD/IMAGE
+# cp ROOTFS.IMG /work_kernel
+
+# minicom
+sv210# dnw dnw 40000000
+
+USB D/D Select
+# smdk-usbdl -f ROOTFS.IMG
+
+sv210# nand erase b00000 500000
+sv210# nand write.yaffs 40000000 b00000 <byte size of ROOTFS.IMG>
+sv210# reset
+
