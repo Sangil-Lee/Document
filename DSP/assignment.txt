@@ -1,0 +1,10 @@
+
+3¿ù 28ÀÏ
+Solve the following examples in chapter 2 : 
+
+Example 2.9, Example 2.10, Example 2.11, Example 2.12, 
+
+Problem 2.4(P2.8), P 2.14 (P2.18).  
+
+Implement matlab functions and use them in solving the examples.  
+Submit a document in pdf format.
