@@ -18,8 +18,8 @@
 \newcommand{\technumber}{
   Digital Signal Processing using MATLAB\\
   Document 1: 2016-03-26}
-\title{\textbf{Digital Signal Processing: 실습 2 \\
-		제2장 이산시간 신호 및 시스템 \\}}
+\title{\textbf{Digital Signal Processing: 실습 3 \\
+		제2장 이산시간 신호 및 시스템 - 2 \\}}
 
 \author{이상일\thanks{silee7103@ibs.re.kr} \\
 
@@ -39,174 +39,166 @@
 MATLAB을 사용한 Digital Signal Processing에 대한 실습과제에 대한 Documents를 구성한다.
 \end{abstract}
 
-\chapter{Example 2-1:}
-
-\section{2-1-1}
+\chapter{Example 2-9:}
 
 \begin{lstlisting}[style=termstyle]
-n=[-5:5];
-x = 2 * impseq(-2,-5,5) - impseq(4,-5,5);
-subplot(2,2,1);
-stem(n,x); title('Sequence in Problem 2.1a');
-xlabel('n'); ylabel('x(n)');
-\end{lstlisting}
+% Example 2.9
 
-\section{2-1-2}
-
-\begin{lstlisting}[style=termstyle]
-n=[0:20];
-x1 = n.*(stepseq(0,0,20) - stepseq(10,0,20));
-x2 = 10*exp(-0.3*(n-10)).*(stepseq(10,0,20)-stepseq(20,0,20));
-x = x1+x2;
-subplot(2,2,2);
-stem(n,x); title('Sequence in Problem 2.1b');
-xlabel('n'); ylabel('x(n)');
-\end{lstlisting}
-
-\section{2-1-3}
-\begin{lstlisting}[style=termstyle]
-n=[0:50];
-x = cos(0.04*pi*n) + 0.2*randn(size(n));
-subplot(2,2,3);
-stem(n,x); title('Sequence in Problem 2.1c');
-xlabel('n'); ylabel('x(n)');
-\end{lstlisting}
-
-\section{2-1-4}
-\begin{lstlisting}[style=termstyle]
-n=[-10:9];
-x = [5,4,3,2,1];
-xtilde = x' * ones(1, 4); xtilde = (xtilde(:))';
-subplot(2,2,4);
-stem(n,xtilde); title('Sequence in Problem 2.1d');
-xlabel('n'); ylabel('xtilde(n)');
+x = [3, 11, 7, 0, -1, 4, 2];
+nx = [-3: 3];
+h = [2, 3, 0, -5, 2, 1];
+nh = [-1: 4];
+[y,ny] = conv_m(x,nx,h,nh)
 \end{lstlisting}
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics{./images/ex2-1.png}
-	\caption{Example 2.1 Result}
-	\label{fig:Example 2.1 Result} 
+	\includegraphics[width=0.7\textwidth,height=0.2\textwidth]{./images/ex209.png}
+	\caption{Example 2.09 Result}
+	\label{fig:Example 2.09 Result}
 \end{figure}
 
-\chapter{Example 2-2:}
+\clearpage
 
-\section{2-2-1}
-
-\begin{lstlisting}[style=termstyle]
-[x11,n11]=sigshift(x,n,5); [x12,n12]=sigshift(x, n, -4);
-[x1, n1]= sigadd(2*x11, n11, -3*x12, n12);
-subplot(2,1,1);
-stem(n1,x1); title('Sequence in Example 2.2a');
-xlabel('n'); ylabel('x1(n)');
-\end{lstlisting}
-
-\section{2-2-2}
-\begin{lstlisting}[style=termstyle]
-[x21,n21]=sigfold(x,n); [x21,n21]=sigshift(x21, n21, 3);
-[x22,n22]= sigshift(x,n,2); [x22,n22]=sigmult(x,n,x22,n22);
-[x2,n2]= sigadd(x21,n21, x22,n22);
-subplot(2,1,2);
-stem(n2,x2); title('Sequence in Example 2.2b');
-xlabel('n'); ylabel('x2(n)');
-\end{lstlisting}
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics{./images/ex2-2.png}
-	\caption{Example 2.2 Result}
-	\label{fig:Example 2.2 Result} 
-\end{figure}
-
-\chapter{Example 2-3: }
+\chapter{Example 2-10:}
 
 \begin{lstlisting}[style=termstyle]
-n=[-10:1:10]; alpha = -0.1+0.3j;
-x = exp(alpha*n);
-subplot(2,2,1); stem(n, real(x)); title('Real part'); xlabel('n');
-subplot(2,2,2); stem(n, imag(x)); title('Imaginary part'); xlabel('n');
-subplot(2,2,3); stem(n, abs(x)); title('Magnitude part'); xlabel('n');
-subplot(2,2,4); stem(n, (180/pi)*angle(x)); title('Phase part'); xlabel('n');
+% Example 2.10
+% noise sequence 1
+x = [3, 11, 7, 0, -1, 4, 2]; nx=[-3:3]; % given signal x(n)
+[y,ny] = sigshift(x,nx,2);              % obtain x(n-2)
+w = randn(1,length(y)); nw = ny;        % generate w(n)
+[y,ny] = sigadd(y,ny,w,nw);             % obtain y(n) = x(n-2) + w(n)
+[x,nx] = sigfold(x,nx);                 % obtain x(-n)
+[rxy,nrxy] = conv_m(y,ny,x,nx);         % cross-corrlation
+subplot(1,1,1)
+subplot(2,1,1);stem(nrxy,rxy)
+axis([-4,8,-50,250]);xlabel('lag variable l')
+ylabel('rxy');title('Crosscorrelation: noise sequence 1')
+
+% noise sequence 2
+x = [3, 11, 7, 0, -1, 4, 2]; nx=[-3:3]; % given signal x(n)
+[y,ny] = sigshift(x,nx,2);              % obtain x(n-2)
+w = randn(1,length(y)); nw = ny;        % generate w(n)
+[y,ny] = sigadd(y,ny,w,nw);             % obtain y(n) = x(n-2) + w(n)
+[x,nx] = sigfold(x,nx);                 % obtain x(-n)
+[rxy,nrxy] = conv_m(y,ny,x,nx);         % cross-corrlation
+subplot(2,1,2);stem(nrxy,rxy)
+axis([-4,8,-50,250]);xlabel('lag variable l')
+ylabel('rxy');title('Crosscorrelation: noise sequence 2')
 \end{lstlisting}
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics{./images/ex2-3.png}
-	\caption{Example 2.3 Result}
-	\label{fig:Example 2.3 Result} 
+	\includegraphics[width=0.7\textwidth,height=0.5\textwidth]{./images/ex210.png}
+	\caption{Example 2.10 Result}
+	\label{fig:Example 2.10 Result}
 \end{figure}
 
-\chapter{Example 2-4:}
+\clearpage
+
+\chapter{Example 2-11:}
 \begin{lstlisting}[style=termstyle]
-n=[0:10]; x = stepseq(0,0,10)-stepseq(10,0,10);
-[xe,xo,m]=evenodd(x,n);
+% Matlab Example 2.11;
 
-subplot(2,2,1); stem(n,x); title('Rectangura pulse');
-xlabel('n'); ylabel('x(n)'); axis([-10,10,0,1.2]);
+a=[1,-1,0.9];b=1;
 
-subplot(2,2,2); stem(m,xe); title('Even Part');
-xlabel('n'); ylabel('xe(n)'); axis([-10,10,0,1.2]);
+% Part a)
+x=impseq(0,-20,120);n=[-20:120];
+h=filter(b,a,x);
+subplot(2,1,1);stem(n,h)
+axis([-20,120,-1.1,1.1])
+title('Impulse Response');xlabel('n');ylabel('h(n)')
 
-subplot(2,2,4); stem(m,xo); title('Odd Part');
-xlabel('n'); ylabel('xo(n)'); axis([-10,10,-0.6,0.6]);
+
+% Part b)
+
+x=stepseq(0,-20,120);
+s=filter(b,a,x);
+subplot(2,1,2);stem(n,s)
+axis([-20,120,-.5,2.5])
+title('Step Response');xlabel('n');ylabel('s(n)')
+
+%print -deps2 ex021000.eps
+
+% Part c)
+sum(abs(h))
+z=roots(a);
+magz=abs(z)
+
 \end{lstlisting}
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics{./images/ex2-4.png}
-	\caption{Example 2.4 Result}
-	\label{fig:Example 2.4 Result} 
+	\includegraphics[width=0.7\textwidth,height=0.35\textwidth]{./images/ex211.png}
+%	\caption{Example 2.11 Result}
+	\label{fig:Example 2.11 Result}
 \end{figure}
 
-%\hfill\break
-
-\chapter{Example 2-7:}
-
-\begin {equation}
-h(n) = (0.9)^n u(n) 
-\end {equation}
-에 대한 출력 y(n) 을 구하라.\\
-풀이)
-
-\begin {equation}
-y(n) = \displaystyle\sum_{k=0}^{9} (1)(0.9)^{(n-k)}u(n-k)=(0.9)^n\displaystyle\sum_{k=0}^{9}(0.9)^{-k}u(n-k)
-\end {equation}
-
-\section{경우 1.}
-n $<$ 0 인 경우, \\
-\begin {equation}
-y(n) = 0
-\end {equation}
-x(n)과 h(n)의 0이 아닌 값들은 겹치지 않는다.
-
-\section{경우 2.}
-0 $<= $ n $<$ 9 인 경우, \\
-\begin {equation}
-y(n) = (0.9)^n\displaystyle\sum_{k=0}^{n}(0.9)^{-k}=10[1-(0.9)^{n+1}],  0 \leq n < 9
-\end {equation}
-임펄스 응답 h(n)은 입력 x(n) 에 일부 겹치는 구간이 발생한다.
-
-\section{경우 3.}
-n $>= $ 9 인 경우, \\
-\begin {equation}
-y(n) = (0.9)^n\displaystyle\sum_{k=0}^{n}(0.9)^{-k}=10(0.9)^{n-9}[1-(0.9)^{10}],  n \geq 9
-\end {equation}
-임펄스 응답 h(n)은 입력 x(n) 에 완전히 겹친다.
-
-\chapter{Example 2-8:}
-\begin{lstlisting}[style=termstyle]
-x = [3, 11, 7, 0, -1, 4, 2]; nx =[-3:3];
-h = [2, 3, 0, -5, 2, 1]; nh = [-1:4];
-[y,ny] = conv_m(x,nx,h,nh);
-y
-ny
-\end{lstlisting}
 \begin{figure}[h!]
 	\centering
-	\includegraphics{./images/ex2-8.png}
-	\caption{Example 2.8 Result}
-	\label{fig:Example 2.8 Result} 
+	\includegraphics[width=0.45\textwidth,height=0.2\textwidth]{./images/ex211-1.png}
+	\caption{Example 2.11 Result}
+	\label{fig:Example 2.11-1 Result}
 \end{figure}
+
+\clearpage
+
+\chapter{Example 2-12:}
+\begin{lstlisting}[style=termstyle]
+% Example 2.12
+
+b = [1]; a = [1,-0.9];
+n = -5:50; x = stepseq(0,-5,50) - stepseq(10,-5,50);
+y = filter(b,a,x);
+subplot(1,1,1);
+subplot(2,1,2); stem(n,y); title('Output sequence')
+xlabel('n'); ylabel('y(n)'); axis([-5,50,-0.5,8])
+
+\end{lstlisting}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics{./images/ex212.png}
+	\caption{Example 2.12 Result}
+	\label{fig:Example 2.12 Result}
+\end{figure}
+
+\chapter{Problem 2.4:}
+\begin{lstlisting}[style=termstyle]
+% Problem 2.4
+% dnsample.m
+function[y,m]=dnsample(x,n,M)
+m=[integer(n(1),M):integer(n(length(n)),M)];
+y=zeros(size(m));
+for i=min(m):max(m)
+y(i-min(m)+1)=x(M*i-min(n)+1);
+end
+\end{lstlisting}
+
+\chapter{Problem 2.14:}
+\begin{lstlisting}[style=termstyle]
+% Problem 2.14
+% conv_tp.m
+
+function [y,H]=conv_tp(h,x)
+% Linear Convolution using Toeplitz Matrix
+% ----------------------------------------
+% [y,H] = conv_tp(h,x)
+% y = output sequence in column vector form
+% H = Toeplitz matrix corresponding to sequence h so that y = Hx
+% h = Impulse response sequence in column vector form
+% x = input sequence in column vector form
+
+Nx = length(x); Nh = length(h);
+hc=[h; zeros(Nx-1, 1)];
+hr=[h(1),zeros(1,Nx-1)];
+H=toeplitz(hc,hr);
+y=H*x;
+end
+
+\end{lstlisting}
+
 
 \end{document}
 
