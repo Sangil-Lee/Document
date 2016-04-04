@@ -1,0 +1,282 @@
+\documentclass[11pt
+  , a4paper
+  , article
+  , oneside
+%  , twoside
+%  , draft
+]{memoir}
+
+\usepackage{control}
+\usepackage[numbers]{natbib}
+\usepackage[acronym,nomain]{glossaries}
+
+
+
+\hypersetup{
+  linkcolor  = {black}          % color of internal links
+%  , citecolor  = {green}
+%  , filecolor  = {magenta}
+%  , urlcolor   = {cyan}
+%  , unicode    = {true}
+}
+\makeglossaries
+
+\begin{document}
+\newcommand{\technumber}{
+  RAON Control-Document Series\\
+  Revision : v0.1,   Release : Nov, 19, 2014}
+\title{\textbf{Requirements, Specification, and Interfaces \\ for the RAON Control System}}
+
+\author{Jeong Han Lee\thanks{jhlee@ibs.re.kr} \\
+  Control Team \\
+  Rare Isotope Science Project\\
+  Institute for Basic Science\\
+  Daejeon, South Korea
+}
+\date{\today}
+
+\renewcommand{\maketitlehooka}{\begin{flushright}\textsf{\technumber}\end{flushright}}
+%\renewcommand{\maketitlehookb}{\centering\textsf{\subtitle}}
+%\renewcommand{\maketitlehookc}{C}
+%\renewcommand{\maketitlehookd}{D}
+
+\maketitle
+
+\begin{abstract}
+This document is the Rare Isotope Science Project at Institute for Basics Science Requirements, Specification, and Interfaces for the RAON Accelerator Control System. It shows all general requirements and specifications for the RAON contron system. 
+\end{abstract}
+
+% Acronym definitions
+\newacronym{epics}{EPICS}{Experimental Physics and Industrial Control System}
+\newacronym{ract}{RACT}{RAON Accelerator Control Team}
+\newacronym{vme}{VMEbus}{Versa Module Europa bus}
+\newacronym{mvme}{MVME}{Motorola Single Board Computers}
+\newacronym{ioc}{IOC}{Input Output Controller}
+\newacronym{vdct}{VisualDCT}{Visual Database Configuration Tool}
+\newacronym{opi}{OPI}{Operator Interface}
+% Use the acronyms
+%\gls{tc} is 3 hours behind \gls{adt} and 10 hours ahead of \gls{est}.
+ 
+
+
+\chapter{General Requirements}
+\section{Overview}
+\label{overview}
+The Control team has selected the \Gls{epics} \cite{EPICS3.14.12.3} as a main framework of the control system, because it is reliable, scalable, maintainable, low-cost system, and standard. The \Gls{epics} is an open-source, i.e. the source code is accessible, software that has various tools, libraries, and predefined applications developed by a world-wide user community and is used in large and small experimental physics projects such as particles accelerators, telescopes, and light sources since 1994. In addition, \Gls{epics} supports several hundred different modules with almost all bus types that produced by more than hundred manufacturers. One can find further information at \url{http:///www.aps.anl.gov/epics/}.
+
+\begin{itemize}
+  \item The \Gls{epics} clients shall be Debian Linux Stable PCs. The current version is Debian 7 Wheezy \cite{DEBIAN}. 
+  \item \Gls{epics} servers on PC hardware shall run Debian Linux Stable (or other version as approved by \Gls{ract})
+  \item \Gls{epics} servers on \Gls{vme} hardware shall run VxWorks version 6.9 (or other version as approved by \Gls{ract})
+\end{itemize}
+
+
+\section{EPICS Versions}
+\begin{itemize}
+  \item All \Gls{epics} software submitted by the Contractors, Collaborators, or any other third party shall be based on EPICS base version 3.14.12 (or later version as specified by \Gls{ract}.
+  \item Where additional EPICS modules are used, the versions shall be according to Table~\ref{table:epicsmoduleversions}. Later versions may be specified by \Gls{ract}.
+  \item If a module is not explicitly specified in Table~\ref{table:epicsmoduleversions}, the default version of this module used shall be the version provided in the synApps packages version 5.7. One can see the further information at \url{http://www.aps.anl.gov/bcda/synApps/}.
+\end{itemize}
+
+
+
+\begin{center}
+\begin{longtable}[t]{>{\raggedleft\arraybackslash}p{2.4cm} |p{2cm}| p{8cm}}
+\caption{EPICS Module Versions}
+\label{table:epicsmoduleversions}\\
+\toprule
+\texttt{Name} & \textbf{Version} &  \textbf{comments}\\
+\midrule
+\endfirsthead
+%%\multicolumn{4}{c}%
+%%{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
+\toprule
+\texttt{Name} & \textbf{Version} &  \textbf{comments}\\
+\midrule
+\endhead
+\midrule \multicolumn{3}{r}{\tablename\ \thetable\ -- \textit{Continued on next page}} \\
+\bottomrule
+\endfoot
+\bottomrule
+\endlastfoot
+&\\
+\texttt{asyn}         & R4-24 & \tiny \url{http://www.aps.anl.gov/epics/modules/soft/asyn/}\\
+\texttt{stream}       & 2-6   & \tiny \url{http://epics.web.psi.ch/software/streamdevice/}\\
+\texttt{ether\_ip}    & 2-26  & \tiny \url{http://sourceforge.net/projects/epics/files/ether_ip/}\\
+\texttt{seq}          & 2.1.7 & \tiny \url{http://www-csr.bessy.de/control/SoftDist/sequencer} \\
+\texttt{areaDetector} & R2-1  & \tiny \url{http://cars9.uchicago.edu/software/epics/areaDetector.html}\\
+\texttt{motor}        & R6-8  & \tiny \url{http://www.aps.anl.gov/bcda/synApps/motor/}\\
+&\\
+\end{longtable}
+\end{center}
+
+
+
+\section{EPICS Support}
+Where the contract involves the development of an \Gls{epics} interface to the equipment and any devices, the following itemized list shall apply.
+
+\subsection{\Gls{ioc} platform}
+\begin{itemize}
+  \item The standard \Gls{ioc} hardware platform is an 1U rack mountable server.
+  \item All \Gls{ioc} hardware shall be installed into the standard 19-in. rack by the Contractor.
+  \item The \Gls{ioc} shall be included in the system performance tests at the Supplier's factory.
+\end{itemize}
+
+
+\subsection{Database development}
+\begin{itemize}
+  \item The Contractor shall provide \Gls{epics} databases with layout information compatible with the \Gls{vdct} \Gls{epics} database development tool \cite{vdct}.
+\end{itemize}
+
+
+\subsection{Device support}
+\begin{itemize}
+\item The Contractor shall supply \Gls{epics} device drivers and devce support for any hardware delivered as part of this contract.
+\item Where the Contractor provides a motion controller, the \Gls{epics} interface shall be the standard Motor record, or a set of records that provides equivalent functionality.
+\end{itemize}
+
+\subsection{Time Synchronization}
+
+
+\subsection{Preserve of PV values through an ioc reboot}
+
+
+
+\section{\Gls{ract} Supplied Items}
+\begin{itemize}
+\item Debian Linux Stable, upon request.
+\item Control System Studio, upon request.
+\item A naming convention document for the control system.
+\item A specification for the file structure to be used for software development. \textbf{Need to be a section in this document}
+\end{itemize}
+
+
+
+\section{\Gls{opi}}
+Where the contract involves the development of an \Gls{epics} interface to the components, the following shall apply.
+\begin{itemize}
+\item The Contractor shall supply a GUI to perform the following functions:
+  \begin{itemize}
+  \item Equipment control panel(s) showing the state of all signals associated with the equipment. These should enable users to monitor and control the equipment for routine operation. It shall be possible to call up the engineering control panels from the Equipment control panel.
+  \item The engineering control panels should enable engineers to monitor and control all the available parameters of the equipment for commissioning and for troubleshooting.
+  \end{itemize}
+\item The \Gls{opi} shall be implemented in CSS/BOY.
+\item The version of CSS used shall be the stable release, currently 3.3.11, or later version as approved by \Gls{ract}.
+\item The version of BOY used shall be the stable release, currently 3.3.0, or later version as approved by \Gls{ract}.
+\item The \Gls{opi} shall be implemented on a Linux PC. The version of Linux, defined in Section \ref{overview}, shall be used.
+\item The \Gls{opi} for all optical elements shall include information about the direction and sign of the coordinate system used, including linear and rotations axes.
+
+\end{itemize}
+
+\section{Software Development}
+\begin{itemize}
+\item The Contractor shall provide current versions of all source code developed by the Contractor when the relevant Equipment is delivered to the Purchaser.
+\item The Contractor shall provide final versions of all source code developed by the Contractor at the completion of equipment commissioning.
+\item The Contractor shall provide software design documentation including functional specifications, sequence diagrams, class diagrams, and so on for the software developed to meet this contract.
+\item A suitable level of commenting shall be adopted for all developed software. As an indication, comments should be provided, on average, for every subroutine and any complex code segment.
+\item All software comments shall be in English or Korean. In case of Korean, UFT-8 encoding shall be used.
+\item The Contractor shall allow the source code developed to meet this contract to be open source, consistent with the \Gls{epics} Open license.  
+\end{itemize}
+
+\section{Other Software}
+\begin{itemize}
+  \item The Contractor shall provide \Gls{epics} device support source code for all devices supplied as part of this contract.
+\end{itemize}
+
+
+\section{Naming}
+\begin{itemize}
+  \item All devices and database records shall be named in accordance with the technical document, which is Naming Convention for the RAON Control System \cite{raon-naming-convention}.
+  \item The naming document \cite{raon-naming-convention} does not provide the names required, the names shall be developed in consultation with \Gls{ract}. 
+  \item The Contractor shall request the developed names via the RAON Naming Service at \url{http://10.1.5.14:8080/naming}. Since this site cannot be accessible outside the local intranet, the Contractor shall contact \Gls{ract} in order to do so.
+  \item The requested names will be reviewed by \Gls{ract}, Accelerator Division Leader, or both. 
+  \item The Contractor shall received approval, in writing, from \Gls{ract} for all names prior to final delivery of the devices and databases. 
+\end{itemize}
+
+
+\section{Computer and Electronics Hardware}
+\begin{itemize}
+  \item All devices and database records shall be named in accordance with the technical document, which is Naming Convention for the RAON Control System \cite{raon-naming-convention}.
+  \item The naming document \cite{raon-naming-convention} does not provide the names required, the names shall be developed in consultation with \Gls{ract}. 
+  \item The Contractor shall request the developed names via the RAON Naming Service at \url{http://10.1.5.14:8080/naming}. Since this site cannot be accessible outside the local intranet, the Contractor shall contact \Gls{ract} in order to do so.
+  \item The requested names will be reviewed by \Gls{ract}, Accelerator Division Leader, or both. 
+  \item The Contractor shall received approval, in writing, from \Gls{ract} for all names prior to final delivery of the devices and databases. 
+\end{itemize}
+
+
+\section{Computer and Electronic Hardware}
+\begin{itemize}
+  \item Electrical energy consumption of rack-mounted hardware (e.g., PCs, IOCs, and so on) shall be minimized where reasonably possible.
+  \item Acoustical noise generation by rack-mounted equipment shall be minimized where reasonably possible.
+  \item Electrical energy consumption of desk-mounted equipment (computers, monitors, etc) shall minimize the heat dissipated to the air.
+  \item Acoustical noise generation by desk-mounted equipment shall be minimized. A suggested maximum from each component, when operating, is 40 dBA, measured at 1 m.
+\end{itemize}
+
+\section{Equipment Protection}
+\begin{itemize}
+  \item All equipment protection instrumentation and logic shall be designed to be fail safe. Circumstances to be considered include, but are not limited to, electrical power failure, compressed air failure, and cable breakage. 
+  \item Software-based equipment protection solutions may only be used in addition to a hardware solution.
+  \item For motions control, limit switches shall be directly connected to the limit switch inputs of the motion controller.
+  \item All components, particularly those exposed to high heat loads, shall have sufficient instrumentation to allow monitoring the integrity of the equipment. This instrumentation will be interfaced to an interlock system which will take action to prevent any permanent damage to the component.
+  \item The Contractor shall define the safe operating range for each component based on the instrumentation provided for that component.
+  \item The Contractor shall define the required interlock actions when equipment is outside the safe operating range.
+  \item The Contractor shall define the length of time required for protective action to occur.
+  \item Where the Contractor implements the complete equipment protection system, it shall be a PLC based system. 
+\end{itemize}
+
+
+\section{Power Supplies}
+\begin{itemize}
+\item All equipment supplied by the Contractor shall be supplied with appropriate power supplies. These power supplies shall accept a standard 220 VAC supply as input.
+\end{itemize}
+
+
+\chapter{Control System Interface Definitions}
+
+\section{Controls Network}
+\begin{itemize}
+  \item Network-attached devices shall be compatible with a 1 Gb/s network.
+  \item Network-attached devices shall operate at a minimum network speed of 100 Mb/s.
+  \item Network-attached devices shall obtain their network address either through static address configuration or DHCP.
+  \item Network-attached devices shall include a Standard RJ-45 modular connector.
+  \item Standardized cables for Gigabit Ethernet shall be used the Category 6 one.
+  \item The Cat 6 should be terminated using the T568B pin/pair assignment.
+\end{itemize}
+
+
+
+\section{Serial Devices}
+\begin{itemize}
+  \item Any device that provides a serial communication interface to the accelerator control system shall be interfaced by a terminal server.
+  \item The serial connection from the device to the terminal server shall be RS232, 422, or 485.
+  \item The use of USB to connect a device to the control system shall be avoided, as far as practicable.
+  \item Applications that are requiring high voltage isolation (e.g., vacuum gauge and pump controllers) shall use a Moxa CN2650I series terminal server, or equivalent with more than 2 kV optical isolation for the serial line protection.
+  \item Applications that do not require high voltage isolation shall use a Moxa NPort 6650 series terminal server, or equivalent with data transmission integrity with support of EDS, 3DES, and AES encryption algorithms.
+\end{itemize}
+
+\section{Triggers}
+\begin{itemize}
+  \item All generated triggers shall be TTL signal levels.
+  \item All trigger inputs shall accept TTL signal levels.
+\end{itemize}
+
+\chapter{Acknowledgment}
+The document is re-compiled by the author based on the original NSLS-II XFD RSI for the Controls and DAQ Systems \cite{LT-C-XFD-RSI-CO-001} in order to use it for the RAON accelerator control system. I owe much to Bob Dalesio and Wayne Lewis for fruitful discussions about the requirements, specifications, and interface for controls systems.
+
+
+%Print the glossary
+\printglossaries
+
+
+\clearpage
+%\bibliographystyle{unsrt}
+%\bibliographystyle{plainnat}
+%\bibliographystyle{abbrvnat}
+\bibliographystyle{unsrtnat}
+%\bibliographystyle{ksfh_nat}
+\bibliography{./refs}
+
+
+
+
+\end{document}

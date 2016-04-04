@@ -1,0 +1,108 @@
+%\documentclass[11pt,a4paper]{article}
+\documentclass[11pt
+  , a4paper
+  , article
+  , oneside
+%  , twoside
+%  , draft
+]{memoir}
+
+\usepackage{control}
+\usepackage[numbers]{natbib}
+
+
+\begin{document}
+
+\newcommand{\technumber}{
+  RAON Control-Document Series\\
+  Revision : v0.1,   Release : 2015. 05. 29}
+\title{\textbf{Alive}}
+
+\author{Seung Hee Nam\thanks{namsh@ibs.re.kr} \\
+  Control Team \\
+  Rare Isotope Science Project\\
+  Institute for Basic Science\\
+  Daejeon, South Korea
+}
+
+\date{\today}
+
+\renewcommand{\maketitlehooka}{\begin{flushright}\textsf{\technumber}\end{flushright}}
+%\renewcommand{\maketitlehookb}{\centering\textsf{\subtitle}}
+%\renewcommand{\maketitlehookc}{C}
+%\renewcommand{\maketitlehookd}{D}
+
+\maketitle
+
+\begin{abstract}
+Alive record is device support for simple network ping include variable information. This paper handling alive and using alive for monitoring dynamic IOC.
+\end{abstract}
+
+
+
+\chapter{What is alive?}
+Alive record was made by Dohn Arms to monitoring dynamic IOC. Alive module is device support for a simple network ping, and that using custom heartbeat protocol and external heartbeat-watching program. Alive send UDP packet every 15 second to a specified address and port. This UDP packet contains  heartbeat counter, current time and so on. The record also opens a TCP port that allows receiving static information about the IOC. On the remote server, the UDP packets are collected by a daemon into a database to monitor the IOCs. The IP address is gotten from the packet itself.
+\section{The structure of alive-1-0}
+  \begin{verbatim}
+   |--   aliveApp
+   |   |--   Db
+   |   |   |--   alive.db
+   |   |   `--   Makefile
+   |   |--   Makefile
+   |   |--   op
+   |   |   |--   adl
+   |   |   |   `--   aliveRecord.adl
+   |   |   |--   opi
+   |   |   |   `--   aliveRecord.opi
+   |   |   `--   ui
+   |   |       `--   aliveRecord.ui
+   |   `--   src
+   |       |--   aliveExMain.cpp
+   |       |--   aliveRecord.c
+   |       |--   aliveRecord.dbd
+   |       |--   aliveSupport.dbd
+   |       `--   Makefile
+   |--   configure
+   |   |--   CONFIG
+   |   |--   CONFIG_SITE
+   |   |--   Makefile
+   |   |--   RELEASE
+   |   |--   RULES
+   |   |--   RULES_DIRS
+   |   |--   RULES.ioc
+   |   `--   RULES_TOP
+   |--   documentation
+   |   |--   aliveDoc.html
+   |   |--   aliveRecord.html
+   |   |--   aliveRecord.png
+   |   |--   aliveReleaseNotes.html
+   |   `--   aliveServer.html
+   |--   iocBoot
+   |   |--   iocaliveEx
+   |   |   |--   Makefile
+   |   |   |--   README
+   |   |   `--   st.cmd
+   |   `-- [namsh     121]  Makefile
+   |--   Makefile
+   `--   start_epics
+
+   \end{verbatim}
+   \section{Important alive module file}
+   
+      \begin{itemize}
+      	\item EPICS Database\\
+      	alive.db 
+      	\item MEDM display file\\
+      	aliveRecord.adl
+      	\item Record\\
+      	aliveRecord.html,
+      	aliveServer.html
+      	   \end{itemize}
+      	   http://www.aps.anl.gov/bcda/synApps/alive/aliveDoc.html
+      	
+   \clearpage
+   
+
+
+
+\end{document}

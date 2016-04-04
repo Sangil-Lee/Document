@@ -1,0 +1,38 @@
+본 문서는 EPICS IOC 구현을 위한 Record 별 사용법을 제시하기 위함이며,
+	IOC 개발시 표준으로 제시되어야 할 Record에 대한 상세 내용을 기술한다. 
+
+	내용:
+	1. EPICS DB Processing(Scanning)의 이해
+	2. VDCT를 이용하는 방법
+	3. Base record에 대한 사용법 및 사용예제
+	4. IOC 개발을 위한 sync/asyn의 이해
+	5. asyn, motor 등 외부에서 개발된 record에 대한 사용법 및 사용예제
+	6. control 팀에서 개발될 record(ifstat,snmp,timestamp,rdbxxx)에 대한 사용법 및 사용예제
+	7. Record type 별 DB 필드 설정에 표준화 -> IOC 개발 문서에 표시(RSI 추가)
+	  : 향 후 Alarm 시스템 구성을 위한 항목
+
+
+  기타 추가 되어야할 Techical Note:	
+  1. SNL code 작성을 위한 표준(SNL code 작성법 및 사용예제) - Operation Sequence
+  2. IOC 개발 문서의 표준화 (control 팀에서 1개의 잘 작성된 IOC 개발문서를 제공) 
+	- Target Contorl System 구성에 대한 설명	
+	- 소프트웨어 구성 Block Diagram
+	- base외 새롭게 개발/사용된 record type에 대한 설명
+	- Naming convention에 따른 DB record에 대한 설명
+	- Record type 별 DB 필드 설정 표준문서를 따른 DB 필드 작성(Alarm System의 입력)
+	  : Alarm 요구사항
+	- Data Archiving List 제공
+	- SNL code 사용시 해당 모듈에 대한 FSM(finite state machine) chart 구성 및 설명
+	- IOC 구성시 사용된 siteLibs에 대한 리스트
+	- 시각동기화 방법(Timing system 이용 또는 NTP 설정)
+	- 타시스템과의 연계시 초기화 방법(PLC, RS232, ...) 
+	  : IOC와 제어시스템이 별도로 구성시 IOC 재부팅에 의한 초기화 문제.
+	- 연계시스템
+	  - Timing system의 trigger 입력이 필요한 경우 입력요구사항 및 event 
+	  - Interlock 시스템과의 연계 요구사항(Fast:MPS, Slow:??)
+	    : Hard wiring 신호 제공
+	- Emergency 상태 정의(이중화의 필요여부)
+	  : Emergency 상태시 최소 동작하여야 할 시스템에 대한 list 작성(Emergency PV list)
+	- Software list 및 시스템 구성에 사용된 관련 SW 코드 제공
+	- Library 사용에 대한 Doxygenfile 제공
+

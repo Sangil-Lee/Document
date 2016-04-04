@@ -1,0 +1,97 @@
+
+\documentclass[11pt
+  , a4paper
+  , article
+  , oneside
+%  , twoside
+%  , draft
+]{memoir}
+
+\usepackage{control}
+\usepackage[numbers]{natbib}
+
+\begin{document}
+\newcommand{\technumber}{
+  RAON Control-Document Series\\
+  Revision : v0.2,   Release : --, 2014}
+\title{\textbf{Practical Installation for \\Channel Finder Service (CF)}}
+
+\author{Jeong Han Lee\thanks{jhlee@ibs.re.kr} \\
+  Rare Isotope Science Project\\
+  Institute for Basic Science, Daejeon, South Korea
+}
+\date{\today}
+
+\renewcommand{\maketitlehooka}{\begin{flushright}\textsf{\technumber}\end{flushright}}
+%\renewcommand{\maketitlehookb}{\centering\textsf{\subtitle}}
+%\renewcommand{\maketitlehookc}{C}
+%\renewcommand{\maketitlehookd}{D}
+
+\maketitle
+
+\begin{abstract}
+blah blah...
+\end{abstract}
+
+
+
+\chapter{Requirements}
+
+The naming convention is a rule for matching signals, which are from devices and equipment of an accelerator, to process variables. And an efficient naming rule quickly and easily lets us to know what the signal is, where the signal comes from, and which device or equipment is related with the signal. Therefore an accelerator facility needs a well-defined naming convention. Since the RAON integrated control system uses the EPICS framework, a standard EPICS naming convention is the basis of the naming convention for the RAON control system. The early draft format is
+\begin{equation*}
+\underbrace{\mathbf{DDDDIII-SSSS}}_\text{a device part}\mathbf{:}\underbrace{\mathrm{TTTT.XXXX}}_\text{a signal part},
+\end{equation*} 
+where 
+
+\begin{itemize}
+\item \textbf{DDDD} : a device name which is \texttt{UPPERCASE} or \texttt{UpperCamelCase}. 
+\item \textbf{III}  : a sequence number which starts from zero (null). 
+\item \textbf{SSSS} : a system name which is \texttt{UPPERCASE} or \texttt{UpperCamelCase}.
+\item \textbf{TTTT} : a signal name which is \texttt{UpperCamelCase}.
+\item \textbf{XXXX} : a suffix of the signal which is be \texttt{lowercase} or delimiter-separated words with the underscore ($\_$).
+\item $\mathbf{-}$  : the hyphen is used to separate the device name with a sequence number from the system name.
+\end{itemize}
+
+In the future, the device part might be changeable after the further integration study among the RAON infrastructure, the technical systems, and the conventional facility. However, the signal part is close to the final format. There is another option for the naming convention, which we are considering now, such as \texttt{SSSS-DDDDIII:TTTT.XXXX}. Here several examples are itemized in Table~\ref{table:naming_convention}.
+\begin{table}[!bt]
+\caption{Examples of the Naming Convention for Process Variables}
+\label{table:naming_convention}
+\centering
+%\begin{tabular}{M{25mm}M{2mm}M{10mm}M{1mm}M{18mm}p{70mm}}
+\begin{tabular}{r|p{7.2cm}l} 
+\toprule 
+\texttt{DDDDIII-SSSS:TTTT.XXXX} &Comments\\ 
+\midrule
+&\\
+\texttt{BPM02-LEBT1:yPos.read}          & Read Y position value from the beam position monitor of LEBT1 with the sequence number 2\\
+&\\
+\texttt{HDipolMag016-MEBT1:Current.set} & Set current on the Horizontal Dipole Magnet of MEBT1 with the sequence number 16\\
+&\\
+\texttt{CryoMod003-SCL1:TempK.read}     & Read the temperature value (K) from the Cryomodule of SCL1 with the sequence number 3\\
+&\\
+\texttt{StepMot007-SCL2:Power.on}       & Power ON the stepping motor of SCL2 with the sequence number 7\\
+&\\
+\texttt{VacGaug028-RFQ:Pressure.read}   & Read the pressure from the vacuum gauge of RFQ with the sequence number 28\\
+&\\
+\texttt{WaterPump012-Cycl:Power.off}    & Power OFF the water pump in the Cyclotron with the sequence 12\\
+&\\
+\texttt{QuadMag004-PreSep:Current.set}  & Set the current value of the quadrupole magnet in the Pre-separator with the sequence 4\\
+&\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+\clearpage
+%\bibliographystyle{unsrt}
+%\bibliographystyle{plainnat}
+%\bibliographystyle{abbrvnat}
+\bibliographystyle{unsrtnat}
+%\bibliographystyle{chicago}
+\bibliography{./refs}
+
+
+
+
+\end{document}

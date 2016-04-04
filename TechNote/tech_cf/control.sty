@@ -1,0 +1,148 @@
+% Author:   Jeong Han Lee
+% email :   jhlee@ibs.re.kr
+% Date:     Saturday, March 30 01:11:27 KST 2013
+%
+% History:
+% 0.1       March 26 KST 2013
+% 0.1.1     Saturday, March 30 01:11:58 KST 2013
+% 0.1.2     Wednesday, April 10 11:44:15 KST 2013,
+%           add booktabs for better tables 
+%    
+% 0.1.3     Saturday, May 18 14:23:17 KST 2013,
+%           add more space between rows in tables
+%
+% 0.1.4     Monday, September  2 00:09:14 KST 2013, jhlee
+%           replace @title with 'hard-coded' title, because of 
+%           the length of NRF suggestion new name
+%
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{control}[2014/06/13 v0.1 RISP Accelerator Control Team]
+
+\RequirePackage{geometry}
+\RequirePackage{verbatim}
+\RequirePackage{graphicx}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{appendix}
+\RequirePackage{xcolor}
+\RequirePackage{setspace}
+\RequirePackage{hyperref}
+\RequirePackage{pstricks}
+\RequirePackage{pifont}
+\RequirePackage{wasysym}
+\RequirePackage{booktabs}
+\RequirePackage{multirow}
+\RequirePackage{array}
+\RequirePackage{makeidx}
+\RequirePackage{shortvrb}
+\RequirePackage{latexsym}
+\RequirePackage{fixltx2e}
+\RequirePackage{textcomp}
+%\RequirePackage{microtype}
+%\RequirePackage{tabu}
+\RequirePackage{longtable}
+\RequirePackage{booktabs}
+\RequirePackage{verbatim}
+\RequirePackage{framed}
+\RequirePackage{ifpdf}
+\RequirePackage{alltt}
+\RequirePackage{listings}
+\RequirePackage{kotex}
+\RequirePackage{url}
+
+%\usepackage[utf]{kotex}
+
+%\RequirePackage{datetime}
+%\RequirePackage{fmtcount}
+% geometry setup for a binding offset
+
+
+%% Only for Draft 
+%% Fedora - nrich cannot handle this  option
+%% 
+%% Thursday, July 11 19:51:21 KST 2013, jhlee
+%% \RequirePackage{draftwatermark}
+%% \SetWatermarkScale{5.0}
+%% \SetWatermarkLightness{0.92}
+
+
+\geometry{a4paper}
+\geometry{centering}
+\geometry{bindingoffset=0mm}
+\geometry{hmarginratio=1:1}
+\special{papersize=210mm,297mm}
+
+%\geometry{letter}
+%\special{papersize=215.9mm,279.4mm}
+
+% microtypesetup option
+% http://mirrors.ibiblio.org/CTAN/macros/latex/contrib/microtype/microtype.pdf
+%\microtypesetup{draft=false, final}
+
+
+
+% includegraphics default image width option
+\setkeys{Gin}{width=0.99\textwidth} 
+
+
+% more space between rows in table 1.2 or 1.3 is recommended
+\makeatletter
+\renewcommand{\arraystretch}{1.1}
+\makeatother
+
+% Change Figure, Table, Listing as bold...
+\makeatletter
+\renewcommand\fnum@figure[1]{\textbf{\figurename~\thefigure~}}
+\renewcommand\fnum@table[1]{\textbf{\tablename~\thetable~} }
+\renewcommand\fnum@lstlisting[1]{\textbf{\lstlistingname~\thelstlisting~} } % page.34 in the Listings Package
+\makeatother
+
+%% http://tex.stackexchange.com/questions/33841/how-to-modify-the-indentation-before-sectioning-titles-in-the-table-of-contents
+\makeatletter
+     \renewcommand*\l@figure{\@dottedtocline{1}{1em}{3.2em}}
+     \renewcommand*\l@table{\@dottedtocline{1}{1em}{3.2em}}
+     \renewcommand*\l@lstlisting{\@dottedtocline{1}{1em}{3.2em}}
+\makeatother
+
+
+\makeatletter    
+\pagestyle{myheadings}
+\makeheadrule{myheadings}{\textwidth}{\normalrulethickness}
+\renewcommand{\chaptermark}[1]% 
+             {\markboth{\thechapter. \ #1}{} }
+%% \renewcommand{\sectionmark}[1]% 
+%%              {\markright{ \thesection. \ #1}{} }
+%% \newcommand \headerfont  {\fontsize{10pt}{10pt} \fontfamily{ppl} \selectfont}
+%% \newcommand \thepagefont {\fontsize{10pt}{10pt} \bfseries }
+\makeatother   
+
+
+\makeatletter 
+\def\addlinecenter#1{%
+  \hbox to \hsize{%
+    \vbox{\centering #1}}}%
+
+
+\hypersetup{
+  , pdfstartview = {Fit}
+  , pdfpagemode= {UseOutlines}
+  , bookmarksnumbered = {true}
+  , bookmarksopen = {false}
+  , baseurl = {http://www.risp.re.kr}
+  , colorlinks = {true}
+  , linkcolor  = {red}          % color of internal links
+  , citecolor  = {green}
+  , filecolor  = {magenta}
+  , urlcolor   = {cyan}
+%  , unicode    = {true}
+  %  , bookmarks  = {true}
+  %  , linkbordercolor = {1 0 0}
+  %  pdfstartview = {FitH}
+}
+
+
+\hypersetup{breaklinks}
+
+\newsubfloat{figure} % Subfigures
+\newsubfloat{table} % Subtables

@@ -1,0 +1,40 @@
+\begin{thebibliography}{8}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[epi()]{epics}
+{EPICS, Experimental Physics ans Industrial Control System}.
+\newblock \\\url{http://www.aps.anl.gov/epics}.
+
+\bibitem[arc()]{archiver}
+{EPICS Channel Archiver}.
+\newblock \\\url{http://ics-web.sns.ornl.gov/kasemir/archiver/}.
+
+\bibitem[rdb()]{rdbarchiver}
+{RDB Archiver}.
+\newblock \\\url{https://ics-web.sns.ornl.gov/css/docs/RDBChannelArchiver.doc}.
+
+\bibitem[app()]{appliance}
+{EPICS Archiver Appliance}.
+\newblock \\\url{http://epicsarchiverap.sourceforge.net/index.html}.
+
+\bibitem[sci()]{scidb}
+{Scientific Database}.
+\newblock \\\url{http://www.scidb.org}.
+
+\bibitem[apa()]{apachetomcat}
+{Apache Tomcat}.
+\newblock \\\url{http://tomcat.apache.org}.
+
+\bibitem[pro()]{protobuffer}
+{Google Protocol Buffer}.
+\newblock \\\url{https://developers.google.com/protocol-buffers/?hl=ko}.
+
+\bibitem[ioz()]{iozone}
+{IOzone Filesystem Benchmark}.
+\newblock \\\url{http://www.iozone.org}.
+
+\end{thebibliography}

@@ -1,0 +1,67 @@
+
+It's possilble to access internet.
+
+===Requesting======
+1.Download license manager xilinx.com (silee7103, d~!1~!d)
+2.untar
+3.use root or sudo
+4.<Installed Dir>/lnx64.o/install_fnp.sh
+5.#lnx64.o>xlicsrvrmgr -p request.xml
+-> This creates a license request into the trusted storage area which causes 
+XML and HTML file to be output containing your server's HostID inforamtion
+
+6.Open the request.html file using web browser.
+7.Your web browser should now open with a Xilinx login screen
+
+8. Login and Account drop-down in Xilinx Site
+9.Select the Activation license of your choice and click the "Activate Floating Lincense" button
+10.A dialog will open and type 2 in "Requested Seats" and 0 in "Borrowed Seats": We have 2 copies floating license.
+11. Click Next button
+12. "Xilinx_License.xml" file will be e-mailed to you.
+
+
+In Debian or Ubuntu, Should be installed lsb (linux standard base) package.
+#>aptitude install lsb
+
+===Installing======
+1.#lnx64.0>./xlicsrvrmgr -p Xilinx_License.xml
+2. This will store the license information into your trusted storage area.
+3.#lnx64.0>./xlicsrvrmgr -v "format=long"
+4. Make license file (.lic)
+SERVER <host_name> <host_id> <port>
+USE_SERVER
+VENDOR xilinxd
+
+for hostid, you can get "hostid" command
+
+i.e)license.lic (IP address:10.1.5.65)
+SERVER silee 010a4105 2100(default port)
+USE_SERVER
+VENDOR xilinxd
+
+5. Run lmgrd (lincense manager)
+
+i.e)
+$lnx64.0>./lmgrd.sh -c license.lic(xilinx.lic) -l lmgrd.log
+
+
+===Vivado Client======
+set environment variable,(in ~/.bashrc)
+export LM_LICENSE_FILE=1700@localhost : -> MATLAB
+export XILINXD_LICENSE_FILE=2100@silee(10.1.5.65) : -> Vivado
+
+$>vivado
+
+Check "Help > Manage License..." Menu
+
+****Activation Based Licenses: Permanent ****
+Analyzer
+HLS
+Implementation
+SDK
+Simulation
+Systhesize
+SysGen
+VIVADO_HLS
+Vivado_System_Edition
+*********************************************

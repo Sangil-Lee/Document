@@ -1,0 +1,55 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/dev/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: tech_ar_appliance.aux
+The style file: unsrtnat.bst
+Database file #1: ./refs.bib
+Warning--empty year in epics
+Warning--empty year in archiver
+Warning--empty year in rdbarchiver
+Warning--empty year in appliance
+Warning--empty year in scidb
+Warning--empty year in apachetomcat
+Warning--empty year in protobuffer
+Warning--empty year in iozone
+You've used 8 entries,
+            2481 wiz_defined-function locations,
+            575 strings with 5087 characters,
+and the built_in function-call counts, 1706 in all, are:
+= -- 144
+> -- 0
+< -- 0
++ -- 16
+- -- 0
+* -- 82
+:= -- 163
+add.period$ -- 16
+call.type$ -- 8
+change.case$ -- 16
+chr.to.int$ -- 8
+cite$ -- 24
+duplicate$ -- 112
+empty$ -- 257
+format.name$ -- 0
+if$ -- 409
+int.to.chr$ -- 1
+int.to.str$ -- 9
+missing$ -- 0
+newline$ -- 40
+num.names$ -- 0
+pop$ -- 136
+preamble$ -- 1
+purify$ -- 8
+quote$ -- 0
+skip$ -- 73
+stack$ -- 0
+substring$ -- 24
+swap$ -- 16
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 56
+warning$ -- 8
+while$ -- 0
+width$ -- 0
+write$ -- 79
+(There were 8 warnings)

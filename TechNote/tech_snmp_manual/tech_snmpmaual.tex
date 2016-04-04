@@ -1,0 +1,241 @@
+%\documentclass[11pt,a4paper]{article}
+\documentclass[11pt
+  , a4paper
+  , article
+  , oneside
+%  , twoside
+%  , draft
+]{memoir}
+
+\usepackage{control}
+\usepackage[numbers]{natbib}
+\usepackage{tabulary}
+
+
+\begin{document}
+ 
+\newcommand{\technumber}{
+  RAON Control-Document Series\\
+  Revision : v0.1,   Release : August. 04. 2015}
+\title{\textbf{RAON\_snmp Manual}}
+
+\author{박미정\thanks{mijoy0909@ibs.re.kr} \\
+
+  Rare Isotope Science Project\\
+  Institute for Basic Science, Daejeon, South Korea
+}
+\date{\today}
+
+
+\renewcommand{\maketitlehooka}{\begin{flushright}\textsf{\technumber}\end{flushright}}
+%\renewcommand{\maketitlehookb}{\centering\textsf{\subtitle}}
+%\renewcommand{\maketitlehookc}{C}
+%\renewcommand{\maketitlehookd}{D}
+
+\maketitle
+
+\begin{abstract}
+본 문서는 EPICS와 SNMP를 통합한 RAON에 최적화된 네트워크 장비 모니터링 시스템에 관한 메뉴얼이다.
+\end{abstract}
+
+\chapter{Introduction}
+RAON\_snmp는 중이온가속기 제어 시스템을 구성하는 이기종 장비들의 최적화와 관리를 위해 네트워크 장비들이 지원하는 인터넷 표준 프로토콜인 간이 망 관리 프로토콜\footnote{* Official Internet Standards Protocol, http://www.rfc-editor.org/search/standards.php, 2002}(Simple Network Management Protoco, SNMP)과 EPICS\footnote{* EPICS, http://www.aps.anl.gov/epics/about.php, 2011}를 통합한 모니터링 시스템이다. 이 시스템은 SNMP를 지원하고 MIB 파일이 존재하는 네트워크 장비에 적용할 수 있다.
+
+\chapter{Development environ. \& Requirements}
+
+RAON\_snmp개발 환경은 다음과 같다.
+\begin{itemize}
+\item Debian Linux 7 Wheezy
+\item EPICS v3.14.12.4
+\item Net-SNMP v5.4.3
+\end{itemize}
+
+\section{EPICS development environ.}
+중이온가속기 제어 시스템의 모든 다른 기종 장비는 EPICS 단일 제어 플랫폼으로 통합되어 개발될 예정이다. 따라서 각 시스템의 원활한 개발 및 개발자 간의 의사소통, 그리고 개발되는 코드들의 단계별 형상관리를 위해  Git\footnote{* http://git-scm.com/}을 이용한 소스코드 버전 관리 시스템을 구축한다. 중이온가속기의 EPICS 개발 환경은 아래와 같이 소프트웨어의 효율적인 재사용을 위한 siteLibs와 IOC를 개발하는 siteApps로 분리된 표준화 및 자동화된 구조를 가진다.
+
+{\scriptsize
+\begin{verbatim}
+.
+├── downloads              
+└── R3.14.12.4             
+    ├── base               : EPICS core module
+    ├── extensions         : EPICS extension software
+    ├── setEpicsEnv.sh     : Dynamic Env Setup Script
+    ├── siteApps           : RAON EPICS Application
+    └── siteLibs           : RAON EPICS Library (reusing code)
+\end{verbatim}
+}
+
+\section{Requirements}
+
+SNMP 사용에 필요한 Debian distribution packages 리스트는 다음과 같다. 
+
+\begin{itemize}
+\item Net-SNMP v5.4.3
+\item snmp v5.4.3
+\item snmp-mibs-downloader v1.1
+\item snmpd v5.4.3
+\item libsnmp-dev v5.4.3
+\item libsnmp-perl v5.4.3
+\item libsnmp15 v5.4.3 (Debian7-wheezy) / libsnmp30 (Debian8-jessie)
+\end{itemize}
+
+또한, SNMP를 사용하기 위해서는 관리되어야 할 장비의 객체들을 계층구조로 모아 놓은 MIB (Management Information Base)가 필요하다. 일반적인 장비의 관리정보는 MIB-2(RFC 1213)에 포함돼 있고, 이에 포함되지 않은 장비들은 각 제조업체에서 제공한다. 일반적인 리눅스 시스템에서 MIB는 아래의 경로에 위치한다.
+
+{\scriptsize
+\begin{verbatim}
+/usr/local/share/snmp/mibs/ 
+/usr/share/mibs
+\end{verbatim}
+}
+
+RAON\_snmp는 siteLibs의 snmpLib에 mibs디렉토리를 생성하여 MIB파일을 관리한다. 따라서 이 경로를 MIB 검색 경로에 추가하기 위해 EPICS IOC의 st.cmd에 아래와 같은 경로 추가 명령어가 필요하다.  
+{\scriptsize
+\begin{verbatim}
+epicsEnvSet("MIBDIRS", "+${RAON_SITELIBS}/snmpLib/mibs")
+\end{verbatim}
+}
+
+\chapter{Features}
+RAON\_snmp는 다음과 같은 특징이 있다. 
+
+\begin{itemize}
+\item Supports SNMPv2/v3 (Authentication, Encryption) \\
+EPICS Community 내 존재하는 SNMP Support Module들은 SNMPv2c에 최적화되어 있으며, SNMPv3를 대부분 지원하지 않는다. RAON\_snmp는 SNMPv2c/v3를 지원하며, SNMPv3에서는 강력한 보안을 위해 인증과 암호화를 지원한다. 이에 모니터링 시 응답속도가 빠른 SNMPv2 사용을, 제어 시에는 보안이 강력한 SNMPv3를 사용하는 것을 권장한다.
+
+\item New Record Types \\
+RAON\_snmp는 기존의 EPICS 레코드 타입이 아닌 새로운 snmp, snmpstrRecord를 지원한다. snmpRecord는 현재 integer, float, gauge의 데이터 타입의 Read를 지원하며, Write는 integer 타입만 지원한다. 나머지 데이터 타입에 대한 Read/Write도 추후 지원 할 예정이다. snmpstrRecord는 string과 BITS타입의 데이터의 Read를 지원하며, 현재 Write는 지원하지 않는다.
+
+\item New fields \\
+앞서 설명한 새로운 레코드에는 SNMP 관련 정보가 필드화 되어있으며, 이는 Chap.4에서 설명한다. 이에 레코드별로 VERS 필드를 사용해 SNMPv2c/v3의 버전을 선택적으로 사용할 수 있다. 
+\end{itemize}
+
+\chapter{Record specification}
+RAON\_snmp는 기존의 EPICS 레코드 대신 SNMP의 데이터 타입에 따른 새로운 두 가지 레코드를 사용한다.
+각 레코드에 대한 정보는 다음과 같다.
+
+\section{snmpRecord}
+snmpRecord는 SNMP 명령어 사용을 위해 기존의 필드 외 SNMP 명령어 사용에 필요한 필드를 사용한다. 이는 표 \ref{table:snmprecord}과 같으며 다음과 같은 목적을 가진다. HOST는 장비(Agent)의 주소로 IP 주소나 노드의 이름에 관한 필드이다. COMM은 v2c사용 시 Community String이며, v3 사용 시에 Username을 설정하는 필드이다. OID 필드는 읽거나 쓰고 싶은 장비의 정보 객체를 OID표기법이나 이름으로 설정한다. AUTH, PRIV는 v3 사용 시 암호화와 인증 비밀번호를 설정하는 필드이다. VERS는 레코드가 사용할 SNMP의 버전 설정 필드로 SNMPv2c 사용 시 SNMP\_VERSION\_2c, SNMPv3 사용 시에는 SNMP\_VERSION\_3로 설정한다. 
+\clearpage
+
+\begin{table}[!h]
+\begin{center}
+\begin{tabular}{cccc}\hline
+Field & Type & Description & Remark\\ \hline
+HOST & String & Host Address \\ \hline
+COMM & String & Community string (v2c) / Username (v3) \\ \hline
+OIDS & String & OID Name \\ \hline
+AUTH & String & Auth Key for strong authentication \\ \hline
+PRIV & String & Priv Key for data encryption\\ \hline
+VERS & String & SNMP Version & SNMPv2c/v3	 \\ \hline
+OVAL & Double & Old Value \\ \hline
+VAL & Double & Value \\ \hline
+\end{tabular}
+\caption{fields of snmpRecord}
+\label{table:snmprecord} 
+\end{center}
+\end{table} 
+
+APC사 Power Distribution Unit의 아웃렛 모니터링과 제어를 위한 snmp레코드 사용의 예는 다음과 같다.
+
+{\scriptsize
+\begin{verbatim}
+record(snmp, "${A}:${P}_Outlet8_R") {
+    field(DESC, "PDU outlet8 control")
+    field(DTYP, "SNMP Read")
+    field(SCAN, "5 second")
+    field(VERS, "${V2C}")
+    field(HOST, "${HOST}")
+    field(COMM, "${COM}")
+    field(OIDS, "${PO}sPDUOutletCtl.8")
+}
+record(snmp, "${A}:${P}_Outlet8_W") {
+    field(DESC, "PDU outlet8 control")
+    field(DTYP, "SNMP Write")
+    field(SCAN, "5 second")
+    field(VERS, "${V3}")
+    field(AUTH, "${AUTH_P}")
+    field(PRIV, "${PRIV_P}")
+    field(HOST, "${HOST}")
+    field(COMM, "${USER}")
+    field(OIDS, "${PO}sPDUOutletCtl.8")
+}
+\end{verbatim}
+}
+
+\section{snmpstrRecord}
+snmpstrRecord는 Sting, BITS 타입의 데이터를 처리하기 때문에 알람 파라미터를 사용하지 않으며, 장비의 정보를 읽는 것만 가능하도록 생성되었다. 추후 Write를 지원할 예정이다. 필드에 대한 정보는 표 \ref{table:snmpstrrecord}와 같으며, OVAL, VAL 필드를 제외하고는 snmpRecord와 같다. 
+\clearpage
+
+\begin{table}[!h]
+\begin{center}
+\begin{tabular}{cccc}\hline
+Field & Type & Description & Remark\\ \hline
+HOST & String & Host Address \\ \hline
+COMM & String & Community string (v2c) / Username (v3) \\ \hline
+OIDS & String & OID Name \\ \hline
+AUTH & String & Auth Key for strong authentication \\ \hline
+PRIV & String & Priv Key for data encryption\\ \hline
+VERS & String & SNMP Version & SNMPv2c	 \\ \hline
+VAL & String & Value \\ \hline
+\end{tabular}
+\caption{fields of snmpstrRecord}
+\label{table:snmpstrrecord} 
+\end{center}
+\end{table} 
+
+APC PDU Outlet의 이름을 모니터링하는 snmpstr레코드의 사용 예이다. 
+
+{\scriptsize
+\begin{verbatim}
+record(snmpstr, "${A}:${P}_Outlet8_Name") {
+    field(DESC, "PDU outlet8 Name")
+    field(DTYP, "SNMP Read")
+    field(SCAN, "5 second")
+    field(VERS, "${V2C}")
+    field(HOST, "${HOST}")
+    field(COMM, "${COM}")
+    field(OIDS, "${PO}sPDUOutletCtlName.8")
+}
+\end{verbatim}
+}
+
+
+\chapter{Issue}
+\begin{enumerate}[1)]
+\item {scan rate} \par
+하나의 DB에서 두 버전의 SNMP를 사용할 때, SNMP 버전별 응답시간의 차이로 인해 IOC 내에서 아래와 같이 dbScan warning 메세지를 받을 수 있다. 현재 scan rate를 5초로 권장하며, 이 부분은 보완할 예정이다.
+
+
+{\scriptsize
+\begin{verbatim}
+dbScan warning from '2 second' scan thread:
+	Scan processing averages 2.27 seconds (2.22 .. 2.37).
+	Over-runs have now happened 10 times in a row.
+	To fix this, move some records to a slower scan rate.
+
+dbScan warning from '2 second' scan thread:
+	Scan processing averages 2.26 seconds (2.20 .. 2.37).
+	Over-runs have now happened 17 times in a row.
+	To fix this, move some records to a slower scan rate.
+
+dbScan warning from '2 second' scan thread:
+	Scan processing averages 2.25 seconds (2.17 .. 2.37).
+	Over-runs have now happened 30 times in a row.
+	To fix this, move some records to a slower scan rate.
+
+dbScan warning from '2 second' scan thread:
+	Scan processing averages 2.28 seconds (2.17 .. 2.42).
+	Over-runs have now happened 55 times in a row.
+	To fix this, move some records to a slower scan rate.
+\end{verbatim}
+}
+
+
+\end{enumerate}
+
+\clearpage
+
+
+
+\end{document}

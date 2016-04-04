@@ -1,0 +1,313 @@
+namsh@namsh:~/Downloads/AA$ ./quickstart.sh.original apache-tomcat-7.0.64.tar.gz 
+SRCDIR=/home/namsh/Downloads/AA
+DATADIR=/home/namsh/Downloads/AA
+Using org.epics.archiverappliance.config.persistence.InMemoryPersistence as the persistence layer
+Found an older quickstart_tomcat folder. Stopping any existing instances.
+Using CATALINA_BASE:   /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-8.0.24
+Using CATALINA_HOME:   /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-8.0.24
+Using CATALINA_TMPDIR: /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-8.0.24/temp
+Using JRE_HOME:        /usr
+Using CLASSPATH:       /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-8.0.24/bin/bootstrap.jar:/home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-8.0.24/bin/tomcat-juli.jar
+Sep 08, 2015 7:29:52 PM org.apache.catalina.startup.Catalina stopServer
+SEVERE: Could not contact localhost:16000. Tomcat may not be running.
+Sep 08, 2015 7:29:52 PM org.apache.catalina.startup.Catalina stopServer
+SEVERE: Catalina.stop: 
+java.net.ConnectException: Connection refused
+	at java.net.PlainSocketImpl.socketConnect(Native Method)
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:339)
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:200)
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:182)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:579)
+	at java.net.Socket.connect(Socket.java:528)
+	at java.net.Socket.<init>(Socket.java:425)
+	at java.net.Socket.<init>(Socket.java:208)
+	at org.apache.catalina.startup.Catalina.stopServer(Catalina.java:450)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:606)
+	at org.apache.catalina.startup.Bootstrap.stopServer(Bootstrap.java:400)
+	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:487)
+
+Deleting an older quickstart_tomcat
+/home/namsh/Downloads/AA/quickstart_tomcat
+total 4
+drwxr-xr-x 9 namsh namsh 4096 Sep  8 19:30 apache-tomcat-7.0.64
+./quickstart.sh.original: 234: ./quickstart.sh.original: [[: not found
+x86_64: =: No such file or directory
+Using 32 bit versions of libraries
+Starting in the foreground...
+Using CATALINA_BASE:   /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64
+Using CATALINA_HOME:   /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64
+Using CATALINA_TMPDIR: /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/temp
+Using JRE_HOME:        /usr
+Using CLASSPATH:       /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/bin/bootstrap.jar:/home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/bin/tomcat-juli.jar
+Sep 08, 2015 7:30:24 PM org.apache.catalina.core.AprLifecycleListener lifecycleEvent
+INFO: The APR based Apache Tomcat Native library which allows optimal performance in production environments was not found on the java.library.path: apache-tomcat-7.0.64/webapps/engine/WEB-INF/lib/native/linux-x86:/home/namsh/epics/R3.14.12.5/base/lib/linux-x86_64:/home/namsh/epics/R3.14.12.5/extensions/lib/linux-x86_64:/home/namsh/epics/R3.14.12.5/siteLibs/lib/linux-x86_64:/home/namsh/epics/R3.14.12.5/siteApps/lib/linux-x86_64:/usr/java/packages/lib/amd64:/usr/lib/x86_64-linux-gnu/jni:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/usr/lib/jni:/lib:/usr/lib
+Sep 08, 2015 7:30:24 PM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["http-bio-17665"]
+Sep 08, 2015 7:30:24 PM org.apache.catalina.startup.Catalina load
+INFO: Initialization processed in 458 ms
+Sep 08, 2015 7:30:24 PM org.apache.catalina.core.StandardService startInternal
+INFO: Starting service Catalina
+Sep 08, 2015 7:30:24 PM org.apache.catalina.core.StandardEngine startInternal
+INFO: Starting Servlet Engine: Apache Tomcat/7.0.64
+Sep 08, 2015 7:30:24 PM org.apache.catalina.startup.HostConfig deployWAR
+INFO: Deploying web application archive /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/engine.war
+Sep 08, 2015 7:30:25 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+0    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Archiver Appliance Version 0.0.1_SNAPSHOT_10-July-2015T09-39-18
+1    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - 		
+15   [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - My identity is appliance0 and my mgmt URL is http://localhost:17665/mgmt/bpl
+16   [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Loading archappl.properties from the webapp classpath /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/engine/WEB-INF/classes/archappl.properties
+16   [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Done loading installation specific properties file from /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/engine/WEB-INF/classes/archappl.properties
+18   [localhost-startStop-1] INFO  config.org.epics.archiverappliance.engine.pv.EngineContext  - Creating 10 command threads as specified by org.epics.archiverappliance.engine.epics.commandThreadCount in archappl.properties
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA/CAJ prop from archappl.properties is true
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA/CAJ prop from archappl.properties is true
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA/CAJ prop from archappl.properties is true
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA/CAJ prop from archappl.properties is true
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA/CAJ prop from archappl.properties is true
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA/CAJ prop from archappl.properties is true
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA/CAJ prop from archappl.properties is true
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA/CAJ prop from archappl.properties is true
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - Setting EPICS_CA_ADDR_LIST to an empty string as it is not defined in the environment.
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - Setting EPICS_CA_ADDR_LIST to an empty string as it is not defined in the environment.
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - Setting EPICS_CA_ADDR_LIST to an empty string as it is not defined in the environment.
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - Setting EPICS_CA_ADDR_LIST to an empty string as it is not defined in the environment.
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - Setting EPICS_CA_ADDR_LIST to an empty string as it is not defined in the environment.
+22   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - Setting EPICS_CA_ADDR_LIST to an empty string as it is not defined in the environment.
+22   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA Configuration:
+<context class="com.cosylab.epics.caj.CAJContext">
+  <preemptive_callback>true</preemptive_callback>
+  <addr_list></addr_list>
+  <auto_addr_list>true</auto_addr_list>
+  <connection_timeout>30.0</connection_timeout>
+  <beacon_period>30.0</beacon_period>
+  <repeater_port>5065</repeater_port>
+  <server_port>5064</server_port>
+  <max_array_bytes>30.0</max_array_bytes>
+  <event_dispatcher class="org.epics.archiverappliance.engine.epics.JCAEventDispatcherBasedOnPVName"/>
+</context>
+
+22   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA Configuration:
+<context class="com.cosylab.epics.caj.CAJContext">
+  <preemptive_callback>true</preemptive_callback>
+  <addr_list></addr_list>
+  <auto_addr_list>true</auto_addr_list>
+  <connection_timeout>30.0</connection_timeout>
+  <beacon_period>30.0</beacon_period>
+  <repeater_port>5065</repeater_port>
+  <server_port>5064</server_port>
+  <max_array_bytes>30.0</max_array_bytes>
+  <event_dispatcher class="org.epics.archiverappliance.engine.epics.JCAEventDispatcherBasedOnPVName"/>
+</context>
+
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA/CAJ prop from archappl.properties is true
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA/CAJ prop from archappl.properties is true
+22   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA Configuration:
+<context class="com.cosylab.epics.caj.CAJContext">
+  <preemptive_callback>true</preemptive_callback>
+  <addr_list></addr_list>
+  <auto_addr_list>true</auto_addr_list>
+  <connection_timeout>30.0</connection_timeout>
+  <beacon_period>30.0</beacon_period>
+  <repeater_port>5065</repeater_port>
+  <server_port>5064</server_port>
+  <max_array_bytes>30.0</max_array_bytes>
+  <event_dispatcher class="org.epics.archiverappliance.engine.epics.JCAEventDispatcherBasedOnPVName"/>
+</context>
+
+22   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA Configuration:
+<context class="com.cosylab.epics.caj.CAJContext">
+  <preemptive_callback>true</preemptive_callback>
+  <addr_list></addr_list>
+  <auto_addr_list>true</auto_addr_list>
+  <connection_timeout>30.0</connection_timeout>
+  <beacon_period>30.0</beacon_period>
+  <repeater_port>5065</repeater_port>
+  <server_port>5064</server_port>
+  <max_array_bytes>30.0</max_array_bytes>
+  <event_dispatcher class="org.epics.archiverappliance.engine.epics.JCAEventDispatcherBasedOnPVName"/>
+</context>
+
+22   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA Configuration:
+<context class="com.cosylab.epics.caj.CAJContext">
+  <preemptive_callback>true</preemptive_callback>
+  <addr_list></addr_list>
+  <auto_addr_list>true</auto_addr_list>
+  <connection_timeout>30.0</connection_timeout>
+  <beacon_period>30.0</beacon_period>
+  <repeater_port>5065</repeater_port>
+  <server_port>5064</server_port>
+  <max_array_bytes>30.0</max_array_bytes>
+  <event_dispatcher class="org.epics.archiverappliance.engine.epics.JCAEventDispatcherBasedOnPVName"/>
+</context>
+
+22   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - Setting EPICS_CA_ADDR_LIST to an empty string as it is not defined in the environment.
+22   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA Configuration:
+<context class="com.cosylab.epics.caj.CAJContext">
+  <preemptive_callback>true</preemptive_callback>
+  <addr_list></addr_list>
+  <auto_addr_list>true</auto_addr_list>
+  <connection_timeout>30.0</connection_timeout>
+  <beacon_period>30.0</beacon_period>
+  <repeater_port>5065</repeater_port>
+  <server_port>5064</server_port>
+  <max_array_bytes>30.0</max_array_bytes>
+  <event_dispatcher class="org.epics.archiverappliance.engine.epics.JCAEventDispatcherBasedOnPVName"/>
+</context>
+
+23   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA Configuration:
+<context class="com.cosylab.epics.caj.CAJContext">
+  <preemptive_callback>true</preemptive_callback>
+  <addr_list></addr_list>
+  <auto_addr_list>true</auto_addr_list>
+  <connection_timeout>30.0</connection_timeout>
+  <beacon_period>30.0</beacon_period>
+  <repeater_port>5065</repeater_port>
+  <server_port>5064</server_port>
+  <max_array_bytes>30.0</max_array_bytes>
+  <event_dispatcher class="org.epics.archiverappliance.engine.epics.JCAEventDispatcherBasedOnPVName"/>
+</context>
+
+21   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - Setting EPICS_CA_ADDR_LIST to an empty string as it is not defined in the environment.
+22   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - Setting EPICS_CA_ADDR_LIST to an empty string as it is not defined in the environment.
+22   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - Setting EPICS_CA_ADDR_LIST to an empty string as it is not defined in the environment.
+23   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA Configuration:
+<context class="com.cosylab.epics.caj.CAJContext">
+  <preemptive_callback>true</preemptive_callback>
+  <addr_list></addr_list>
+  <auto_addr_list>true</auto_addr_list>
+  <connection_timeout>30.0</connection_timeout>
+  <beacon_period>30.0</beacon_period>
+  <repeater_port>5065</repeater_port>
+  <server_port>5064</server_port>
+  <max_array_bytes>30.0</max_array_bytes>
+  <event_dispatcher class="org.epics.archiverappliance.engine.epics.JCAEventDispatcherBasedOnPVName"/>
+</context>
+
+23   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA Configuration:
+<context class="com.cosylab.epics.caj.CAJContext">
+  <preemptive_callback>true</preemptive_callback>
+  <addr_list></addr_list>
+  <auto_addr_list>true</auto_addr_list>
+  <connection_timeout>30.0</connection_timeout>
+  <beacon_period>30.0</beacon_period>
+  <repeater_port>5065</repeater_port>
+  <server_port>5064</server_port>
+  <max_array_bytes>30.0</max_array_bytes>
+  <event_dispatcher class="org.epics.archiverappliance.engine.epics.JCAEventDispatcherBasedOnPVName"/>
+</context>
+
+23   [JCA Command Thread] INFO  config.org.epics.archiverappliance.engine.epics.JCAConfigGen  - JCA Configuration:
+<context class="com.cosylab.epics.caj.CAJContext">
+  <preemptive_callback>true</preemptive_callback>
+  <addr_list></addr_list>
+  <auto_addr_list>true</auto_addr_list>
+  <connection_timeout>30.0</connection_timeout>
+  <beacon_period>30.0</beacon_period>
+  <repeater_port>5065</repeater_port>
+  <server_port>5064</server_port>
+  <max_array_bytes>30.0</max_array_bytes>
+  <event_dispatcher class="org.epics.archiverappliance.engine.epics.JCAEventDispatcherBasedOnPVName"/>
+</context>
+
+314  [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.ConvertPVNameToKey  - The pv name components in this installation are separated by these characters [\:\-] and the key names are terminated by :
+Sep 08, 2015 7:30:26 PM org.apache.catalina.startup.HostConfig deployWAR
+INFO: Deployment of web application archive /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/engine.war has finished in 1,971 ms
+Sep 08, 2015 7:30:26 PM org.apache.catalina.startup.HostConfig deployWAR
+INFO: Deploying web application archive /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/retrieval.war
+Sep 08, 2015 7:30:27 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+0    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Archiver Appliance Version 0.0.1_SNAPSHOT_10-July-2015T09-39-18
+1    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - 		
+2    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - My identity is appliance0 and my mgmt URL is http://localhost:17665/mgmt/bpl
+2    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Loading archappl.properties from the webapp classpath /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/retrieval/WEB-INF/classes/archappl.properties
+2    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Done loading installation specific properties file from /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/retrieval/WEB-INF/classes/archappl.properties
+3    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.ConvertPVNameToKey  - The pv name components in this installation are separated by these characters [\:\-] and the key names are terminated by :
+Sep 08, 2015 7:30:27 PM org.apache.catalina.startup.HostConfig deployWAR
+INFO: Deployment of web application archive /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/retrieval.war has finished in 1,071 ms
+Sep 08, 2015 7:30:27 PM org.apache.catalina.startup.HostConfig deployWAR
+INFO: Deploying web application archive /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/etl.war
+Sep 08, 2015 7:30:28 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+0    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Archiver Appliance Version 0.0.1_SNAPSHOT_10-July-2015T09-39-18
+1    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - 		
+2    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - My identity is appliance0 and my mgmt URL is http://localhost:17665/mgmt/bpl
+2    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Loading archappl.properties from the webapp classpath /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/etl/WEB-INF/classes/archappl.properties
+2    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Done loading installation specific properties file from /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/etl/WEB-INF/classes/archappl.properties
+90   [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.ConvertPVNameToKey  - The pv name components in this installation are separated by these characters [\:\-] and the key names are terminated by :
+Sep 08, 2015 7:30:28 PM org.apache.catalina.startup.HostConfig deployWAR
+INFO: Deployment of web application archive /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/etl.war has finished in 957 ms
+Sep 08, 2015 7:30:28 PM org.apache.catalina.startup.HostConfig deployWAR
+INFO: Deploying web application archive /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/mgmt.war
+Sep 08, 2015 7:30:28 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+0    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Archiver Appliance Version 0.0.1_SNAPSHOT_10-July-2015T09-39-18
+1    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - 		
+2    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - My identity is appliance0 and my mgmt URL is http://localhost:17665/mgmt/bpl
+2    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Loading archappl.properties from the webapp classpath /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/mgmt/WEB-INF/classes/archappl.properties
+2    [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Done loading installation specific properties file from /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/mgmt/WEB-INF/classes/archappl.properties
+28   [localhost-startStop-1] INFO  config.org.epics.archiverappliance.config.ConvertPVNameToKey  - The pv name components in this installation are separated by these characters [\:\-] and the key names are terminated by :
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployWAR
+INFO: Deployment of web application archive /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/mgmt.war has finished in 703 ms
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/host-manager
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/host-manager has finished in 46 ms
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/examples
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/examples has finished in 119 ms
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/manager
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/manager has finished in 22 ms
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/docs
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/docs has finished in 20 ms
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/ROOT
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/namsh/Downloads/AA/quickstart_tomcat/apache-tomcat-7.0.64/webapps/ROOT has finished in 16 ms
+Sep 08, 2015 7:30:29 PM org.apache.coyote.AbstractProtocol start
+INFO: Starting ProtocolHandler ["http-bio-17665"]
+Sep 08, 2015 7:30:29 PM org.apache.catalina.startup.Catalina start
+INFO: Server startup in 4979 ms
+10029 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Post startup for MGMT
+10034 [Startup executor] DEBUG config.org.epics.archiverappliance.config.DefaultConfigService  - Initializing the MGMT webapp's clustering
+10113 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Setting my cluster port base to 16670 and using interface 127.0.0.1
+10344 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Loading PVTypeInfo from persistence
+10344 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Done loading 0 PVs from persistence into cluster
+10344 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Loading aliases from persistence
+10344 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Done loading 0 aliases from persistence into cluster 
+10344 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Loading archive requests from persistence
+10344 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Done loading 0 archive pv requests from persistence into cluster 
+10344 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Loading external servers from persistence
+10344 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Done loading external servers from persistence 
+10349 [Startup executor] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Start complete for webapp MGMT
+10349 [Startup executor] INFO  config.org.epics.archiverappliance.mgmt.MgmtPostStartup  - Finished post startup for the mgmt webapp
+27299 [http-bio-17665-exec-4] INFO  config.org.epics.archiverappliance.mgmt.WebappReady  - Received webAppReady from ENGINE
+30423 [http-bio-17665-exec-5] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Post startup for ENGINE
+30423 [http-bio-17665-exec-5] DEBUG config.org.epics.archiverappliance.config.DefaultConfigService  - Initializing a non-mgmt webapp's clustering
+30427 [http-bio-17665-exec-5] DEBUG config.org.epics.archiverappliance.config.DefaultConfigService  - ENGINE connecting as a native client to 127.0.0.1:16670
+30606 [http-bio-17665-exec-5] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Start complete for webapp ENGINE
+28381 [http-bio-17665-exec-8] INFO  config.org.epics.archiverappliance.mgmt.WebappReady  - Received webAppReady from RETRIEVAL
+30027 [http-bio-17665-exec-9] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Post startup for RETRIEVAL
+30028 [http-bio-17665-exec-9] DEBUG config.org.epics.archiverappliance.config.DefaultConfigService  - Initializing a non-mgmt webapp's clustering
+30031 [http-bio-17665-exec-9] DEBUG config.org.epics.archiverappliance.config.DefaultConfigService  - RETRIEVAL connecting as a native client to 127.0.0.1:16670
+30204 [http-bio-17665-exec-9] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Start complete for webapp RETRIEVAL
+29347 [http-bio-17665-exec-2] INFO  config.org.epics.archiverappliance.mgmt.WebappReady  - Received webAppReady from ETL
+30127 [http-bio-17665-exec-3] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Post startup for ETL
+30130 [http-bio-17665-exec-3] DEBUG config.org.epics.archiverappliance.config.DefaultConfigService  - Initializing a non-mgmt webapp's clustering
+30143 [http-bio-17665-exec-3] DEBUG config.org.epics.archiverappliance.config.DefaultConfigService  - ETL connecting as a native client to 127.0.0.1:16670
+30299 [http-bio-17665-exec-3] INFO  config.org.epics.archiverappliance.etl.common.PBThreeTierETLPVLookup  - Beginning ETL post startup; scheduling the configServiceSyncThread to keep the local ETL lifetimeId2PVName2LookupItem in sync
+30299 [http-bio-17665-exec-3] DEBUG config.org.epics.archiverappliance.etl.common.PBThreeTierETLPVLookup  - Done initializing ETL post startup.
+30330 [http-bio-17665-exec-3] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Start complete for webapp ETL
+29569 [http-bio-17665-exec-2] INFO  config.org.epics.archiverappliance.mgmt.MgmtRuntimeState  - All components in this appliance have started up. We should be ready to start accepting UI requests
+45598 [Startup executor] DEBUG config.org.epics.archiverappliance.config.DefaultConfigService  - Start archiving PVs from persistence.
+45624 [Startup executor] DEBUG config.org.epics.archiverappliance.config.DefaultConfigService  - Started 0 PVs from persistence.
+180904 [http-bio-17665-exec-8] INFO  config.org.epics.archiverappliance.config.DefaultConfigService  - Using policies file /WEB-INF/classes/policies.py found in classpath
+

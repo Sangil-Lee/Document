@@ -1,0 +1,50 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/dev/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: tech_mrf_timing_eval.aux
+The style file: unsrtnat.bst
+Database file #1: ./refs.bib
+Warning--empty year in mrf
+Warning--empty year in evg
+Warning--empty year in evr
+You've used 3 entries,
+            2481 wiz_defined-function locations,
+            560 strings with 4688 characters,
+and the built_in function-call counts, 661 in all, are:
+= -- 54
+> -- 0
+< -- 0
++ -- 6
+- -- 0
+* -- 32
+:= -- 68
+add.period$ -- 6
+call.type$ -- 3
+change.case$ -- 6
+chr.to.int$ -- 3
+cite$ -- 9
+duplicate$ -- 42
+empty$ -- 97
+format.name$ -- 0
+if$ -- 154
+int.to.chr$ -- 1
+int.to.str$ -- 4
+missing$ -- 0
+newline$ -- 20
+num.names$ -- 0
+pop$ -- 51
+preamble$ -- 1
+purify$ -- 3
+quote$ -- 0
+skip$ -- 28
+stack$ -- 0
+substring$ -- 9
+swap$ -- 6
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 21
+warning$ -- 3
+while$ -- 0
+width$ -- 0
+write$ -- 34
+(There were 3 warnings)

@@ -1,0 +1,495 @@
+#!/bin/bash
+#
+# COPYRIGHT NOTICE
+# Copyright 1986-1999, 2001-2012 Xilinx, Inc. All Rights Reserved.
+#
+
+
+#
+# Check if DIR contains valid executables for PLAT
+#
+# Usage: 
+#  if IS_VALID_TOOL() DIR PLAT; then
+#
+#  dir   - Directory to test
+#  plat  - lin or lin64
+#  valid - Will be set to True if the following directories exist: 
+#                   $XILINX/bin/PLAT
+#                   $XILINX/lib/PLAT
+#                   $XILINX/xilinx
+#
+# WARNING: The variables _dir, _plat, and _valid cannot be used elsewhere 
+#          in loader
+IS_VALID_TOOL() {
+  _dir=$1
+  _plat=$2
+  _valid=0
+  for d in lib/$_plat bin/$_plat; do
+    if [ ! -d "$_dir/$d" ]; then
+      echo "WARNING: $_dir/$d does not exist."
+      _valid=1
+    fi
+  done
+  return $_valid
+}
+
+. "`dirname \"$0\"`/setupEnv.sh"
+if [ "`uname -o`" == "Cygwin" ]; then
+  trap "" INT
+  "$RDI_BINROOT/loader.bat" "$@"
+  exit $?
+fi
+
+
+RDI_OS_ARCH=32
+case `uname -m` in
+  x86_64) 
+    RDI_OS_ARCH=64
+    ;;
+esac
+
+RDI_OPT_EXT=.o
+
+export RDI_OPT_EXT
+#
+# If True check for the existence of RDI_PROG prior to invoking the
+# Function RDI_EXEC_COMMANDS
+#
+RDI_CHECK_PROG=True
+
+case "$XILINX" in 
+  *:*)
+    echo "WARNING: \$XILINX contains multiple entries. Setting"
+    echo "         \$XIL_PA_NO_XILINX_OVERRIDE to 1."
+    echo 
+    XIL_PA_NO_XILINX_OVERRIDE=1
+    ;;
+esac
+
+case "$XILINX_EDK" in 
+  *:*)
+    echo "WARNING: \$XILINX_EDK contains multiple entries. Setting"
+    echo "         \$XIL_PA_NO_XILINX_EDK_OVERRIDE to 1."
+    echo 
+    XIL_PA_NO_XILINX_EDK_OVERRIDE=1
+    ;;
+esac
+
+if [ "$XIL_PA_NO_XILINX_OVERRIDE" = "1" ]; then
+  echo "WARNING: \$XIL_PA_NO_XILINX_OVERRIDE is set to 1."
+  echo "         When \$XIL_PA_NO_XILINX_OVERRIDE is enabled"
+  echo "         \$XILINX, \$MYXILINX, \$PATH, and \$LD_LIBRARY_PATH must"
+  echo "         be manually set."
+fi
+
+if [ "$XIL_PA_NO_XILINX_EDK_OVERRIDE" = "1" ]; then
+  echo "WARNING: \$XIL_PA_NO_XILINX_EDK_OVERRIDE is set to 1."
+  echo "         When \$XIL_PA_NO_XILINX_EDK_OVERRIDE is enabled"
+  echo "         \$XILINX_EDK, \$PATH, and \$LD_LIBRARY_PATH must"
+  echo "         be manually set."
+fi
+
+#
+# Handle options. If this is a release build rdiArgs.sh will
+# be mostly empty.
+#
+. "$RDI_BINROOT/rdiArgs.sh" "$@"
+
+#
+# Populate PATH and LD_LIBRARY_PATH with XILINX libraries and executables
+#
+if [ "$XIL_PA_NO_XILINX_OVERRIDE" != "1" ]; then
+  #
+  # On 64bit hosts look for 64bit XILINX tools first then fall back 32bit.
+  #
+  if [ ! -z "$XILINX" ]; then
+    if [ "$RDI_OS_ARCH" == "64" ]; then
+      if [ "$RDI_PLATFORM" == "lnx64"  ]; then
+        if IS_VALID_TOOL "$XILINX" lin64; then
+          RDI_ISE_PLATFORM=lin64
+        else
+          if IS_VALID_TOOL "$XILINX" lin; then
+            echo "ERROR: \$XILINX does not contain 64bit executables. Use -m32 to run 32bit executables."
+          else
+            echo "ERROR: \$XILINX does not contain 64bit executables."
+          fi
+          exit 1
+        fi
+      else
+        if IS_VALID_TOOL "$XILINX" lin; then
+          RDI_ISE_PLATFORM=lin
+        else
+          echo "ERROR: \$XILINX does not contain 32bit executables."
+          exit 1
+        fi
+      fi
+    else
+      if IS_VALID_TOOL "$XILINX" lin; then
+        RDI_ISE_PLATFORM=lin
+      else
+        echo "ERROR: \$XILINX does not contain 32bit executables."
+        exit 1
+      fi
+    fi
+    if [ -z "$RDI_ISE_PLATFORM" ]; then
+      echo
+      echo "ERROR: Set \$XILINX to point to a valid ISE installation and"
+      echo "       \$XIL_PA_NO_XILINX_OVERRIDE to 1."
+      echo 
+      echo "       When \$XIL_PA_NO_XILINX_OVERRIDE is enabled \$PATH and"
+      echo "       \$LD_LIBRARY_PATH must be manually prefixed with the"
+      echo "       appropriate \$XILINX bin and lib directories."
+      exit 1
+    fi
+    if [ ! -z "$MYXILINX" ]; then
+      RDI_PREPEND_PATH=$MYXILINX/bin/$RDI_ISE_PLATFORM:$XILINX/bin/$RDI_ISE_PLATFORM
+      RDI_PREPEND_LD_LIBRARY_PATH=$MYXILINX/lib/$RDI_ISE_PLATFORM:$XILINX/lib/$RDI_ISE_PLATFORM
+    else
+      RDI_PREPEND_PATH=$XILINX/bin/$RDI_ISE_PLATFORM
+      RDI_PREPEND_LD_LIBRARY_PATH=$XILINX/lib/$RDI_ISE_PLATFORM
+    fi
+    export RDI_PREPEND_PATH RDI_PREPEND_LD_LIBRARY_PATH
+  fi
+fi
+
+#
+# Populate PATH and LD_LIBRARY_PATH with XILINX_EDK libraries and executables
+#
+if [ "$XIL_PA_NO_XILINX_EDK_OVERRIDE" != "1" ]; then
+  if [ ! -z "$XILINX_EDK" ]; then
+    if [ "$RDI_OS_ARCH" == "64" ]; then
+      if [ "$RDI_PLATFORM" == "lnx64"  ]; then
+        if IS_VALID_TOOL "$XILINX_EDK" lin64; then
+          RDI_EDK_PLATFORM=lin64
+        else
+          if IS_VALID_TOOL "$XILINX_EDK" lin; then
+            echo "ERROR: \$XILINX_EDK does not contain 64bit executables. Use -m32 to run 32bit executables."
+          else
+            echo "ERROR: \$XILINX_EDK does not contain 64bit executables."
+          fi
+          exit 1
+        fi
+      else
+        if IS_VALID_TOOL "$XILINX_EDK" lin; then
+          RDI_EDK_PLATFORM=lin
+        else
+          echo "ERROR: \$XILINX_EDK does not contain 32bit executables."
+          exit 1
+        fi
+      fi
+    else
+      if IS_VALID_TOOL "$XILINX_EDK" lin; then
+        RDI_EDK_PLATFORM=lin
+      else
+        echo "ERROR: \$XILINX_EDK does not contain 32bit executables."
+        exit 1
+      fi
+    fi
+    if [ -z "$RDI_EDK_PLATFORM" ]; then
+      echo
+      echo "ERROR: Set \$XILINX_EDK to point to a valid EDK installation and"
+      echo "       \$XIL_PA_NO_XILINX_EDK_OVERRIDE to 1."
+      echo 
+      echo "       When \$XIL_PA_NO_XILINX_EDK_OVERRIDE is enabled \$PATH and"
+      echo "       \$LD_LIBRARY_PATH must be manually prefixed with the"
+      echo "       appropriate \$XILINX_EDK bin and lib directories."
+      exit 1
+    fi
+    if [ ! -z "RDI_PREPEND_PATH" ]; then
+      RDI_PREPEND_PATH=$XILINX_EDK/bin/$RDI_EDK_PLATFORM:$RDI_PREPEND_PATH
+    else
+      RDI_PREPEND_PATH=$XILINX_EDK/bin/$RDI_EDK_PLATFORM
+    fi
+    if [ ! -z "RDI_PREPEND_LD_LIBRARY_PATH" ]; then
+      RDI_PREPEND_LD_LIBRARY_PATH=$XILINX_EDK/lib/$RDI_EDK_PLATFORM:$RDI_PREPEND_LD_LIBRARY_PATH
+    else
+      RDI_PREPEND_LD_LIBRARY_PATH=$XILINX_EDK/lib/$RDI_EDK_PLATFORM
+    fi
+    export RDI_PREPEND_PATH RDI_PREPEND_LD_LIBRARY_PATH
+  fi
+fi
+
+if [ ! -z "$XILINX_COMMON_TOOLS" ]; then
+  if [ ! -z "$RDI_ISE_PLATFORM" ]; then
+    if IS_VALID_TOOL "$XILINX_COMMON_TOOLS" $RDI_ISE_PLATFORM; then
+      if [ ! -z "$RDI_PREPEND_PATH" ]; then
+        RDI_PREPEND_PATH=$RDI_PREPEND_PATH:$XILINX_COMMON_TOOLS/bin/$RDI_ISE_PLATFORM
+      else 
+        RDI_PREPEND_PATH=$XILINX_COMMON_TOOLS/bin/$RDI_ISE_PLATFORM
+      fi
+      if [ ! -z "$RDI_PREPEND_LD_LIBRARY_PATH" ]; then
+        RDI_PREPEND_LD_LIBRARY_PATH=$RDI_PREPEND_LD_LIBRARY_PATH:$XILINX_COMMON_TOOLS/lib/$RDI_ISE_PLATFORM
+      else
+        RDI_PREPEND_LD_LIBRARY_PATH=$XILINX_COMMON_TOOLS/lib/$RDI_ISE_PLATFORM
+      fi
+      export RDI_PREPEND_PATH RDI_PREPEND_LD_LIBRARY_PATH
+    else
+      echo
+      echo "WARNING: Unable to find common Xilinx tools. Automatic updates and "
+      echo "         license management will be disabled."
+      echo
+    fi
+  fi
+fi
+
+XILINX_DSP=$XILINX
+XILINX_PLANAHEAD="$RDI_APPROOT"
+XILINXD_LICENSE_FILE=$HOME/.Xilinx/Xilinx.lic
+export XILINX_DSP XILINX_PLANAHEAD XILINXD_LICENSE_FILE
+if [ ! -z "$XILINXD_LICENSE_FILE" ]; then
+  export XILINXD_LICENSE_FILE=$XILINXD_LICENSE_FILE:$RDI_APPROOT/data/sysgen/hwcosim_compiler/pp_ethernet/Xilinx_IP.lic
+else
+  export XILINXD_LICENSE_FILE=$RDI_APPROOT/data/sysgen/hwcosim_compiler/pp_ethernet/Xilinx_IP.lic
+fi
+
+if [ ! -d "$RDI_JAVAROOT" ]; then
+  echo "ERROR: $RDI_JAVAROOT does not exist."
+  if [ -d "$RDI_APPROOT/data/patches" ]; then
+    echo " A baseline is the path of the full install being patched and is required"
+    echo " for patches to function correctly.\n"
+    echo " To establish a baseline for this patch, run 'establish-baseline.sh'"
+    echo " in '$RDI_APPROOT/scripts/patch'"
+    echo " and enter the necessary install path when prompted.\n"
+    echo " If you received this error running from a non-patch installation,"
+    echo " please contact customer support."
+  else
+    echo " Vivado is unable to locate a valid installation of JAVA. PlanAhead is necessary\n"
+    echo " for Vivado to run. Please contact customer support for assistance."
+  fi
+  exit 1
+fi
+#RDI_PROG="matlab -r \"addpath('$RDI_LIBDIR/matlab');addpath('$HDI_APPROOT/scripts/sysgen/matlab');javaaddpath('$HDI_APPROOT/lib/classes/sysgen.jar');\""
+RDI_PROG="matlab"
+if [ -z "$RDI_PROG" -a "$RDI_CHECK_PROG" = "True" ]; then
+  echo "ERROR: No executable to launch. The -exec option *must* be used"
+  echo "       when invoking the loader."
+  echo "       Example:"
+  echo "         $0 -exec EXECUTABLE"
+  echo "         Where: EXECUTABLE is the name of binary in bin/unwrapped/PLAT.{o,d}"
+  exit 1
+fi
+RDI_PROGNAME="$RDI_PROG"
+#RDI_PROG="$RDI_APPROOT/bin/unwrapped/$RDI_PLATFORM$RDI_OPT_EXT/$RDI_PROGNAME"
+#Locate RDI_PROG in patch areas.
+IFS=$':'
+for SUB_PATCH in $RDI_PATCHROOT; do
+    if [ -f "$SUB_PATCH/bin/unwrapped/$RDI_PLATFORM$RDI_OPT_EXT/$RDI_PROGNAME" ]; then
+        RDI_PROG="$SUB_PATCH/bin/unwrapped/$RDI_PLATFORM$RDI_OPT_EXT/$RDI_PROGNAME"
+    fi
+done
+IFS=$' \t\n'
+export RDI_PROG
+
+#Add patch lib areas before %RDI_APPROOT%/lib
+RDI_LIBDIR="$RDI_APPROOT/lib/$RDI_PLATFORM$RDI_OPT_EXT"
+IFS=$':'
+for SUB_PATCH in $RDI_PATCHROOT; do
+    if [ -d "$SUB_PATCH/lib/$RDI_PLATFORM$RDI_OPT_EXT" ]; then
+        RDI_LIBDIR="$SUB_PATCH/lib/$RDI_PLATFORM$RDI_OPT_EXT:$RDI_LIBDIR"
+    fi
+done
+IFS=$' \t\n'
+export RDI_LIBDIR
+
+#Add patch bin areas before %RDI_APPROOT%/bin
+RDI_BINDIR="$RDI_APPROOT/bin"
+IFS=$':'
+for SUB_PATCH in $RDI_PATCHROOT; do
+    if [ -d "$SUB_PATCH/bin" ]; then
+        RDI_BINDIR="$SUB_PATCH/bin:$RDI_BINDIR"
+    fi
+done
+IFS=$' \t\n'
+
+# Set TCL_LIBRARY so that planAhead can find init.tcl at startup
+TCL_LIBRARY="$RDI_APPROOT/tps/tcl/tcl8.5"
+export TCL_LIBRARY
+
+# Set ISL path
+ISL_IOSTREAMS_RSA="$RDI_APPROOT/tps/isl"
+export ISL_IOSTREAMS_RSA
+
+# Control what shared objects planAhead.java loads.  This variable
+# allows to conditional loading depending for rmake builds vs hmake
+# builds.
+RDI_BUILD=yes
+export RDI_BUILD
+
+# Set the library load path
+if [ -z "$LD_LIBRARY_PATH" ]; then
+  # This variable is used to restore the LD_LIBRARY_PATH when executables are invoked from planAhead.
+  if [ ! -z "$RDI_PREPEND_LD_LIBRARY_PATH" ]; then
+    HDIPRELDPATH=$RDI_PREPEND_LD_LIBRARY_PATH
+  fi
+  LD_LIBRARY_PATH=$RDI_LIBDIR:$RDI_JAVAROOT/lib/$RDI_JAVA_PLATFORM:$RDI_JAVAROOT/lib/$RDI_JAVA_PLATFORM/server
+else
+  # This variable is used to restore the LD_LIBRARY_PATH when executables are invoked from planAhead.
+  if [ ! -z "$RDI_PREPEND_LD_LIBRARY_PATH" ]; then
+    HDIPRELDPATH=$RDI_PREPEND_LD_LIBRARY_PATH:$LD_LIBRARY_PATH
+  else
+    HDIPRELDPATH=$LD_LIBRARY_PATH
+  fi
+  LD_LIBRARY_PATH=$RDI_LIBDIR:$RDI_JAVAROOT/lib/$RDI_JAVA_PLATFORM:$RDI_JAVAROOT/lib/$RDI_JAVA_PLATFORM/server:$LD_LIBRARY_PATH
+fi
+export LD_LIBRARY_PATH HDIPRELDPATH
+
+# Add planAhead binary location to path.
+if [ ! -z "$RDI_PREPEND_PATH" ]; then
+  if [ -z "$PATH" ]; then
+    PATH=$RDI_PREPEND_PATH
+  else
+    PATH=$RDI_PREPEND_PATH:$PATH
+  fi
+fi
+if [ -z "$PATH" ]; then
+  PATH=$RDI_BINDIR
+else
+  PATH=$RDI_BINDIR:$PATH
+fi
+export PATH
+
+# set up RT_LIBPATH
+RT_LIBPATH=$RDI_APPROOT/scripts/rt/data
+IFS=$':'
+for SUB_PATCH in $RDI_PATCHROOT; do
+    if [ -d "$SUB_PATCH/scripts/rt/data" ]; then
+        RT_LIBPATH="$SUB_PATCH/scripts/rt/data"
+        break
+    fi
+done
+IFS=$' \t\n'
+export RT_LIBPATH
+
+RT_TCL_PATH=$RDI_APPROOT/scripts/rt/base_tcl/tcl
+IFS=$':'
+for SUB_PATCH in $RDI_PATCHROOT; do
+    if [ -d "$SUB_PATCH/scripts/rt/base_tcl/tcl" ]; then
+        RT_TCL_PATH="$SUB_PATCH/scripts/rt/base_tcl/tcl"
+        break
+    fi
+done
+IFS=$' \t\n'
+export RT_TCL_PATH
+
+RT_TMP="`pwd`/.Xil/tmp"
+export RT_TMP
+SYNTH_COMMON=$RT_LIBPATH
+export SYNTH_COMMON
+
+# set RDI_APPROOT to be a multipath at this point
+IFS=$':'
+for SUB_PATCH in $RDI_PATCHROOT; do
+    if [ -d "$SUB_PATCH" ]; then
+        RDI_APPROOT="$SUB_PATCH:$RDI_APPROOT"
+    fi
+done
+IFS=$' \t\n'
+export RDI_APPROOT
+
+if [ "$RDI_VERBOSE" = "True" ]; then
+  echo "     **** ENVIRONMENT DEBUG INFO ****"
+  echo "         RDI_BINROOT: \"$RDI_BINROOT\""
+  echo "         RDI_APPROOT: \"$RDI_APPROOT\""
+  echo "         HDI_APPROOT: \"$HDI_APPROOT\""
+  echo "       RDI_PATCHROOT: \"$RDI_PATCHROOT\""
+  echo "        RDI_BASEROOT: \"$RDI_BASEROOT\""
+  echo "         RDI_DATADIR: \"$RDI_DATADIR\""
+  echo "          RDI_LIBDIR: \"$RDI_LIBDIR\""
+  echo "          RDI_BINDIR: \"$RDI_BINDIR\""
+  echo "        RDI_JAVAROOT: \"$RDI_JAVAROOT\""
+  echo "     LD_LIBRARY_PATH: \"$LD_LIBRARY_PATH\""
+  echo "                PATH: \"$PATH\""
+fi
+
+if [ "$RDI_CHECK_PROG" = True ]; then
+  RDI_PROG_EXISTS=True
+  type $RDI_PROG >/dev/null 2>&1 || RDI_PROG_EXISTS=False
+  if [ "$RDI_PROG_EXISTS" = False ]; then
+    if [ "$RDI_PLATFORM" = "lnx64"  ]; then
+      echo "ERROR: Could not find matlab 64-bit executable in the path. Please add the path to a matlab 64 bit executable to the PATH environment variable and try launching System Generator for DSP again."
+    else
+      echo "ERROR: Could not find matlab 32-bit executable in the path. Please add the path to a matlab 32-bit executable to the PATH environment variable and try launching System Generator for DSP again."
+    fi
+    echo "ERROR: $RDI_PROG does not exist"
+    exit 1
+  fi
+fi
+
+RDI_CURR_ARG=0
+RDI_SYSGEN_MATLAB_SCRIPT_ARG_FOUND=0
+RDI_SYSGEN_MATLAB_DEBUG_FLAG=0
+while [ $# -gt 0 ]; do
+  if [ "$1" = "-r" ]; then
+    RDI_SYSGEN_MATLAB_SCRIPT_ARG_FOUND=1
+  else 
+    if [ $RDI_SYSGEN_MATLAB_SCRIPT_ARG_FOUND -gt 0 ]; then
+      RDI_ADDNL_SYSGEN_MATLAB_ARGS=$1
+      RDI_SYSGEN_MATLAB_SCRIPT_ARG_FOUND=0
+    else
+      if [ "$1" = "-dbg" ]; then
+        RDI_SYSGEN_MATLAB_DEBUG_FLAG=1
+      else 
+        RDI_SYSGEN_MATLAB_ARGS[$RDI_CURR_ARG]=$1
+        RDI_CURR_ARG=$(($RDI_CURR_ARG + 1))
+      fi 
+    fi
+  fi 
+  shift
+done
+XILINX_VIVADO=`dirname "$RDI_BINROOT"`
+export XILINX_VIVADO
+QT_PLUGIN_PATH="$RDI_LIBDIR"
+export QT_PLUGIN_PATH
+unset _RDI_SETENV_RUN 
+
+if [ ! -z "$DO_NOT_USE_VIVADO_RUNTIME_FOR_MATLAB" ]; then
+  if [ $RDI_SYSGEN_MATLAB_DEBUG_FLAG -gt 0 ]; then
+    "$RDI_PROG" ${RDI_SYSGEN_MATLAB_ARGS[@]} "-r \"addpath('$RDI_LIBDIR/matlab');addpath('$HDI_APPROOT/scripts/sysgen/matlab');addpath('$HDI_APPROOT/scripts/sysgen/matlab/plugins/compilation');javaaddpath('$HDI_APPROOT/lib/classes/sysgen.jar');java.lang.System.setProperty('vivado.build','debug');$RDI_ADDNL_SYSGEN_MATLAB_ARGS\""
+  else
+    "$RDI_PROG" ${RDI_SYSGEN_MATLAB_ARGS[@]} "-r \"addpath('$RDI_LIBDIR/matlab');addpath('$HDI_APPROOT/scripts/sysgen/matlab');addpath('$HDI_APPROOT/scripts/sysgen/matlab/plugins/compilation');addpath('$HDI_APPROOT/examples/sysgen_demos');javaaddpath('$HDI_APPROOT/lib/classes/sysgen.jar');disp(['Type <a href=' char(34) 'matlab:xlDoc' char(34) '>xlDoc</a> to open the Xilinx System Generator help documentation.']);disp(['Type <a href=' char(34) 'matlab:demo blockset xilinx' char(34) '>demo blockset xilinx</a> to view the demos available for Xilinx System Generator.']);$RDI_ADDNL_SYSGEN_MATLAB_ARGS\""
+  fi
+else
+  #Clean up before proceeding to setup environment
+  echo "Here System Generator Environment ..."
+  XILINX_MATLAB_ROOT_PATH=/usr/local/MATLAB/R2014a
+  if [ ! -z "$XILINX_MATLAB_ROOT_PATH" ]; then
+      XILINX_MATLAB_ROOT_PATH=$XILINX_MATLAB_ROOT_PATH
+  else
+      XILINX_MATLAB_ROOT_PATH=$(dirname $(dirname $(which $RDI_PROG)))
+  fi
+  MATLAB_VERSION=$(basename $XILINX_MATLAB_ROOT_PATH)
+  if [ ! -z "$RDI_INSTALLVERSION" ]; then
+      RDI_INSTALLVERSION=$RDI_INSTALLVERSION
+  else
+      RDI_INSTALLVERSION=$(basename $HDI_APPROOT)
+  fi
+  SG_MATLAB_RUNTIME_VERSION="_$MATLAB_VERSION"
+  SG_MATLAB_RUNTIME_VERSION="$RDI_INSTALLVERSION$SG_MATLAB_RUNTIME_VERSION"
+  export XILINX_MATLAB_RUNTIME_WRAPPER_DIR=~/.XILINX_MATLAB_RUNTIME/SG_$SG_MATLAB_RUNTIME_VERSION
+  if [ ! -d "$XILINX_MATLAB_RUNTIME_WRAPPER_DIR" ]; then
+      echo "Creating XILINX based MATLAB Runtime"
+      mkdir -p $XILINX_MATLAB_RUNTIME_WRAPPER_DIR
+      cp -f $RDI_LIBDIR/libstdc++.so.6 $XILINX_MATLAB_RUNTIME_WRAPPER_DIR
+	#/usr/local/MATLAB/R2014a/bin/glnxa64
+      cp -f $XILINX_MATLAB_ROOT_PATH/bin/glnxa64/MATLAB $XILINX_MATLAB_RUNTIME_WRAPPER_DIR
+      cp -f $HDI_APPROOT/data/sysgen/.matlab7rc.sh ~/.
+  else
+      if [ ! -f "$XILINX_MATLAB_RUNTIME_WRAPPER_DIR/libstdc++.so.6" ]; then
+         cp -f $RDI_LIBDIR/libstdc++.so.6 $XILINX_MATLAB_RUNTIME_WRAPPER_DIR
+      fi
+      if [ ! -f "$XILINX_MATLAB_RUNTIME_WRAPPER_DIR/MATLAB" ]; then
+         cp -f $XILINX_MATLAB_ROOT_PATH/bin/glnxa64/MATLAB $XILINX_MATLAB_RUNTIME_WRAPPER_DIR
+      fi
+      if [ ! -f "~/.matlab7rc.sh" ]; then
+         cp -f $HDI_APPROOT/data/sysgen/.matlab7rc.sh ~/.
+      fi
+  fi
+  export SOURCE_MATLAB_ENV_FROM=$XILINX_MATLAB_ROOT_PATH
+  source "$RDI_PROG"
+  export MATLAB_PROG=$XILINX_MATLAB_RUNTIME_WRAPPER_DIR/MATLAB
+  if [ $RDI_SYSGEN_MATLAB_DEBUG_FLAG -gt 0 ]; then
+    eval exec "$MATLAB_PROG ${RDI_SYSGEN_MATLAB_ARGS[@]} -r \"addpath('$RDI_LIBDIR/matlab');addpath('$HDI_APPROOT/scripts/sysgen/matlab');addpath('$HDI_APPROOT/scripts/sysgen/matlab/plugins/compilation');addpath('$HDI_APPROOT/examples/sysgen_demos');javaaddpath('$HDI_APPROOT/lib/classes/sysgen.jar');disp(['Type <a href=' char(34) 'matlab:xlDoc' char(34) '>xlDoc</a> to open the Xilinx System Generator help documentation.']);disp(['Type <a href=' char(34) 'matlab:demo blockset xilinx' char(34) '>demo blockset xilinx</a> to view the demos available for Xilinx System Generator.']);java.lang.System.setProperty('vivado.build','debug');$RDI_ADDNL_SYSGEN_MATLAB_ARGS\""
+  else
+    eval exec "$MATLAB_PROG ${RDI_SYSGEN_MATLAB_ARGS[@]} -r \"addpath('$RDI_LIBDIR/matlab');addpath('$HDI_APPROOT/scripts/sysgen/matlab');addpath('$HDI_APPROOT/scripts/sysgen/matlab/plugins/compilation');addpath('$HDI_APPROOT/examples/sysgen_demos');javaaddpath('$HDI_APPROOT/lib/classes/sysgen.jar');disp(['Type <a href=' char(34) 'matlab:xlDoc' char(34) '>xlDoc</a> to open the Xilinx System Generator help documentation.']);disp(['Type <a href=' char(34) 'matlab:demo blockset xilinx' char(34) '>demo blockset xilinx</a> to view the demos available for Xilinx System Generator.']);$RDI_ADDNL_SYSGEN_MATLAB_ARGS\""
+  fi
+fi

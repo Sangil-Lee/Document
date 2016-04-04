@@ -1,0 +1,623 @@
+%\documentclass[11pt,a4paper]{article}
+\documentclass[11pt
+  , a4paper
+  , article
+  , oneside
+%  , twoside
+%  , draft
+]{memoir}
+
+\usepackage{control}
+\usepackage[numbers]{natbib}
+
+
+\begin{document}
+
+\newcommand{\technumber}{
+  RAON Control-Document Series\\
+  Revision : v0.1,   Release : 2015.05.06}
+\title{\textbf{Integrated alive and devIocStats in snmpTest IOC \\}}
+
+%\author{your name\thanks{@ibs.re.kr} \\
+
+\author{Nam Seung Hee\thanks{namsh@ibs.re.kr} \\
+  Control Team \\
+  Rare Isotope Science Project\\
+  Institute for Basic Science\\
+  Daejeon, South Korea
+}
+
+\date{\today}
+
+\renewcommand{\maketitlehooka}{\begin{flushright}\textsf{\technumber}\end{flushright}}
+%\renewcommand{\maketitlehookb}{\centering\textsf{\subtitle}}
+%\renewcommand{\maketitlehookc}{C}
+%\renewcommand{\maketitlehookd}{D}
+
+\maketitle
+
+\begin{abstract}
+snmpTest IOC에 alive와 devIocStats를 라이브러리화 시켜 integration하는 방법을 알아보았다. 
+\end{abstract}
+
+
+
+\chapter{Integrated alive in snmpTest IOC}
+
+\section{Changing src Makefile of snmpTest}
+
+\begin{itemize}
+\item Add the header file address
+\begin{lstlisting}[style=termstyle]
+USR_INCLUDES += -I${EPICS_SYNAPPS}/alive-1-0/include
+\end{lstlisting}
+\item Add the dbd file address
+\begin{lstlisting}[style=termstyle]
+USR_DBDFLAGS += -I${EPICS_SYNAPPS}/alive-1-0/aliveApp/src
+\end{lstlisting}
+\item Add the LIB address
+\begin{lstlisting}[style=termstyle]
+alive_DIR += ${EPICS_SYNAPPS}/alive-1-0/lib/$(T_A)
+\end{lstlisting}
+\item Add the dbd file
+\begin{lstlisting}[style=termstyle]
+snmpTest_DBD += aliveRecord.dbd   
+snmpTest_DBD += aliveSupport.dbd
+\end{lstlisting}
+\item Add the LIB file
+\begin{lstlisting}[style=termstyle]
+snmpTest_LIBS += alive
+\end{lstlisting}
+\end{itemize}
+
+\subsection{Makefile}
+\begin{lstlisting}[style=termstyle]
+TOP=../..
+
+include $(TOP)/configure/CONFIG
+
+USR_INCLUDES += -I${RAON_SITELIBS}/include/
+USR_DBDFLAGS += -I${RAON_SITELIBS}/dbd/
+USR_INCLUDES += -I$(EPICS_EXTENSIONS)/include
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+USR_DBDFLAGS += -I${EPICS_SYNAPPS}/alive-1-0/aliveApp/src
+USR_INCLUDES += -I${EPICS_SYNAPPS}/alive-1-0/include
+\end{lstlisting}
+
+\begin{lstlisting}[style=termstyle]
+snmpMon_DIR += ${RAON_SITELIBS}/lib/$(T_A)
+timeStamp_DIR += $(RAON_SITELIBS)/lib/$(T_A)
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+alive_DIR += ${EPICS_SYNAPPS}/alive-1-0/lib/$(T_A)
+\end{lstlisting}
+
+\begin{lstlisting}[style=termstyle]
+#----------------------------------------
+#  ADD MACRO DEFINITIONS AFTER THIS LINE
+#=============================
+
+#=============================
+# Build the IOC application
+
+PROD_IOC = snmpTest
+# snmpTest.dbd will be created and installed
+DBD += snmpTest.dbd
+
+# snmpTest.dbd will be made up from these files:
+snmpTest_DBD += base.dbd
+snmpTest_DBD += snmpRecord.dbd
+snmpTest_DBD += timestampRecord.dbd
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+snmpTest_DBD += aliveRecord.dbd   
+snmpTest_DBD += aliveSupport.dbd
+\end{lstlisting}
+
+\begin{lstlisting}[style=termstyle]
+# Include dbd files from all support applications:
+#snmpTest_DBD += xxx.dbd
+snmpTest_DBD += snmpDevSoft.dbd
+snmpTest_DBD += timestampDevSoft.dbd
+
+# Add all the support libraries needed by this IOC
+#snmpTest_LIBS += xxx
+snmpTest_LIBS += snmpMon timeStamp
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+snmpTest_LIBS += alive
+\end{lstlisting}
+
+\begin{lstlisting}[style=termstyle]
+# snmpTest_registerRecordDeviceDriver.cpp derives from snmpTest.dbd
+snmpTest_SRCS += snmpTest_registerRecordDeviceDriver.cpp
+
+# Build the main IOC entry point on workstation OSs.
+snmpTest_SRCS_DEFAULT += snmpTestMain.cpp
+snmpTest_SRCS_vxWorks += -nil-
+
+# Add support from base/src/vxWorks if needed
+#snmpTest_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
+
+# Finally link to the EPICS Base libraries
+snmpTest_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+#===========================
+
+include $(TOP)/configure/RULES
+#----------------------------------------
+#  ADD RULES AFTER THIS LINE
+\end{lstlisting}
+\section{Copy db and changing Db Makefile of snmpTest}
+\subsection{Copy alive db}
+\begin{lstlisting}[style=termstyle]
+namsh@namsh:~/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp/Db$ ls
+O.Common	alive.db	O.linux-x86_64	timestamp.vdb	Makefile	xerox.vdb
+\end{lstlisting}
+\subsection{Changing Db Makefile of snmpTest}
+\begin{itemize}
+\item Add the db file
+\begin{lstlisting}[style=termstyle]
+DB += alive.db
+\end{lstlisting}
+\end{itemize}
+\subsection{Makefile}
+\begin{lstlisting}[style=termstyle]
+TOP=../..
+include $(TOP)/configure/CONFIG
+#----------------------------------------
+#  ADD MACRO DEFINITIONS AFTER THIS LINE
+
+#----------------------------------------------------
+#  Optimization of db files using dbst (DEFAULT: NO)
+#DB_OPT = YES
+
+#----------------------------------------------------
+# Create and install (or just install) into <top>/db
+# databases, templates, substitutions like this
+#DB += xxx.db
+DB += xerox.vdb
+DB += timestamp.vdb
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+DB += alive.db
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+#----------------------------------------------------
+# If <anyname>.db template is not named <anyname>*.template add
+# <anyname>_template = <templatename>
+
+include $(TOP)/configure/RULES
+#----------------------------------------
+#  ADD RULES AFTER THIS LINE
+\end{lstlisting}
+
+\section{Changing st.cmd of snmpTest}
+\subsection{Add the dbLoadRecords}
+\begin{lstlisting}[style=termstyle]
+#!../../bin/linux-x86_64/snmpTest
+
+## You may have to change snmpTest to something else
+## everywhere it appears in this file
+
+< envPaths
+
+cd "${TOP}"
+
+## Register all support components
+dbLoadDatabase "dbd/snmpTest.dbd"
+snmpTest_registerRecordDeviceDriver pdbbase
+
+## Load record instances
+#dbLoadRecords("db/xxx.db","user=mijoy0909Host")
+dbLoadRecords("db/xerox.vdb", "HOST=10.1.6.232, COM=public, V2C=SNMP_VERSION_2c, PR=Printer-MIB::")
+dbLoadRecords("db/timestamp.vdb", "S=SNMPIOC")
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+dbLoadRecords "db/alive.db", "P=aliveEx:,RHOST=10.1.6.104"
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+cd "${TOP}/iocBoot/${IOC}"
+iocInit
+
+## Start any sequence programs
+#seq sncxxx,"user=mijoy0909Host"
+st.cmd (END)
+\end{lstlisting}
+
+\chapter{Integrated devIocStats in snmpTest IOC}
+
+\section{Changing src Makefile of snmpTest}
+
+\begin{itemize}
+	\item Add the header file address
+	\begin{lstlisting}[style=termstyle]
+	USR_INCLUDES += -I${EPICS_SYNAPPS}/devIocStats-3-1-13/include/os/Linux
+	USR_INCLUDES += -I${EPICS_SYNAPPS}/devIocStats-3-1-13/devIocStats
+\end{lstlisting}
+	\item Add the dbd file address
+	\begin{lstlisting}[style=termstyle]
+	USR_DBDFLAGS += -I${EPICS_SYNAPPS}/devIocStats-3-1-13/dbd
+\end{lstlisting}
+	\item Add the LIB address
+	\begin{lstlisting}[style=termstyle]
+	devIocStats_DIR += ${EPICS_SYNAPPS}/devIocStats-3-1-13/lib/$(T_A)
+\end{lstlisting}
+	\item Add the dbd file
+	\begin{lstlisting}[style=termstyle]
+	snmpTest_DBD += devIocStats.dbd
+	snmpTest_DBD += devVxStats.dbd
+	snmpTest_DBD += iocAdmin.dbd
+\end{lstlisting}
+	\item Add the LIB file
+	\begin{lstlisting}[style=termstyle]
+	snmpTest_LIBS += devIocStats
+\end{lstlisting}
+\end{itemize}
+
+\subsection{Makefile}
+\begin{lstlisting}[style=termstyle]
+TOP=../..
+
+include $(TOP)/configure/CONFIG
+
+USR_INCLUDES += -I${RAON_SITELIBS}/include/
+USR_DBDFLAGS += -I${RAON_SITELIBS}/dbd/
+USR_INCLUDES += -I$(EPICS_EXTENSIONS)/include
+
+USR_DBDFLAGS += -I${EPICS_SYNAPPS}/alive-1-0/aliveApp/src
+USR_INCLUDES += -I${EPICS_SYNAPPS}/alive-1-0/include
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+USR_INCLUDES += -I${EPICS_SYNAPPS}/devIocStats-3-1-13/include/os/Linux
+USR_INCLUDES += -I${EPICS_SYNAPPS}/devIocStats-3-1-13/devIocStats
+USR_DBDFLAGS += -I${EPICS_SYNAPPS}/devIocStats-3-1-13/dbd
+\end{lstlisting}
+
+\begin{lstlisting}[style=termstyle]
+snmpMon_DIR += ${RAON_SITELIBS}/lib/$(T_A)
+timeStamp_DIR += $(RAON_SITELIBS)/lib/$(T_A)
+alive_DIR += ${EPICS_SYNAPPS}/alive-1-0/lib/$(T_A)
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+devIocStats_DIR += ${EPICS_SYNAPPS}/devIocStats-3-1-13/lib/$(T_A)
+\end{lstlisting}
+
+\begin{lstlisting}[style=termstyle]
+#----------------------------------------
+#  ADD MACRO DEFINITIONS AFTER THIS LINE
+#=============================
+
+#=============================
+# Build the IOC application
+
+PROD_IOC = snmpTest
+# snmpTest.dbd will be created and installed
+DBD += snmpTest.dbd
+
+# snmpTest.dbd will be made up from these files:
+snmpTest_DBD += base.dbd
+snmpTest_DBD += snmpRecord.dbd
+snmpTest_DBD += timestampRecord.dbd
+snmpTest_DBD += aliveRecord.dbd   
+snmpTest_DBD += aliveSupport.dbd
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+snmpTest_DBD += devIocStats.dbd
+snmpTest_DBD += devVxStats.dbd
+snmpTest_DBD += iocAdmin.dbd
+\end{lstlisting}
+
+\begin{lstlisting}[style=termstyle]
+# Include dbd files from all support applications:
+#snmpTest_DBD += xxx.dbd
+snmpTest_DBD += snmpDevSoft.dbd
+snmpTest_DBD += timestampDevSoft.dbd
+
+# Add all the support libraries needed by this IOC
+#snmpTest_LIBS += xxx
+snmpTest_LIBS += snmpMon timeStamp
+snmpTest_LIBS += alive
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+snmpTest_LIBS += devIocStats
+\end{lstlisting}
+
+\begin{lstlisting}[style=termstyle]
+# snmpTest_registerRecordDeviceDriver.cpp derives from snmpTest.dbd
+snmpTest_SRCS += snmpTest_registerRecordDeviceDriver.cpp
+
+# Build the main IOC entry point on workstation OSs.
+snmpTest_SRCS_DEFAULT += snmpTestMain.cpp
+snmpTest_SRCS_vxWorks += -nil-
+
+# Add support from base/src/vxWorks if needed
+#snmpTest_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
+
+# Finally link to the EPICS Base libraries
+snmpTest_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+#===========================
+
+include $(TOP)/configure/RULES
+#----------------------------------------
+#  ADD RULES AFTER THIS LINE
+\end{lstlisting}
+\section{Copy db and changing Db Makefile of snmpTest}
+\subsection{Copy devIocStats db}
+\begin{lstlisting}[style=termstyle]
+namsh@namsh:~/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp/Db$ ls
+access.db           iocAdminSoft.db     iocEnvVar.db       iocScanMon.db      O.Common
+alive.db            iocAdminVxWorks.db  iocGeneralTime.db  iocScanMonSum.db   O.linux-x86_64
+iocAdminRTEMS.db    iocCluster.db       iocRTEMSOnly.db    iocVxWorksOnly.db  timestamp.vdb
+iocAdminScanMon.db  ioc.db              iocRTOS.db         Makefile           xerox.vdb
+\end{lstlisting}
+\subsection{Changing Db Makefile of snmpTest}
+\begin{itemize}
+	\item Add the db file
+	\begin{lstlisting}[style=termstyle]
+DB += access.db 
+DB += iocAdminSoft.db
+DB += iocEnvVar.db
+DB += iocScanMon.db
+DB += iocAdminVxWorks.db
+DB += iocGeneralTime.db
+DB += iocScanMonSum.db
+DB += iocAdminRTEMS.db
+DB += iocRTEMSOnly.db
+DB += iocVxWorksOnly.db
+DB += iocCluster.db
+DB += iocAdminScanMon.db
+DB += ioc.db
+DB += iocRTOS.db 
+\end{lstlisting}
+\end{itemize}
+\subsection{Makefile}
+\begin{lstlisting}[style=termstyle]
+TOP=../..
+include $(TOP)/configure/CONFIG
+#----------------------------------------
+#  ADD MACRO DEFINITIONS AFTER THIS LINE
+
+#----------------------------------------------------
+#  Optimization of db files using dbst (DEFAULT: NO)
+#DB_OPT = YES
+
+#----------------------------------------------------
+# Create and install (or just install) into <top>/db
+# databases, templates, substitutions like this
+#DB += xxx.db
+DB += xerox.vdb
+DB += timestamp.vdb
+DB += alive.db
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+DB += access.db 
+DB += iocAdminSoft.db
+DB += iocEnvVar.db
+DB += iocScanMon.db
+DB += iocAdminVxWorks.db
+DB += iocGeneralTime.db
+DB += iocScanMonSum.db
+DB += iocAdminRTEMS.db
+DB += iocRTEMSOnly.db
+DB += iocVxWorksOnly.db
+DB += iocCluster.db
+DB += iocAdminScanMon.db
+DB += ioc.db
+DB += iocRTOS.db
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+#----------------------------------------------------
+# If <anyname>.db template is not named <anyname>*.template add
+# <anyname>_template = <templatename>
+
+include $(TOP)/configure/RULES
+#----------------------------------------
+#  ADD RULES AFTER THIS LINE
+\end{lstlisting}
+
+\section{Changing st.cmd of snmpTest}
+\subsection{Add the dbLoadRecords}
+\begin{lstlisting}[style=termstyle]
+#!../../bin/linux-x86_64/snmpTest
+
+## You may have to change snmpTest to something else
+## everywhere it appears in this file
+
+< envPaths
+
+cd "${TOP}"
+
+## Register all support components
+dbLoadDatabase "dbd/snmpTest.dbd"
+snmpTest_registerRecordDeviceDriver pdbbase
+
+## Load record instances
+#dbLoadRecords("db/xxx.db","user=mijoy0909Host")
+dbLoadRecords("db/xerox.vdb", "HOST=10.1.6.232, COM=public, V2C=SNMP_VERSION_2c, PR=Printer-MIB::")
+dbLoadRecords("db/timestamp.vdb", "S=SNMPIOC")
+dbLoadRecords "db/alive.db", "P=aliveEx:,RHOST=10.1.6.104"
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+dbLoadDatabase("dbd/testIocStats.dbd",0,0)
+## Load all record instances (VxWorks)
+#dbLoadRecords("db/iocAdminVxWorks.db","IOC=IOCTEST")
+## or load only those records for RTEMS IOCs
+#dbLoadRecords("db/iocAdminRTEMS.db","IOC=IOCTEST")
+## or load only those records for Soft IOCs
+dbLoadRecords("db/iocAdminSoft.db","IOC=IOCTEST")
+## optionally load the SCAN monitoring records
+#dbLoadRecords("db/iocAdminScanMon.db","IOC=IOCTEST")
+#dbLoadRecords("db/testIocAdminRelease.db","IOC=IOCTEST")
+\end{lstlisting}
+\begin{lstlisting}[style=termstyle]
+cd "${TOP}/iocBoot/${IOC}"
+iocInit
+
+## Start any sequence programs
+#seq sncxxx,"user=mijoy0909Host"
+st.cmd (END)
+\end{lstlisting}
+\chapter{Compile and operating EPICS}
+\section{Compile snmpTest}
+
+\begin{lstlisting}[style=termstyle]
+namsh@namsh:~/epics/R3.14.12.5/siteApps/snmpTest$ make
+make -C ./configure install 
+make[1]: Entering directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/configure'
+make -C O.linux-x86_64 -f ../Makefile TOP=../.. \
+T_A=linux-x86_64 install
+make[2]: Entering directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/configure/O.linux-x86_64'
+perl /home/namsh/epics/R3.14.12.5/base/bin/linux-x86_64/convertRelease.pl checkRelease
+make[2]: Leaving directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/configure/O.linux-x86_64'
+make[1]: Leaving directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/configure'
+make -C ./snmpTestApp install 
+make[1]: Entering directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp'
+make -C ./src install 
+make[2]: Entering directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp/src'
+make -C O.linux-x86_64 -f ../Makefile TOP=../../.. \
+T_A=linux-x86_64 install
+make[3]: Entering directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp/src/O.linux-x86_64'
+make[3]: Nothing to be done for `install'.
+make[3]: Leaving directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp/src/O.linux-x86_64'
+make[2]: Leaving directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp/src'
+make -C ./Db install 
+make[2]: Entering directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp/Db'
+make -C O.linux-x86_64 -f ../Makefile TOP=../../.. \
+T_A=linux-x86_64 install
+make[3]: Entering directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp/Db/O.linux-x86_64'
+make[3]: Nothing to be done for `install'.
+make[3]: Leaving directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp/Db/O.linux-x86_64'
+make[2]: Leaving directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp/Db'
+make[1]: Leaving directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/snmpTestApp'
+make -C ./iocBoot install 
+make[1]: Entering directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/iocBoot'
+make -C ./iocsnmpTest install 
+make[2]: Entering directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/iocBoot/iocsnmpTest'
+make[2]: Nothing to be done for `install'.
+make[2]: Leaving directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/iocBoot/iocsnmpTest'
+make[1]: Leaving directory `/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/iocBoot'
+\end{lstlisting}
+\section{Operating EPICS}
+\subsection{Operating EPICS}
+\begin{lstlisting}[style=termstyle]
+namsh@namsh:~/epics/R3.14.12.5/siteApps/snmpTest/iocBoot/iocsnmpTest$ ./st.cmd 
+#!../../bin/linux-x86_64/snmpTest
+## You may have to change snmpTest to something else
+## everywhere it appears in this file
+< envPaths
+epicsEnvSet("ARCH","linux-x86_64")
+epicsEnvSet("IOC","iocsnmpTest")
+epicsEnvSet("TOP","/home/namsh/epics/R3.14.12.5/siteApps/snmpTest")
+cd "/home/namsh/epics/R3.14.12.5/siteApps/snmpTest"
+## Register all support components
+dbLoadDatabase "dbd/snmpTest.dbd"
+snmpTest_registerRecordDeviceDriver pdbbase
+## Load record instances
+#dbLoadRecords("db/xxx.db","user=mijoy0909Host")
+dbLoadRecords("db/xerox.vdb", "HOST=10.1.6.232, COM=public, V2C=SNMP_VERSION_2c, PR=Printer-MIB::")
+dbLoadRecords("db/timestamp.vdb", "S=SNMPIOC")
+dbLoadRecords "db/alive.db", "P=aliveEx:,RHOST=10.1.6.104"
+dbLoadDatabase("dbd/testIocStats.dbd",0,0)
+filename="../dbLexRoutines.c" line number=240
+## Load all record instances (VxWorks)
+#dbLoadRecords("db/iocAdminVxWorks.db","IOC=IOCTEST")
+## or load only those records for RTEMS IOCs
+#dbLoadRecords("db/iocAdminRTEMS.db","IOC=IOCTEST")
+## or load only those records for Soft IOCs
+dbLoadRecords("db/iocAdminSoft.db","IOC=IOCTEST")
+## optionally load the SCAN monitoring records
+#dbLoadRecords("db/iocAdminScanMon.db","IOC=IOCTEST")
+#dbLoadRecords("db/testIocAdminRelease.db","IOC=IOCTEST")
+cd "/home/namsh/epics/R3.14.12.5/siteApps/snmpTest/iocBoot/iocsnmpTest"
+iocInit
+Starting iocInit
+############################################################################
+## EPICS R3.14.12.5 $Date: Tue 2015-03-24 09:57:35 -0500$
+## EPICS Base built Mar 30 2015
+############################################################################
+iocRun: All initialization complete
+## Start any sequence programs
+#seq sncxxx,"user=mijoy0909Host"
+epics> 
+\end{lstlisting}
+\subsection{PV}
+\begin{lstlisting}[style=termstyle]
+epics> dbl
+IOCTEST:CA_CLNT_CNT
+IOCTEST:CA_CONN_CNT
+IOCTEST:CPU_CNT
+IOCTEST:FD_CNT
+IOCTEST:FD_MAX
+IOCTEST:GTIM_TIME
+IOCTEST:IOC_CPU_LOAD
+IOCTEST:LOAD
+IOCTEST:MEM_FREE
+IOCTEST:MEM_MAX
+IOCTEST:MEM_USED
+IOCTEST:RECORD_CNT
+IOCTEST:SUSP_TASK_CNT
+IOCTEST:SYS_CPU_LOAD
+IOCTEST:CA_UPD_TIME
+IOCTEST:FD_UPD_TIME
+IOCTEST:LOAD_UPD_TIME
+IOCTEST:MEM_UPD_TIME
+IOCTEST:GTIM_RESET
+IOCTEST:FD_FREE
+IOCTEST:HEARTBEAT
+IOCTEST:START_CNT
+IOCTEST:GTIM_ERR_CNT
+IOCTEST:ACCESS
+IOCTEST:APP_DIR1
+IOCTEST:APP_DIR2
+IOCTEST:CA_ADDR_LIST
+IOCTEST:CA_AUTO_ADDR
+IOCTEST:CA_BEAC_TIME
+IOCTEST:CA_CONN_TIME
+IOCTEST:CA_MAX_ARRAY
+IOCTEST:CA_RPTR_PORT
+IOCTEST:CA_SRCH_TIME
+IOCTEST:CA_SRVR_PORT
+IOCTEST:ENGINEER
+IOCTEST:EPICS_VERS
+IOCTEST:GTIM_CUR_SRC
+IOCTEST:GTIM_EVT_SRC
+IOCTEST:GTIM_HI_SRC
+IOCTEST:HOSTNAME
+IOCTEST:IOC_LOG_INET
+IOCTEST:IOC_LOG_PORT
+IOCTEST:KERNEL_VERS
+IOCTEST:LOCATION
+IOCTEST:STARTTOD
+IOCTEST:ST_SCRIPT1
+IOCTEST:ST_SCRIPT2
+IOCTEST:TIMEZONE
+IOCTEST:TOD
+IOCTEST:TS_NTP_INET
+IOCTEST:UPTIME
+IOCTEST:READACF
+IOCTEST:SYSRESET
+IOCTEST:SysReset
+IOCTEST:APP_DIR
+IOCTEST:EPICS_VERSION
+IOCTEST:ST_SCRIPT
+xerox_TR1
+xerox_TR2
+xerox_TR3
+xerox_TR4
+xerox_TR5
+xerox_toner_B
+xerox_toner_C
+xerox_toner_M
+xerox_toner_Y
+xerox_toner_drum_B
+xerox_toner_drum_C
+xerox_toner_drum_M
+xerox_toner_drum_Y
+xerox_toner_waste
+SNMPIOC:TIMESTAMP
+aliveEx:alive
+\end{lstlisting}
+\end{document}

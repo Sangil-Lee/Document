@@ -1,0 +1,317 @@
+%\documentclass[11pt,a4paper]{article}
+\documentclass[11pt
+  , a4paper
+  , article
+  , oneside
+%  , twoside
+%  , draft
+]{memoir}
+
+\usepackage{control}
+\usepackage[numbers]{natbib}
+\usepackage{tabulary}
+
+
+\begin{document}
+ 
+\newcommand{\technumber}{
+  RAON Control-Document Series\\
+  Revision : v0.1,   Release : December. 01. 2015}
+\title{\textbf{Git Server 구축}}
+
+\author{박미정\thanks{mijoy0909@ibs.re.kr} \\
+  Rare Isotope Science Project\\
+  Institute for Basic Science, Daejeon, South Korea
+}
+\date{\today}
+
+
+\renewcommand{\maketitlehooka}{\begin{flushright}\textsf{\technumber}\end{flushright}}
+%\renewcommand{\maketitlehookb}{\centering\textsf{\subtitle}}
+%\renewcommand{\maketitlehookc}{C}
+%\renewcommand{\maketitlehookd}{D}
+
+\maketitle
+
+\begin{abstract}
+본 문서는 Debian Linux 환경에서 Git Server 구축에 관한 매뉴얼이다. 
+\end{abstract}
+
+
+\chapter{Git Server Repository 생성}
+
+\begin{enumerate}
+\item git 서버로 사용할 pc로 접속
+
+\scriptsize
+{
+\begin{verbatim}
+mijoy0909@mjpark:~$ ssh ctrluser@10.1.5.88
+Host key fingerprint is 9f:34:3d:cc:99:12:85:ff:44:02:15:d3:e5:b6:a8:f0
++--[ECDSA  256]---+
+|          .+=o ..|
+|          ....o. |
+|          .. o  o|
+|           =.oo..|
+|        S.+ B+ . |
+|         oo+...  |
+|          oE     |
+|                 |
+|                 |
++-----------------+
+
+ctrluser@10.1.5.88's password: 
+\end{verbatim}
+}
+
+\item Bare 저장소 생성\\
+git init명령에서 --bare를 사용해 워킹 디렉토리가 없는 저장소인 bare 저장소를 생성한다\footnote{git 서버 설정, "https://git-scm.com/book/ko/v2/Git-서버-서버-설정하기"}. bare 저장소는 관례에 따라  .git으로 끝난다. --shared 옵션은 git이 자동으로 그룹 쓰기 권한을 추가하게 한다.
+
+\scriptsize
+{
+\begin{verbatim}
+ctrluser@ctrlsv1:~$ cd /opt/
+trluser@ctrlsv1:/opt$ mkdir git
+ctrluser@ctrlsv1:/opt$ sudo chmod 777 git/
+ctrluser@ctrlsv1:/opt$ su ctrlgit
+Password: 
+ctrlgit@ctrlsv1:/opt$ 
+ctrlgit@ctrlsv1:/opt$ cd git/
+ctrlgit@ctrlsv1:/opt/git$ mkdir RaonControl.git
+ctrlgit@ctrlsv1:/opt/git$ cd RaonControl.git/
+ctrlgit@ctrlsv1:/opt/git/RaonControl.git$ git init --bare --shared
+Initialized empty shared Git repository in /opt/git/RaonControl.git/
+ctrluser@ctrlsv1:/opt/git/RaonControl.git$ cd
+\end{verbatim}
+}
+
+저장소를 생성하면 다음과 같이 디렉토리에 파일들이 생성 됨을 알 수 있다.
+
+\scriptsize
+{
+\begin{verbatim}
+ctrluser@ctrlsv1:/home/ctrlgit/git_server$ ls -al
+total 40
+drwxrwsr-x 7 ctrluser ctrluser 4096 Nov 17 17:48 .
+drwxrwxrwx 3 root     root     4096 Nov 17 17:47 ..
+drwxrwsr-x 2 ctrluser ctrluser 4096 Nov 17 17:48 branches
+-rwxrw-r-- 1 ctrluser ctrluser  126 Nov 17 17:48 config
+-rw-rw-r-- 1 ctrluser ctrluser   73 Nov 17 17:48 description
+-rw-rw-r-- 1 ctrluser ctrluser   23 Nov 17 17:48 HEAD
+drwxrwsr-x 2 ctrluser ctrluser 4096 Nov 17 17:48 hooks
+drwxrwsr-x 2 ctrluser ctrluser 4096 Nov 17 17:48 info
+drwxrwsr-x 4 ctrluser ctrluser 4096 Nov 17 17:48 objects
+drwxrwsr-x 4 ctrluser ctrluser 4096 Nov 17 17:48 refs
+\end{verbatim}
+}
+\end{enumerate}
+
+
+\chapter{Git Server 계정 생성}
+git 저장소의 권한 관리 및 사용을 위해 git계정을 생성한다. 이 git계정은 서버 접속을 위한 수단일 뿐 사용자의 데이터 commit에는 아무런 영향을 주지 않는다.
+
+\scriptsize
+{
+\begin{verbatim}
+ctrluser@ctrlsv1:~$ sudo adduser ctrlgit
+Adding user `ctrlgit' ...
+Adding new group `ctrlgit' (1001) ...
+Adding new user `ctrlgit' (1001) with group `ctrlgit' ...
+Creating home directory `/home/ctrlgit' ...
+Copying files from `/etc/skel' ...
+Enter new UNIX password: 
+Retype new UNIX password: 
+passwd: password updated successfully
+Changing the user information for ctrlgit
+Enter the new value, or press ENTER for the default
+Full Name []: MiJeong Park
+Room Number []: 
+Work Phone []: 
+Home Phone []: 
+Other []: mijoy0909@ibs.re.kr
+Is the information correct? [Y/n] y
+ctrluser@ctrlsv1:~$ 
+\end{verbatim}
+}
+
+\chapter{SSH 접속}
+앞서 생성된 Ctrlgit계정에 쓰기 권한이 필요한 사용자의 SSH 공개키를 서버의 $\sim$/.ssh/authorized\_keys 파일에 등록하기 위한 과정이다.
+
+\section{Git Client SSH 설정}
+먼저 $\sim$/.ssh 디렉토리를 확인해 공개키가 있는지 확인한다. $\sim$/.ssh 디렉토리가 존재하지 않다면 공개키는 존재하지 않으며 $\sim$/ 디렉토리에 .ssh 디렉토리를 생성해야한다. 공개키는 id\_dsa나 id\_rsa의 파일명으로 존재하며 .pub 확장자가 붙은 파일이 공개키이며, 나머지는 개인키이다. 공개키가 존재하지 않다면 아래의 과정을 따른다.
+
+\scriptsize
+{
+\begin{verbatim}
+mijoy0909@mjpark:~/.ssh$ 
+mijoy0909@mjpark:~/.ssh$ ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/mijoy0909/.ssh/id_rsa): press the Enter key
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again: 
+Your identification has been saved in /home/mijoy0909/.ssh/id_rsa.
+Your public key has been saved in /home/mijoy0909/.ssh/id_rsa.pub.
+The key fingerprint is:
+65:a5:ba:e9:07:79:b0:52:92:41:a2:3c:37:dd:8e:94 mijoy0909@mjpark
+The key's randomart image is:
++--[ RSA 2048]----+
+|    ...     .    |
+| . . o.o   o     |
+|  + o Eo. +      |
+|   o oooo+       |
+|      .oS+       |
+|      . +o.      |
+|       .oo       |
+|       .  .      |
+|        ..       |
++-----------------+
+mijoy0909@mjpark:~/.ssh$
+mijoy0909@mjpark:~/.ssh$ ls -al
+total 26K
+drwx------  2 mijoy0909 mijoy0909 4.0K Nov 19 14:09 .
+drwxr-xr-x 10 mijoy0909 mijoy0909 4.0K Feb  9  2015 ..
+-rw-r--r--  1 mijoy0909 mijoy0909 1.2K Aug 22  2014 config
+-rw-r--r--  1 mijoy0909 mijoy0909 1.2K Aug 22  2014 config~
+-rw-------  1 mijoy0909 mijoy0909 1.7K Nov 17 17:53 id_rsa
+-rw-r--r--  1 mijoy0909 mijoy0909  398 Nov 17 17:53 id_rsa.pub   ****
+-rw-r--r--  1 mijoy0909 mijoy0909 8.1K Nov 17 14:38 known_hosts
+-rw-r--r--  1 mijoy0909 mijoy0909 3.5K Sep 25  2013 known_hosts~
+\end{verbatim}
+}
+
+위와 같이 생성된 공개키는 파일인 id\_rsa.pub는 scp 명령어 또는 메일을 통해 git 서버에 등록한다. 
+
+\scriptsize
+{
+\begin{verbatim}
+mijoy0909@mjpark:~/.ssh$ scp id_rsa.pub ctrluser@10.1.5.88:/tmp/id_rsa.mjpark.pub
+Host key fingerprint is 9f:34:3d:cc:99:12:85:ff:44:02:15:d3:e5:b6:a8:f0
++--[ECDSA  256]---+
+|          .+=o ..|
+|          ....o. |
+|          .. o  o|
+|           =.oo..|
+|        S.+ B+ . |
+|         oo+...  |
+|          oE     |
+|                 |
+|                 |
++-----------------+
+
+ctrluser@10.1.5.88's password: 
+id_rsa.pub                                        100%  398     0.4KB/s   00:00    
+mijoy0909@mjpark:~/.ssh$ 
+\end{verbatim}
+}
+
+
+\section{Git Server SSH 설정}
+먼저 SSH 사용을 위해 .ssh 디렉토리 생성 및 권한을 설정한다.
+
+\scriptsize
+{
+\begin{verbatim}
+ctrluser@ctrlsv1:~$ su ctrlgit 
+Password: 
+ctrlgit@ctrlsv1:/home/ctrluser$ 
+ctrlgit@ctrlsv1:~$ mkdir .ssh && chmod 700 .ssh
+ctrlgit@ctrlsv1:~$ touch .ssh/authorized_keys && chmod 600 .ssh/authorized_keys
+\end{verbatim}
+}
+
+클라이언트의 접근을 허용하기 위해 앞서 클라이언트에게 받은 공개키를 등록한다. 
+
+\scriptsize
+{
+\begin{verbatim}
+ctrlgit@ctrlsv1:~/.ssh$ cat /tmp/id_rsa.mjpark.pub >> ~/.ssh/authorized_keys 
+\end{verbatim}
+}
+\chapter{Git Client 정보, 리모트 저장소 등록 및 테스트}
+\section{client 정보 등록}
+저장된 사용자 정보는 추후 git commit시 다음과 같이 log에 남는다.
+
+\scriptsize
+{
+\begin{verbatim}
+mijoy0909@mjpark:~/RaonControl$ git config --global user.name "MiJeong Park"
+mijoy0909@mjpark:~/RaonControl$ git config --global user.email "mijoy0909@ibs.re.kr"
+
+-------------------------------------------------------------------------------------
+
+mijoy0909@mjpark:~/RaonControl$ git log
+commit d0f9a13736b573cf8febfd7f0238a6cd93e1c8d9
+Author: MiJeong Park <mijoy0909@ibs.re.kr>
+Date:   Thu Nov 19 14:05:52 2015 +0900
+
+rm test.c
+\end{verbatim}
+}
+
+\section{기존의 디렉토리 및 파일을 git 서버에 저장}
+기존에 사용중이던 디렉토리 및 파일을 git 서버로 저장하기 위해서는 다음과 같은 과정을 거친다.
+
+\scriptsize
+{
+\begin{verbatim}
+mijoy0909@mjpark:~$ cd RaonControl/
+mijoy0909@mjpark:~/RaonControl$ git init
+Initialized empty Git repository in /home/mijoy0909/RaonControl/.git/
+mijoy0909@mjpark:~/RaonControl$ git add .
+mijoy0909@mjpark:~/RaonControl$ git commit -m "git tset"
+[master (root-commit) 12dfe92] git tset
+1 file changed, 6 insertions(+)
+create mode 100644 testgit.c
+mijoy0909@mjpark:~/RaonControl$ 
+mijoy0909@mjpark:~/RaonControl$ git remote add origin ctrlgit@10.1.5.88:/opt/git/RaonControl.git
+mijoy0909@mjpark:~/RaonControl$ 
+mijoy0909@mjpark:~/RaonControl$ git push origin master
+Host key fingerprint is 9f:34:3d:cc:99:12:85:ff:44:02:15:d3:e5:b6:a8:f0
++--[ECDSA  256]---+
+|          .+=o ..|
+|          ....o. |
+|          .. o  o|
+|           =.oo..|
+|        S.+ B+ . |
+|         oo+...  |
+|          oE     |
+|                 |
+|                 |
++-----------------+
+
+/usr/bin/xauth:  file /home/ctrlgit/.Xauthority does not exist
+Counting objects: 3, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (2/2), done.
+Writing objects: 100% (3/3), 286 bytes, done.
+Total 3 (delta 0), reused 0 (delta 0)
+To ctrlgit@10.1.5.88:/opt/git/RaonControl.git
+* [new branch]      master -> master
+mijoy0909@mjpark:~/RaonControl$ 
+\end{verbatim}
+}
+
+\section{git 서버에서 clone}
+git clone 방법은 기존의 방법과 동일하다.
+
+\scriptsize
+{
+\begin{verbatim}
+mijoy0909@mjpark:~$ git clone ctrlgit@10.1.5.88:/opt/git/RaonControl.git .
+\end{verbatim}
+}
+
+\scriptsize
+{
+\section{git 서버에 push}
+\begin{verbatim}
+mijoy0909@mjpark:~/RaonControl$ mkdir mj_test
+mijoy0909@mjpark:~/RaonControl$ git add mj_test
+mijoy0909@mjpark:~/RaonControl$ git commit -m "add directory"
+mijoy0909@mjpark:~/RaonControl$ git push origin master
+\end{verbatim}
+}
+\clearpage
+
+
+\end{document}

@@ -1,0 +1,150 @@
+% !TeX spellcheck = en_US
+%\documentclass[11pt,a4paper]{article}
+\documentclass[11pt
+  , a4paper
+  , article
+  , oneside
+%  , twoside
+%  , draft
+]{memoir}
+
+\usepackage{control}
+\usepackage[numbers]{natbib}
+
+
+\begin{document}
+
+\newcommand{\technumber}{
+  RAON Control-Document Series\\
+  Revision : v1.0,   Release : 2016-03-14 fixed date}
+\title{\textbf{FPGA 개발 툴 Vivado Floating License 서버 설치}}
+
+\author{이상일\thanks{silee7103@ibs.re.kr} \\
+
+  Rare Isotope Science Project\\
+  Institute for Basic Science, Daejeon, South Korea
+}
+\date{\today}
+
+\renewcommand{\maketitlehooka}{\begin{flushright}\textsf{\technumber}\end{flushright}}
+%\renewcommand{\maketitlehookb}{\centering\textsf{\subtitle}}
+%\renewcommand{\maketitlehookc}{C}
+%\renewcommand{\maketitlehookd}{D}
+
+\maketitle
+
+\begin{abstract}
+본 문서는 Xilinx FPGA 개발을 위하여 사용하는 Vivado 툴을 사용하기 위한 Floating License Server에 대한 구성 내용을 기술한다.
+현재 제어그룹에서는 Vivado Floating License 2 Copies를 구매하여 사용 중이다.
+\end{abstract}
+
+FPGA 7 series 이상부터는 Vivado를 사용하여야 하며, Vivado를 사용하기 위한 라이센스 구성 방법은 크게 두가지로 나뉜다. 첫째는 FPGA 보드를 살 경우 그에 부여 되는 Node Lock License를 사용하는 방법이 있으며 둘째는 Floating License를 통하여 Activation 하는 방법이다. 첫째 방법은 "tech\_fpga\_dev" 매뉴얼에서 Node Lock License를 이용하여 설치하는 방법이 기술되어 있다. 여기서는 두번째 방법으로 설치하는 방법을 기술한다.
+
+
+
+
+\chapter{라이센스 Software 구성 및 Activation License 요청}
+먼저 Xilinx 사이트로 부터 로그인하여 라이센스 설치 파일을 다운로드 한 후 아래와 같은 절차를 수행한다.("linux\_flexlm.tar.gz")
+License 설치 경로는 "/home/ctrluser/Vivado/Vivado/2014.4/bin" 디렉토리를 기준으로 수행한다.
+
+\begin{lstlisting}[style=termstyle, escapechar=!]
+It's possilble to access internet.
+
+===Requesting======
+1.Download license manager xilinx.com (silee7103, d~!1~!d)
+2.use root or sudo
+3.untar on "/home/ctrluser/Vivado/Vivado/2014.4/bin"
+4.<Installed Dir="/home/ctrluser/Vivado/Vivado/2014.4/bin/linux_flexlm_v11.11.0_201410">/lnx64.o/install_fnp.sh
+5.#lnx64.o>xlicsrvrmgr -p request.xml
+-> This creates a license request into the trusted storage area which causes
+XML and HTML file to be output containing your server's HostID inforamtion
+
+6.Open the request.html file using web browser.
+7.Your web browser should now open with a Xilinx login screen
+8. Login and Account drop-down in Xilinx Site
+9.Select the Activation license of your choice and click the "Activate Floating Lincense" button
+10.A dialog will open and type 2 in "Requested Seats" and 0 in "Borrowed Seats": We have 2 copies floating license.
+11. Click Next button
+12. "Xilinx_License.xml" file will be e-mailed to you.
+\end{lstlisting}
+
+위의 절차 과정에서 9,10 항목은 중요 순서이다. 라이센스 파일을 구성하기 전 아래와 같이 lsb 모듈을 설치한다.
+
+\begin{lstlisting}[style=termstyle, escapechar=!]
+In Debian or Ubuntu, Should be installed lsb (linux standard base) package.
+#>aptitude install lsb
+\end{lstlisting}
+
+
+\chapter{Software 구성 및 License 서버 구동}
+1부터 3 항목을 실행 후 License File를 "filename.lic" 파일명으로 생성한다. 이때 입력하여야 할 세가지 항목은 host\_name, host\_id 및 port 번호이다. Port 번호는 디폴트 2100이 할당 되며, host\_name은 hostname command로 host\_id는 hostid command를 통하여 입력한다. 만들어진 lincense 파일은 해당 lmgrd.sh 스크립트가 존재한 곳에 복사를 하여 관리하며, 5번 항목과 같이 라이센스 서버를 구동한다. 
+\begin{lstlisting}[style=termstyle, escapechar=!]
+===Installing======
+1.#lnx64.0>./xlicsrvrmgr -p Xilinx_License.xml
+2. This will be stored the license information into your trusted storage area.
+3.#lnx64.0>./xlicsrvrmgr -v "format=long"
+4. Make license file (.lic)
+SERVER <host_name> <host_id> <port>
+USE_SERVER
+VENDOR xilinxd
+
+For hostname and hostid, you can get using "hostname" and "hostid" command
+#>hostname
+silee
+#>hostid
+010a4105
+
+i.e)license.lic (IP address:10.1.5.65)
+SERVER silee 010a4105 2100(default port)
+USE_SERVER
+VENDOR xilinxd
+
+5. Run lmgrd (lincense manager)
+
+i.e)
+$lnx64.0>./lmgrd.sh -c license.lic(xilinx.lic) -l lmgrd.log
+\end{lstlisting}
+
+\section{Vivado Floating License 서버 정보}
+현재 Vivado Floating License 서버를 구동하는 서버의 정보는 아래와 같다.
+
+\begin{itemize}
+	\item Server IP:10.1.5.65 
+	\item Account:ctrluser, Password:q~4
+	\item Hostname:silee(hostname command), Hostid:010a4105(hostid command)
+	\item Path: /home/ctrluser/Vivado/Vivado/2014.4/bin/linux\_flexlm\_v11.11.0\_201410/lnx64.o
+	\item License Filename: xilinx.lic
+	\item Command: \$./lnx64.0>lmgrd.sh -c license.lic(xilinx.lic) -l lmgrd.log
+\end{itemize}
+
+\chapter{Client 설정}
+MATLAB은 standalone 형태의 1user copy를 현재 개발 PC에 설정하였다. 또한, Vivado Floating License 원격서버를 Client에서 사용하기 위하여는 아래와 같은 MATLAB 환경변수(LM\_LICENSE\_FILE)와 Vivado 환경변수(XILINXD\_LICENSE\_FILE) 변수를 아래와 같이 설정한 후 Vivado에서 활성화된 라이센스를 확인한다.
+
+\begin{lstlisting}[style=termstyle, escapechar=!]
+===Vivado Client======
+set environment variable,(in ~/.bashrc)
+export LM_LICENSE_FILE=1700@localhost : -> MATLAB
+export XILINXD_LICENSE_FILE=2100@silee(10.1.5.65) : -> Vivado
+
+$>vivado
+
+Check "Help > Manage License..." Menu
+****Activation Based Licenses: Permanent ****
+Analyzer
+HLS
+Implementation
+SDK
+Simulation
+Systhesize
+SysGen
+VIVADO_HLS
+Vivado_System_Edition
+*********************************************
+\end{lstlisting}
+
+\clearpage
+\bibliographystyle{unsrtnat}
+\bibliography{./refs}
+
+\end{document}
+

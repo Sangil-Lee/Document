@@ -1,0 +1,180 @@
+% !TeX spellcheck = de_DE
+%\documentclass[11pt,a4paper]{article}
+\documentclass[11pt
+  , a4paper
+  , article
+  , oneside
+%  , twoside
+%  , draft
+]{memoir}
+
+\usepackage{control}
+\usepackage[numbers]{natbib}
+
+
+\begin{document}
+
+\newcommand{\technumber}{
+  RAON Control-Document Series\\
+  Revision : v1.0,   Release : 2015-10-29 fixed date}
+\title{\textbf{EPICS 설치 및 환경구성 자동화 스크립트}}
+
+\author{이상일\thanks{silee7103@ibs.re.kr}\\
+  Rare Isotope Science Project\\
+  Institute for Basic Science, Daejeon, South Korea
+}
+\date{\today}
+
+\renewcommand{\maketitlehooka}{\begin{flushright}\textsf{\technumber}\end{flushright}}
+%\renewcommand{\maketitlehookb}{\centering\textsf{\subtitle}}
+%\renewcommand{\maketitlehookc}{C}
+%\renewcommand{\maketitlehookd}{D}
+
+\maketitle
+
+\begin{abstract}
+RAON 제어 시스템은 Experimental Physics and Industrial Control System (EPICS)\cite{epics} 미들웨어를 사용하여 대형 이기종간의 장치들을 통합하여 하나의 제어시스템으로 통합한다. 본 문서는 EPICS 개발환경에 대한 표준구성을 자동화한 스크립트 사용을 명시한다. 
+\end{abstract}
+
+\hfil\break
+\hfil\break
+\hfil\break
+\hfil\break
+\chapter{EPICS 개발환경 표준화 구성}
+\section{목적}
+EPICS 표준화 구성을 통하여 각 장치간의 EPICS 개발환경(개발 디렉토리명, 라이브러리 표준, 개발환경변수 등) 및 운영 환경을 통일하고 그에 대한 형상을 맞추어 체계적인 형상관리를 이룰 수 있다. 소프트웨어 개발 및 운영에 있어 버전에 대한 형상은 매우 중요하며 또한 여러 장치별 개발 코드 및 업체들로 부터 개발된 소프트웨어의 코드 형상관리는 반드시 필요하다. EPICS 표준화 구성을 위하여 자동화 설치 스크립트가 개발되었으며 이 스크립트를 통해 EPICS 표준화 설치 구성에 대한 설명을 한다.
+
+
+\section{요구사항}
+자동화 설치 스크립트를 사용하기 전 다음 사항을 만족해야 한다.
+\begin{itemize}
+	\item Debian Linux 계열(whizzy,jessie) 32bit/64bit, Ubuntu Linux 32bit/64bit
+	\item 설치될 EPICS Base R3.14.12.5
+	\item Internet 접속 필요
+	\item Git utility 설치 필요
+\end{itemize}
+
+Linux 설치가 완료되면 root 계정이 아닌 일반계정(예,ctrluser)을 생성한다. 이는 EPICS 환경 운영시 계정에 대한 컨트롤을 위함이다. 슈퍼유저 모드에서의 EPICS 설치 운영은 가급적 피하여야 한다. 아래 절차는 ctrluser 계정을 생성하여 진행한다.
+
+\section{설치절차}
+\subsection{Debian Package 관리 서버 등록}
+관련 Package를 설치하기 전 Debian Package 관리 서버를 아래와 같은 두 라인을 추가 저장한다.
+\begin{lstlisting}[style=termstyle]
+root@silee:/home/ctrluser# vi /etc/apt/sources.list
+# Insert following two lines
+deb http://ftp.debian.org/debian/ jessie main contrib non-free
+deb-src http://ftp.debian.org/debian/ jessie main contrib non-free
+\end{lstlisting}
+
+Package list를 update와 upgrade 한다.
+\begin{lstlisting}[style=termstyle]
+root@silee:/home/ctrluser# aptitude update && aptitude upgrade
+\end{lstlisting}
+
+\subsection{Git 설치}
+Git은 소프트웨어 형상관리 목적으로 개발된 open source의 프로그램이다. 현재 제어그룹의 형상관리는 "github.com"\cite{github}을 이용한다. 아래와 같은 Package를 슈퍼유저 모드로 설치한다.
+
+\begin{lstlisting}[style=termstyle]
+root@silee:/home/ctrluser# aptitude install git
+\end{lstlisting}
+
+\subsection{scripts\_for\_epics download}
+슈퍼유저 모드에서 빠져나와 다음과 같은 git clone을 진행한다. 해당 계정의 home에서 진행한다.
+\begin{lstlisting}[style=termstyle]
+ctrluser@silee:~$ git clone https://github.com/Sangil-Lee/scripts_for_epics
+\end{lstlisting}
+github의 Sangil-Lee\cite{github_sangil} 계정은 public 계정으로 암호입력 없이 scripts\_for\_epics 디렉토리가 다운로드 된다. 다운로드된 디렉토리로 이동하여 슈퍼유저 모드로 아래와 같은 절차를 따른다. 
+
+\subsection{require\_package.sh}
+"require\_packages.sh"은 EPICS 환경에 필요한 기본 extension package 및 환경변수 스크립트를 설치한다.
+\begin{lstlisting}[style=termstyle]
+ctrluser@:~$ cd scripts_for_epics/
+ctrluser@:~/scripts_for_epics$ su
+Password: 
+root@:/home/ctrluser/scripts_for_epics# bash require_packages.sh all
+.... package install....
+root@:/home/ctrluser/scripts_for_epics# exit
+\end{lstlisting}
+
+\subsection{epics\_default\_installation.sh}
+아래와 같이 해당 디렉토리로 이동 후 "epics\_default\_installation.sh"을 실행하여 EPICS Base 및 Extension을 설치한다. EPICS Base는 R3.14.12.5 버전이 설치된다. 해당 스크립트는 관련 package를 다운로드 받음과 동시에 컴파일을 진행하여 Binary 파일까지 생성한다.
+\begin{lstlisting}[style=termstyle]
+ctrluser@:~/scripts_for_epics$ bash epics_default_installation.sh 
+... Download ... Compiling... Installation
+\end{lstlisting}
+
+\subsection{setEpicsEnv.sh}
+컴파일 설치 후 아래와 같이 디렉토리 이동 후 환경변수를 로딩한다.
+\begin{lstlisting}[style=termstyle]
+ctrluser@:~/scripts_for_epics$ cd ../epics/R3.14.12.5/
+ctrluser@:~/epics/R3.14.12.4$ ls
+base  extensions  setEpicsEnv.sh
+ctrluser@:~/epics/R3.14.12.4$ . setEpicsEnv.sh 
+\end{lstlisting}
+여기까지가 진행되면 EPICS 사용을 위한 기본 설치 구성이 완료된 상황이다.
+
+\hfil\break
+다음 절차부터는 EPICS 개발환경에 필요한 Synchronous Application 라이브러리 설치 및 RAON 제어그룹에서 개발 진행된 EPICS 개발 IOC 및 라이브러리 이다.
+
+\subsection{epics\_synApps.sh}
+EPICS IOC 개발에 매우 유용한 Asynchronous 개발 libraries 모음이다. 아래 절차를 실행하여 해당 소스의 다운로드 및 컴파일 설치를 완료한다.
+
+ \begin{lstlisting}[style=termstyle]
+ ctrluser@:~/epics/R3.14.12.4$bash ~/scripts_for_epics/epics_synApps.sh
+ 
+ ctrluser@silee:~/epics/R3.14.12.5$ ls epicsLibs/synApps_5_8/support/
+ alive-1-0            checkout.csh        export.csh                       mca-7-6            softGlue-2-4-3
+ allenBradley-2-3     configure           ip-2-17                          measComp-1-1        sscan-2-10-1
+ areaDetector-R2-0    dac128V-2-8         ip330-2-8                        modbus-2-7          std-3-4
+ asyn-4-26            delaygen-1-1-1      ipac-2-13                        motor-6-9           stream-2-6a
+ autosave-5-6-1       devIocStats-3-1-13  ipac.patch                       optics-2-9-3        update.bat
+ busy-1-6-1           devIocStats.patch   ipUnidig-2-10                    propsetForHtml.csh  update.csh
+ calc-3-4-2-1         dircmp.out          LICENSE                          quadEM-5-0          utils
+ camac-2-7            documentation       love-3-2-5                       README              vac-1-5-1
+ camac.patch          doMake              make_3.14.12.5_linux-x86_64.out  README.tmm          vme-2-8-2
+ caputRecorder-1-4-2  dotag               make_3.15_linux-x86_64.out       seq-2-2-1           xxx-5-8-3
+ checkout.bat         dxp-3-4             Makefile                         seq.patch
+ \end{lstlisting}
+
+\subsection{RAON siteApps/siteLibs Download}
+다음 절차는 제어그룹에서 개발완료 또는 개발 중인 EPICS 개발 코드 디렉토리이다. 이는 github의 유료계정으로 형상관리를 진행하고 있다. 따라서 해당 코드를 다운로드하기 위하여는 먼저 github의 무료 계정을 생성한 후 제어그룹의 RaonControl 계정에 해당 계정의 인증절차를 거쳐야 한다.
+
+따라서 본절은 향 후 SCL Demo 구성원의 EPICS training 시간에 자세한 설명이 이루어질 예정이며, 본 문서에서는 절차의 내용만 습득한다. 다운로드가 완료된 후 각 항목을 빌드하여 EPICS IOC를 구성한다. 아래는 제어그룹에서 개발한 siteLibs와 siteApps에 대한 디렉토리 구조를 보여준다. 해당 로컬 제어 EPICS IOC 개발 코드 및 업체의 개발 코드 역시 아래 개발 환경에 위치하여 형상관리가 진행되어야 한다.
+
+\begin{lstlisting}[style=termstyle]
+ctrluser@:~/epics/R3.14.12.4$ ls
+base  extensions  setEpicsEnv.sh
+ctrluser@:~/epics/R3.14.12.4$ git clone https://github.com/RaonControl/siteLibs
+... After git account and password, downloading...
+
+ctrluser@:~/epics/R3.14.12.4$ git clone https://github.com/RaonControl/siteApps
+... After git account and password, downloading...
+
+
+ctrluser@silee:~/epics/R3.14.12.5$ ls
+base  epicsLibs  extensions  setEpicsEnv.sh  siteApps  siteLibs
+ctrluser@silee:~/epics/R3.14.12.5$ ls siteApps/
+abplc            exAsynRecord  gconpi         isol_mobiis   pvlists    README.md  snmpTest    Tr1  Tr5
+bin              exSysMon      glassManPS     keithley6514  raspberry  rtp        sorensenPS  Tr2  Tr6
+caGateway_kstar  exTimeStamp   grackApps      lsplcModbus   rdbMySQL   snmp2      srs725      Tr3  xgs600
+ecrisApps        exTr5         integrateTest  mrfioc2       rdbPG      snmpMSU    streamSim   Tr4
+ctrluser@silee:~/epics/R3.14.12.5$ ls siteLibs/
+abplcLib_test  dbd            glassManPSLib  Makefile           README.siteLibs  snmpLib      timestampLib
+bin            devlib2        ifstatLib      Makefile.template  RPiLibPack       snmpMSULib   XGS600LibSrc
+configure      documentation  include        rdbpgLib           rtpLib           sysMonLib
+db             ether_ipLib    lib            README             s7plcLib         TC353LibSrc
+\end{lstlisting}
+
+
+
+
+\chapter{Acknowledgement}
+EPICS 표준화 구성에 대한 자동화 스크립트의 저자는 제어그룹의 이전 멤버였던 이정한 박사이며, 이 스크립트 작성에 대하여 감사의 뜻을 전합니다.
+
+\clearpage
+
+\bibliographystyle{unsrtnat}
+\bibliography{./refs}
+
+\end{document}
+
