@@ -214,6 +214,28 @@ Ubuntu 64bit에서 추가적인 라이브러리를 아래와 같이 설치한다
 sudo aptitude install lib32z1 lib32ncurses5 lib32bz2-1.0
 \end{lstlisting}
 
+현재 MATLAB-Simulink의 개발 환경은 가상화 상에 구성되었다. Ubuntu 14.04에 설정된 Ethernet MAC 정보는 MATLAB-Simulink 라이센스 파일을 만드는 정보로 활용된다. 따라서, 라이센스 파일에 대한 입력정보는 아래와 같이 맞추어야 한다.
+
+\begin{lstlisting}[style=termstyle]
+ctrluser@ubuntu:~/Document/DSP/images$ hostid
+007f0101
+ctrluser@ubuntu:~/Document/DSP/images$ hostname
+ubuntu
+ctrluser@ubuntu:~/Document/DSP/images$ /sbin/ifconfig | grep HWaddr
+eth0     HWaddr 00:0c:29:73:36:d9  
+eth1     HWaddr 00:0c:29:73:36:e3  
+\end{lstlisting}
+
+
+\clearpage
+
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.8\textwidth, height=0.4\textwidth]{./images/matlab_virtual_info.png}
+	\caption{Information for Matlab on VM}
+	\label{fig:info_matlab_vm} 
+\end{figure}
 
 \chapter{System Generator 설정}
 System Generator는 Xilinx사에서 Matlab-Simulink를 활용할 수 있는 Xilinx 툴박스를 제공한다. 따라서, 바탕화면에 설정된 System Generator를 더블클릭 하거나 Xilinx 실행 폴더 bin의 sysgen을 실행하면 Xilinx 툴박스 라이브러리 경로가 환경변수로 입력된 후 Matlab이 실행된다. 올바른 설정이 되었다면 아래화면에서 처럼 Simunlink Libraries 창에 "Xilinx Blockset"과 "Xilinx Reference Blockset"이 생성되어 나타난다. 기본 Path 설정이 맞질 않는 다면 아래화면은 실행 되지 않을 것이다.
