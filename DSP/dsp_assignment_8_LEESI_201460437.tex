@@ -59,7 +59,17 @@ x = ((0.8).^n).*(cos(pi*n/4)+2*sin(pi*n/4))\end{lstlisting}
 	\label{fig:Example 4.10 Result}
 \end{figure}
 
-\clearpage
+위 계산으로 부터,
+ 
+\begin {equation}
+X(z) =\frac{0.5-j}{1-0.8e^{j\frac{\pi}{4}z^{-1}}}+\frac{0.5+j}{1-0.8e^{-j\frac{\pi}{4}z^{-1}}}, |z| > 0.8
+\end {equation}
+
+그리고, 역변환을 다음과 같이 얻는다.
+\begin {equation}
+x(n) = 0.8^n[cos(\frac{\pi*n}{4})+2sin(\frac{\pi*n}{4})]u(n)
+\end {equation}
+
 
 \chapter{Example 4-11a:}
 \subsection{4-11a}
@@ -127,9 +137,28 @@ title('Phase Response');
 	\label{fig:Example 4.11b2 Result}
 	\end{figure}
 
+\subsection{4-11c}
+z-변환표로 부터,
+\begin {equation}
+ㅗ(n) = Z^{-1}[\frac{1}{1-0.9z^{-1}}, |z|> 0.9] = (0.9)^nu(n)
+\end {equation}
+
 \clearpage
 
 \chapter{Example 4-12:}
+\subsection{4-12a: 전달함수 표현}
+
+\begin {equation}
+H(e^{jw}) = \frac{e^{jw}+1}{e^{jw}-0.9e^{jw} +0.81} = \frac{e^{jw}+1}{(e^{jw}-0.9e^{j\pi/3})(e^{jw}-0.9e^{-j\pi/3})}
+\end {equation}
+
+\subsection{4-12b: 차분방정식 표현}
+\begin {equation}
+\frac{Y(z)}{X(z)} = \frac{z^{-1} + z^{-2}}{1-0.9z^{-1}+0.81z^{-2}}
+\end {equation}
+
+\subsection{4-12c: 임펄스 응답 표현}
+
 \begin{lstlisting}[style=termstyle]
 %Example 4.12
 
@@ -148,6 +177,38 @@ Ap = (angle(p))'/pi
 \end{figure}
 
 \chapter{Example 4-13:}
+\subsection{4-13a: 시스템 함수}
+
+\begin {equation}
+H(z) = \frac{1-z^{-2}}{(1+0.9z^{-1})(1-0.9z^{-1})}
+\end {equation}
+
+\subsection{4-13b: 단위 임펄스 응답}
+\begin{lstlisting}[style=termstyle]
+%Example 4.13
+
+b = [1,0,-1]; a = [1, 0, -0.81];
+[R,p,C]=residuez(b,a)
+
+\end{lstlisting}
+
+
+\subsection{4-13c: 단위계단 응답}
+Z 변환표로 부터,
+
+\begin {equation}
+V(z) = \frac{1+z^{-1}}{(1+0.9z^{-1})(1-0.9z^{-1})}, |z| > 0.9
+\end {equation}
+또는,
+\begin {equation}
+V(z) = 1.0556\frac{1}{(1-0.9z^{-1})} - 0.0556\frac{1}{1+0.9z^{-1}}, |z| > 0.9
+\end {equation}
+
+\begin {equation}
+v(n) = [1.0556(0.9)^n - 0.0556(-0.9)^n]u(n)
+\end {equation}
+
+\subsection{4-13d: 주파수 응답}
 \begin{lstlisting}[style=termstyle]
 %Example 4.13
 
@@ -165,7 +226,6 @@ subplot(2,1,2); plot(w/pi,phaH/pi); grid
 xlabel('Freq. in pi units'); ylabel('Phase in pi units');
 title('Phase Response');
 \end{lstlisting}
-
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.5\textwidth,height=0.3\textwidth]{./images/ex413.png}
@@ -173,10 +233,12 @@ title('Phase Response');
 	\label{fig:Example 4.13 Result}
 \end{figure}
 
-\clearpage
-
 \chapter{연습문제 4.7: }
 \section{4.7-1: }
+\begin {equation}
+X(z) = 3z^2+2z+1-2z^{-1}+3z^{-2}, 0 < |z| < \infty
+\end {equation}
+
 \begin{lstlisting}[style=termstyle]
 %Problem 4.7-1
 b1 = [0 2 3]; a1 = [1]; 
@@ -244,6 +306,11 @@ error = max(abs(xb1-xb2))
 
 
 \section{4.7-4: }
+\begin {equation}
+X(z) = \frac{1-[0.5cos(0.4\pi)]z}{1-[cos(0.4\pi)]z+0.25z^2}, |z| < 2
+\end {equation}
+
+
 \begin{lstlisting}[style=termstyle]
 %Problme 4.7-4
 
@@ -320,6 +387,18 @@ na = [-1:1]; a = [1 2 1];
 \end{figure}
 
 \chapter{연습문제 4.15: }
+\section{4.15-1: }
+\begin {equation}
+H(z) = \frac{3}{4}+\frac{5}{4}z^{-1}+z^{-2}+z^{-3}+\frac{5}{4}z^{-4}+\frac{3}{4}z^{-5}
+\end {equation}
+
+\begin {equation}
+y(n)=\frac{3}{4}x(n)+\frac{5}{4}x(n-1)+x(n-2)+x(n-3)+\frac{5}{4}x(n-4)+\frac{3}{4}x(n-5)
+\end {equation}
+
+\section{4.15-3: }
+
+
 \begin{lstlisting}[style=termstyle]
 %Problem 4.15
 
