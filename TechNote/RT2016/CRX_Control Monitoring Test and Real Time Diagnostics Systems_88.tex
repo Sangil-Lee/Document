@@ -28,11 +28,9 @@
 \author{~Sangil Lee,
 	~Changwook Son,
 	and~Hyojae Jang% <-this % stops a space
-\thanks{Manuscript received November 4, 2007. (Write the date on which you submitted your paper for review.) This work was supported in part by the U.S. Department of Commerce under Grant No. BS123456 (sponsor acknowledgment goes here).}% <-this % stops a space
-\thanks{Full names of authors are preferred in the author field, but are not required. Put a space between authors' initials. Do not use all uppercase for authors' surnames.}%
-\thanks{F. A. Author is with the National Institute of Standards and Technology, Boulder, CO 80303 USA (telephone: 303-497-3650, e-mail: author @boulder.nist.gov).}%
-\thanks{S. B. Author, Jr., was with Rice University, Houston, TX 77005 USA. He is now with the Department of Physics, Colorado State University, Ft. Collins, CO 80523 USA (telephone: 970-491-6206, e-mail: author@lamar. colostate.edu).}%
-\thanks{T. C. Author is with the Electrical Engineering Department, University of Colorado, Boulder, CO 80309 USA, on leave from the National Research Institute for Metals, Tsukuba, Japan (e-mail: author@nrim.go.jp).}%
+\thanks{F. A. SI Lee is with the Institute for Basic Science, 70 Yuseong-daero, CO 34047 South Korea (telephone: +82-42-878-8854, e-mail: silee7103@ibs.re.kr.}%
+\thanks{S. B. CW Son is with the Institute for Basic Science, 70 Yuseong-daero, CO 34047 South Korea (telephone: +82-42-878-8831, e-mail: scwook@ibs.re.kr.}%
+\thanks{T. C. HY Jang is is with the Institute for Basic Science, 70 Yuseong-daero, CO 34047 South Korea (telephone: +82-42-878-8788, e-mail: lkcom@ibs.re.kr.}%
 }
 
 \maketitle
@@ -64,15 +62,12 @@ This paper describes the content and configuration of the distributed and parall
 % 
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
-\IEEEPARstart{T}{his} document is an example of preparing your manuscript in {\LaTeX}. It provides instructions for authors that will be presenting a paper at the 2014 IEEE Real Time Conference (RT14), and should be used in preparing and submitting manuscripts to the Conference Record (CR). The Conference Record is a non-refereed, CD-ROM-based publication that is distributed to all conference attendees after the conference.  A detailed description of the CR submission procedure is provided in section II below. Submission of a manuscript to the CR is mandatory and the deadline is May 26, 2014..
-
-%거대 실험 장치의 제어 시스템의 구성요소 
+\IEEEPARstart{R}{AON} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications\cite{risp}. RAON, which is a colossal machine, is composed of many control devices, experimental equipments, and additional utilities. In order to control a enormous machine such as a RAON, it needs to the middle-ware layer to support for the distributed control system. For the purpose of  implementing it, the control system of RAON has decided to apply the EPICS (Experimental Physics and Industrial Control System) software framework. "EPICS is a set of open source software tools, libraries and applications developed collaboratively and used worldwide to create distributed soft real-time control systems for scientific instruments such as a particle accelerators, telescopes and other large scientific experiments"\cite{epics}. Additionally for monitoring or control system of the fast response time, FPGA chips are in general use.
 
 
-Additionally, you may submit your manuscript to the \emph{IEEE Transactions on Nuclear Science (TNS)} if it represents significant original contributions in the fields associated with the conference (i.e., progress reports and preliminary findings are not appropriate).  The TNS is a refereed publication, and is published throughout the year. The reviewing process, independent from the conference, will be performed during the weeks after the conference. For instructions on TNS  manuscript submissions, please visit the IEEE's on-line peer review system Manuscript Centra   (http://mc.manuscriptcentral.com/tns-ieee). Please note that submission to TNS  is a separate process from that of the Conference Record.
+%빠른 응답성을 갖는 고속의 제어 또는 모니터링 시스템을 위하여, FPGA 칩이 사용된다.
 
-You can download this document, and the MS Word template, from the RT14 conference web site (http://rt2014.rcnp.osaka-u.ac.jp/authorinfo.html) so that you can use it to prepare your manuscript.  For authors using word processors other than {\LaTeX}, please refer to the RT14.pdf file for page layout guidelines. 
-
+you may submit your manuscript to the \emph{IEEE Transactions on Nuclear Science (TNS)} if it represents significant original contributions in the fields associated with the conference (i.e., progress reports and preliminary findings are not appropriate).  The TNS is a refereed publication, and is published throughout the year. The reviewing process, independent from the conference, will be performed during the weeks after the conference. For instructions on TNS  manuscript submissions, please visit the IEEE's on-line peer review system Manuscript Centra   (http://mc.manuscriptcentral.com/tns-ieee). Please note that submission to TNS  is a separate process from that of the Conference Record.
 
 \section{Procedure for Manuscript Submission}
 
@@ -240,7 +235,14 @@ This work is supported by the Rare Isotope Science Project funded by Ministry of
 % <OR> manually copy in the resultant .bbl file
 % set second argument of \begin to the number of references
 % (used to reserve space for the reference number labels box)
-\begin{thebibliography}{2}
+\begin{thebibliography}{3}
+
+\bibitem{risp} Y.~K.~Kwon, {\it et. al},``Status of Rare Isotope Science Project in Korea'',
+Few-Body Syst 54, 961-966, (2013).
+
+
+\bibitem{epics}
+EPICS website, http://www.aps.anl.gov/epics/
 
 \bibitem{IEEEhowto:kopka}
 H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
@@ -248,6 +250,7 @@ H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
 
 \bibitem{IEEEPDFRequirement401}
 IEEE Content Engineering, \emph{IEEE PDF Specification Version 4.10}. Available: http://www.ieee.org/documents/31296\_IEEE\_PDF\_Spec.zip.
+
 
 \end{thebibliography}
 
