@@ -62,19 +62,35 @@ This paper describes the content and configuration of the distributed and parall
 % 
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
-\IEEEPARstart{R}{AON} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications\cite{risp}. RAON, which is a colossal machine, is composed of many control devices, experimental equipments, and additional utilities. In order to control a enormous machine such as a RAON, it needs to the middle-ware layer to support for the distributed control system. For the purpose of  implementing it, the control system of RAON has decided to apply the EPICS (Experimental Physics and Industrial Control System) software framework. "EPICS is a set of open source software tools, libraries and applications developed collaboratively and used worldwide to create distributed soft real-time control systems for scientific instruments such as a particle accelerators, telescopes and other large scientific experiments"\cite{epics}. Additionally FPGA chips are used in general for monitoring or control system of the fast response time. There are also many control systems that adopted FPGA among the RAON equipments, such as timing system, LLRF control system, power supply cotrol system and so on. A lot of devices or systems have implemented the control system configuring CPUs with OS and FPGA chips using VME or cPCI interface. The low-power clustering application for parallel computing is also one of the fields utilizing the GPU or FPGA. Likewise, the configuration of the specific hardwares, such as GPU processing elements or FPGA gate logics, it can be saved the prorated cost of the CPU for control and analysis algorithms. 
+\IEEEPARstart{R}{AON} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications\cite{risp}. RAON, which is a colossal machine, is composed of many control devices, experimental equipments, and additional utilities. 
+
+
+%가속기, 핵융합, 천체 망원경과 같은 거대 과학 실험 장치는 그 특성상 분산된 이기종 제어 장치들의 통일성이 요구되며, 특정 장치에 대해서는 빠른 응답성이 요구된다. 더욱이 이 두가지 요구사항은 동시에 만족되어야 한다.TCP/UDP/IP protocol Ethernet-based EPICS middleware framework는 여러 이기종 제어장치들을 하나의 단일 제어시스템으로 구현할 수 있는 환경을 제공한다
+
+In order to control a enormous machine such as a RAON, it needs to the middle-ware layer to support for the distributed control system. For the purpose of  implementing it, the control system of RAON has decided to apply the EPICS (Experimental Physics and Industrial Control System) software framework. "EPICS is a set of open source software tools, libraries and applications developed collaboratively and used worldwide to create distributed soft real-time control systems for scientific instruments such as a particle accelerators, telescopes and other large scientific experiments"\cite{epics}. Additionally FPGA chips are used in general for monitoring or control system of the fast response time. There are also many control systems that adopted FPGA among the RAON equipments, such as timing system, LLRF control system, power supply cotrol system and so on. A lot of devices or systems have implemented the control system configuring CPUs with OS and FPGA chips using VME or cPCI interface. The low-power clustering application for parallel computing is also one of the fields utilizing the GPU or FPGA. Likewise, the configuration of the specific hardwares, such as GPU processing elements or FPGA gate logics, it can be saved the prorated cost of the CPU for control and analysis algorithms. 
 
 
 
-% GPU 또는 FPGA는 또한 저전력 클러스터링 분야에서 계산노드로 구축되기도 한다. 
-
-you may submit your manuscript to the \emph{IEEE Transactions on Nuclear Science (TNS)} if it represents significant original contributions in the fields associated with the conference (i.e., progress reports and preliminary findings are not appropriate).  The TNS is a refereed publication, and is published throughout the year. The reviewing process, independent from the conference, will be performed during the weeks after the conference. For instructions on TNS  manuscript submissions, please visit the IEEE's on-line peer review system Manuscript Centra   (http://mc.manuscriptcentral.com/tns-ieee). Please note that submission to TNS  is a separate process from that of the Conference Record.
-
-\section{Distributed Environment with EPICS framework on Zynq Processing System}
-
-The manuscript submission is done online on the paper submission web site.  See details below. All questions regarding CR submission should be directed to Dora Merelli, the Guest Editor, at dora.merelli@ieee.fr. Formatting and submission assistance will be provided at the conference in the Guest Editor room. We ask all of you to pass by with your paper before the end of the conference. This will allow the Guest Editor to check the format of your paper and see the possible correction and modification directly on site.
+% 정리하자면 병렬처리 시스템은 프로세서를 늘려서 여러 일을 동시에, 더 빨리 처리 할 수 있게 해주는 시스템 방식이고, 분산처리 시스템은 처리할 수 있는 장비(컴퓨터 등)을 네트워크로 상호 연결하여 전체적인 일의 부분 부분을 나누어 더 빨리 처리 할 수 있게 하는 시스템 방식이다. 이 둘은 단일에서 여럿으로, 일을 동시에 처리한다는 점이 유사하지만 전체적인 틀에서 보면 일을 처리하는 방식이 매우 다르다. 병렬처리는 “동시에 여러 일”을 처리하는 것이고, 분산처리는 “하나의 일을 동시에 여럿이서” 처리하는 것이다.
 
 
+\section{Environment Distributed Control}
+\subsection{Linux on Zynq PS}
+To operate linux OS on the ARM processor of the zynq PS there consists of:
+
+\begin{itemize}
+	\item ARM Cross Compile Tool Chain (arm-linux-gnueabihf)
+	\item Linux Kernel Source (Linaro)
+	\item Bootloader (BOOT.BIN)
+	\item Board Support Package (Linux Device Tree)
+	\item Root File System (Busybox)
+\end{itemize}
+
+Linaro\cite{linaro} is a not-for-profit engineering organization that works on free and open-source software such as the Linux kernel, the GNU Compiler Collection (GCC), power management, graphics and multimedia interfaces for the ARM family of instruction sets and implementations thereof as well as for the Heterogeneous System Architecture.  
+The linaro kernel source is the ubuntu-based kernel source including a lot of device driver such as zynq device tree.
+The bootloader of PS uses U-Boot\cite{u-boot} supporting for the zynq device of Xilinx. To boot the zynq device, it should be made up the boot.bin file created by Vivado\cite{vivado} tool. The boot.bin\cite{boot-bin} file consists of fsbl.elf (First Stage BootLoader), u-boot.elf (Second BootLoader), uImage (kernel zImage for uboot ), zynq.bif (Boot Image Format file) and user.bit (bitstream file of FPGA). The linux kernel is using the root file system generated by the Busybox\cite{busybox} tool.
+
+\subsection{Linux on Zynq PS}
 
 \begin{figure*}[!tbh]
 	\centering
@@ -212,33 +228,87 @@ After you have obtained the Xplore-compatible PDF file, you have to submit it to
 An IEEE Copyright Form should be submitted electronically at the same time your Xplore-compatible manuscript is submitted. Details on how to submit an IEEE copyright form will be given on the Conference web site.  Each manuscript submitted to the Conference Record must be accompanied by a corresponding copyright form. 
 
 
-\section{Software Defined System on Chip}
+\section{Software Defined System on Chip, SDSoC with Zynq}
 
-\section{Parallel Configuration}
+\section{Future Work}
+\subsection{OpenCL for Parallel Processing}
+OpenCL is a programming model developed by the Khronos group for the parallel processing on the specific hardwares like GPU and FPGA.
+
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=75mm, height=50mm]{img02.png}
+	\caption{OpenCL-based Parallel Control System Configuration}
+	\label{opencl_control_system}
+\end{figure}
+
+
 
 \subsection{on GPU}
 
+
 \subsection{on FPGA}
+
+%\begin{table}[h!t]
+\begin{table}.
+%	\setlength\tabcolsep{3.8pt}
+\centering
+\caption{Software Modules}
+	\label{sw-conf}
+	
+	\begin{tabular}{@{}lll@{}}
+		%\begin{tabular}{clc}}
+		
+		\hline
+		\textbf{Software} & \textbf{Contents}                 & \textbf{Module}     \\
+		\hline
+		EPICS        & Base R3.14.15.2                       & PS of Zynq            \\
+		Libiio       & Industrial I/O library                &                       \\
+		& supplied Analog Devices               &                       \\         
+		Kernel       & Linaro kernel source                  &                       \\
+		& including iio device driver           &                       \\         
+		Bootloader   & U-Boot for zynq                       &                       \\
+		IOC          & In-house using Libiio                 &                       \\
+		
+		\hline
+		FPGA         & Analog Devices and                    & PL of Zynq            \\
+		& In-house code                         &                       \\
+		
+		\hline
+		VxWorks      & Real-time OS for VME                  & Timing                \\
+		& including BSP                         &                       \\         
+		MRFIOC2      & EPICS IOC for timing                  &                       \\
+		
+		\hline
+		SRSIOC       & IOC for rubidium clock                &                       \\
+		
+		\hline
+		Workbench    & Workbench3.3 for VxWorks              & Development           \\
+		Vivado       & Vivado14.4 including SDK              & Tool                  \\        
+		& with node lock license                &                       \\            
+		Busybox      & for rootfs system (free)              &                       \\
+		Toolchain    & for ARM cross-compile (GNU)           &                       \\        
+		\hline
+		
+	\end{tabular}
+\end{table}
+
+
+\subsection{EPICS v4 PV Access}
 
 \newpage
 
+\section{Conclusion}
+%가속기, 핵융합, 천체 망원경과 같은 거대 과학 실험 장치는 그 특성상 분산된 이기종 제어 장치들의 통일성이 요구되며, 특정 장치에 대해서는 빠른 응답성이 요구된다. 더욱이 이 두가지 요구사항은 동시에 만족되어야 한다.TCP/UDP/IP protocol Ethernet-based EPICS middleware framework는 여러 이기종 제어장치들을 하나의 단일 제어시스템으로 구현할 수 있는 환경을 제공한다.
 
-\appendices
-\section{}
+Timing system can distribute the fine synchronized event signal at a high speed. The objective of the stepper motor control testbed is to know how to operate the timing system and how to apply it to the high speed controller. The overall implementation is still underway, however if the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to implement this high-speed control system.
 
-The {\LaTeX} class file included in the above package is the current version of the IEEEtran.cls (version 1.7).  Use the "{\bf journal}" mode to format your document so that the page layout follows the standard style for the IEEE Transactions. However, you must include these two commands in your source file to prevent the generation of headers and footers in the manuscript:
-\begin{itemize}
-\item add the command \verb1\pagestyle{empty}1 right after  \verb1\documentclass1; 
-\item add the command \verb1\thispagestyle{empty}1 right after \verb1\maketitle1.  
-\end{itemize}
-
-Do not include your biography information at the end of the manuscript.  
-
-
+Utilizing the OpenCL standard on an FPGA may offer significantly higher performance and at much lower power than is available today from hardware architectures (CPU, GPUs, etc). In addition, an FPGA-based heterogeneous system (CPU + FPGA) using the OpenCL standard has a significant time-to-market advantage compared to traditional FPGA development using lower level hardware description languages (HDLs) such as Verilog or VHDL. Altera joined The Khronos Group in 2010 and is an active contributor to the standard. To stay up to date on Altera’s OpenCL program for FPGAs, please register at www.altera.com/opencl.
 
 % use section* for acknowledgement
 \section*{Acknowledgment}
-This work is supported by the Rare Isotope Science Project funded by Ministry of Science, ICT and Future Planning {(MSIP)} and National Research Foundation {(NRF)} of Korea (Project No. 2011-0032011).
+This work is supported by the Rare Isotope Science Project funded by Ministry of Science, ICT and Future Planning \textbf{(MSIP)} and National Research Foundation \textbf{(NRF)} of Korea (Project No. 2011-0032011).
+
 
 % references section
 
@@ -269,6 +339,12 @@ H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
 
 \bibitem{IEEEPDFRequirement401}
 IEEE Content Engineering, \emph{IEEE PDF Specification Version 4.10}. Available: http://www.ieee.org/documents/31296\_IEEE\_PDF\_Spec.zip.
+
+\bibitem{linaro}
+Linaro Document website, https://en.wikipedia.org/wiki/Linaro
+
+\bibitem{opencl_on_altera}
+OpenCL on Altera, https://www.altera.com/en\_US/pdfs/literature/wp/wp-01173-opencl.pdf
 
 
 \end{thebibliography}
