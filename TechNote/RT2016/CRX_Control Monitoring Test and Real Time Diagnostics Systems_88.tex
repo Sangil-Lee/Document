@@ -62,22 +62,21 @@ This paper describes the content and configuration of the distributed and parall
 % 
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
-\IEEEPARstart{R}{AON} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications\cite{risp}. RAON, which is a colossal machine, is composed of many control devices, experimental equipments, and additional utilities. 
+\IEEEPARstart{R}{AON} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications\cite{risp}. RAON, which is a colossal machine, is composed of many control devices, experimental equipments, and additional utilities. A big scientific experiment is required by the unity of the heterogenous distributed control system according to its characteristic and the fast response for a particular device. Furthermore, these requirements for the distributed and parallel environments must be satisfied at the same time. The distributed processing is to handle dividing one job into several processes and the parallel processing is to handle the multiple jobs at the same time. 
+To satisfy the general requirements under the distributed environment, it needs to the middle-ware layer to support for the distributed control system. For the purpose of  implementing it, the control system of RAON has decided to apply the EPICS (Experimental Physics and Industrial Control System) software framework. "EPICS is a set of open source software tools, libraries and applications developed collaboratively and used worldwide to create distributed soft real-time control systems for scientific instruments such as a particle accelerators, telescopes and other large scientific experiments"\cite{epics}. Additionally FPGA chips are used in general for monitoring or control system of the fast response time. There are also many control systems that adopted FPGA among the RAON equipments, such as timing system, LLRF control system, power supply cotrol system and so on. A lot of devices or systems have implemented the control system configuring CPUs with OS and FPGA chips using VME or cPCI interface. The low-power clustering application for parallel computing is also one of the fields utilizing the GPU or FPGA. Likewise, the configuration of the specific hardwares, such as GPU processing elements or FPGA gate logics, it can be saved the prorated cost of the CPU for control and analysis algorithms. Zynq series of Xilinx FPGA chips are called the programmable SoC. Within the one chip it consists of the arm-based CPU and the logic gates of FPGA. PS with the dual-core ARM Cortex–A9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level FPGA is connecting with a lot of I/O peripherals for real-time control system. Utilizing Zynq SoC, it could configure an environment of the distributed and parallel processing at a time. In addition, I guess that the control system may provide an abstract layer of the parallel processing integrated with EPICS middleware using Open Computing Lanaguage (OpenCL)\cite{opencl} for the specific heterogenous hardwares in future plan.
 
+\section{Distributed Processing Environment}
+Configuration of Fig.\ref{control_system} shows the overall of the control system for the distributed and parallel processing. The PS of zynq is equipped with the EPICS software framework on the cross-compiled linux OS of the ARM processor. The parameter values for the motor control is set through the EPICS interface on PS. The data communication between PS and PL uses the AXI interface of the ARM Advanced Microcontroller Bus Architecture (AMBA). Software module for AXI interface between both should be also developed in the linux device driver. The types of motor which can be supported by a low voltage drive board of the Analog Device\cite{analog} are brushless DC, PMSM, brushed DC or stepper motor.
 
-%가속기, 핵융합, 천체 망원경과 같은 거대 과학 실험 장치는 그 특성상 분산된 이기종 제어 장치들의 통일성이 요구되며, 특정 장치에 대해서는 빠른 응답성이 요구된다. 더욱이 이 두가지 요구사항은 동시에 만족되어야 한다.TCP/UDP/IP protocol Ethernet-based EPICS middleware framework는 여러 이기종 제어장치들을 하나의 단일 제어시스템으로 구현할 수 있는 환경을 제공한다
+\begin{figure*}[!tbh]
+	\centering
+	\includegraphics*[width=\textwidth,height=0.6\textwidth]{img01.png}
+	\caption{Distributed and Parallel Control System Configuration}
+	\label{control_system}
+\end{figure*}
 
-In order to control a enormous machine such as a RAON, it needs to the middle-ware layer to support for the distributed control system. For the purpose of  implementing it, the control system of RAON has decided to apply the EPICS (Experimental Physics and Industrial Control System) software framework. "EPICS is a set of open source software tools, libraries and applications developed collaboratively and used worldwide to create distributed soft real-time control systems for scientific instruments such as a particle accelerators, telescopes and other large scientific experiments"\cite{epics}. Additionally FPGA chips are used in general for monitoring or control system of the fast response time. There are also many control systems that adopted FPGA among the RAON equipments, such as timing system, LLRF control system, power supply cotrol system and so on. A lot of devices or systems have implemented the control system configuring CPUs with OS and FPGA chips using VME or cPCI interface. The low-power clustering application for parallel computing is also one of the fields utilizing the GPU or FPGA. Likewise, the configuration of the specific hardwares, such as GPU processing elements or FPGA gate logics, it can be saved the prorated cost of the CPU for control and analysis algorithms. 
-
-
-
-% 정리하자면 병렬처리 시스템은 프로세서를 늘려서 여러 일을 동시에, 더 빨리 처리 할 수 있게 해주는 시스템 방식이고, 분산처리 시스템은 처리할 수 있는 장비(컴퓨터 등)을 네트워크로 상호 연결하여 전체적인 일의 부분 부분을 나누어 더 빨리 처리 할 수 있게 하는 시스템 방식이다. 이 둘은 단일에서 여럿으로, 일을 동시에 처리한다는 점이 유사하지만 전체적인 틀에서 보면 일을 처리하는 방식이 매우 다르다. 병렬처리는 “동시에 여러 일”을 처리하는 것이고, 분산처리는 “하나의 일을 동시에 여럿이서” 처리하는 것이다.
-
-
-\section{Environment Distributed Control}
 \subsection{Linux on Zynq PS}
 To operate linux OS on the ARM processor of the zynq PS there consists of:
-
 \begin{itemize}
 	\item ARM Cross Compile Tool Chain (arm-linux-gnueabihf)
 	\item Linux Kernel Source (Linaro)
@@ -86,149 +85,23 @@ To operate linux OS on the ARM processor of the zynq PS there consists of:
 	\item Root File System (Busybox)
 \end{itemize}
 
-Linaro\cite{linaro} is a not-for-profit engineering organization that works on free and open-source software such as the Linux kernel, the GNU Compiler Collection (GCC), power management, graphics and multimedia interfaces for the ARM family of instruction sets and implementations thereof as well as for the Heterogeneous System Architecture.  
-The linaro kernel source is the ubuntu-based kernel source including a lot of device driver such as zynq device tree.
+Linaro\cite{linaro} is a not-for-profit engineering organization that works on free and open-source software such as the Linux kernel, the GNU Compiler Collection (GCC), power management, graphics and multimedia interfaces for the ARM family of instruction sets and implementations thereof as well as for the heterogeneous system architecture. The linaro kernel source is the ubuntu-based kernel source including a lot of device driver such as zynq device tree. 
 The bootloader of PS uses U-Boot\cite{u-boot} supporting for the zynq device of Xilinx. To boot the zynq device, it should be made up the boot.bin file created by Vivado\cite{vivado} tool. The boot.bin\cite{boot-bin} file consists of fsbl.elf (First Stage BootLoader), u-boot.elf (Second BootLoader), uImage (kernel zImage for uboot ), zynq.bif (Boot Image Format file) and user.bit (bitstream file of FPGA). The linux kernel is using the root file system generated by the Busybox\cite{busybox} tool.
 
-\subsection{Linux on Zynq PS}
 
-\begin{figure*}[!tbh]
-	\centering
-	\includegraphics*[width=\textwidth,height=0.7\textwidth]{img01.png}
-	\caption{Distributed and Parallel Control System Configuration}
-	\label{control_system}
-\end{figure*}
+\subsection{Device Driver on Linux}
+Linux device driver for zynq PS uses Industrial IO (IIO) module of the Analog Devices. Libiio\cite{iio} is a library that has been developed by Analog Devices for easy interface with IIO devices. Localbackend module of Fig.~\ref{control_system} goes into kernel mode from user mode through the system call and accesses the iio device driver via "struct file\_operations". Basically the iio device driver is a character device type.
 
-\subsection{Create IEEE Xplore-Compatible PDF File}
-
-All manuscripts submitted to IEEE for publication must meet the PDF Specification for IEEE Xplore\cite{IEEEPDFRequirement401}. To assist authors in meeting this requirement, IEEE has established a web based service called PDF eXpress. You can use this web service to convert your dvi  files into Xplore-compatible PDF files, or to check if your own PDF file is Xplore-compatible. You must put your dvi and all graphics files into a compressed archive to upload to PDF eXpress.
-
-The PDF eXpress service will be available to the RT14 authors. To use this service, you will need to go to http://www.pdf-express.org, and enter the Conference ID, which is \textbf{31098X}. If you are a first time user of this system, you need to set up an account.  Once logged in, follow the instructions on the web site to upload your word processor file or PDF file.  Shortly after your file is uploaded to the PDF eXpress, you will receive an email. If you uploaded a word processor file for conversion, the attachment in this email will be the converted Xplore-compatible PDF file.  Save this file for the submission step outlined in section II.B below.  If you uploaded a PDF file for checking, the email will show if your file passed or failed the check.  If your PDF file failed the check, read the error report and fix the identified problem(s).  Re-upload your PDF file and have it checked again until your PDF file is Xplore-compatible.
-
-You can also bypass the PDF eXpress service and create your own Xplore-complatible PDF files.  The key requirements are the following:
-\begin{itemize}
-\item[1]	Do not protect your PDF file with any password;
-\item[2]	Embed all fonts used in the document;
-\item[3]	Do not embed any bookmarks or hyperlinks.
-\end{itemize}
+\subsection{EPICS Middleware Framework}
+EPICS IOC is being implemented using the libiio library that abstracted the low-level details of the hardware, as shown in Fig.~\ref{control_system}. EPICS is a set of open source software tools, libraries and applications developed collaboratively and used worldwide to create distributed soft real-time control systems for scientific instruments such as a particle accelerators, telescopes and other large scientific experimental facilities\cite{epics}. The device support routine of EPICS is implemented using the libiio library to read or write the parameter values for the motor control. The motor control parameters become the Process Variables (PVs) of EPICS and are carried out the EPICS database processing according to EPICS scan rate. Also, it is going to develop additional EPICS waveform PV to monitor the PWM signal of the low voltage drive board.
 
 
-Use Type 1 postscript fonts when converting dvi file into postscript.  If you are using older versions of dvips to generate the postscript file, you might need to include -P pdf in the command line to produce postscript file optimized for distilling to PDF.
-
-A detailed description of the IEEE Xplore-compatible PDF requirement is available at http://www.ieee.org/documents/31296\_IEEE\_PDF\_Spec.zip \cite{IEEEPDFRequirement401}.  
-If you are using a Windows version of the Adobe Distiller to create PDF files, you can download a set of job option files from http://www.ieee.org/documents/IEEE\_PDF\_Create.zip. Install and use the appropriate job option to create your own Xplore-compatible PDF files.  
-If you are using other software packages to generate PDF files, please refer to their manuals for correct conversion settings.  The most common problem in creating Xplore-compatible PDF files is not embedding all fonts.
- 
+\cleardoublepage
+\section{Parallel Processing Environment}
 
 
-% An example of a floating figure using the graphicx package.
-% Note that \label must occur AFTER (or within) \caption.
-% For figures, \caption should occur after the \includegraphics.
-% Note that IEEEtran v1.7 and later has special internal code that
-% is designed to preserve the operation of \label within \caption
-% even when the captionsoff option is in effect. However, because
-% of issues like this, it may be the safest practice to put all your
-% \label just after \caption rather than within \caption{}.
-%
-% Reminder: the "draftcls" or "draftclsnofoot", not "draft", class
-% option should be used if it is desired that the figures are to be
-% displayed while in draft mode.
-%
-%\begin{figure}[!t]
-%\centering
-%\includegraphics[width=3.5in]{myFigure.eps}
-% where an .eps filename suffix will be assumed under latex, 
-% and a .pdf suffix will be assumed for pdflatex; or what has been declared
-% via \DeclareGraphicsExtensions.
-%\caption{Daily abstract submission rate of the 2007 NSS-MIC. }
-%\label{fig_sim}
-%\end{figure}
+\section{Software Defined System on Chip}
 
-% Note that IEEE typically puts floats only at the top, even when this
-% results in a large percentage of a column being occupied by floats.
-
-
-% An example of a double column floating figure using two subfigures.
-% (The subfig.sty package must be loaded for this to work.)
-% The subfigure \label commands are set within each subfloat command, the
-% \label for the overall figure must come after \caption.
-% \hfil must be used as a separator to get equal spacing.
-% The subfigure.sty package works much the same way, except \subfigure is
-% used instead of \subfloat.
-%
-%\begin{figure*}[!t]
-%\centerline{\subfloat[Case I]\includegraphics[width=2.5in]{subfigcase1}%
-%\label{fig_first_case}}
-%\hfil
-%\subfloat[Case II]{\includegraphics[width=2.5in]{subfigcase2}%
-%\label{fig_second_case}}}
-%\caption{Simulation results}
-%\label{fig_sim}
-%\end{figure*}
-%
-% Note that often IEEE papers with subfigures do not employ subfigure
-% captions (using the optional argument to \subfloat), but instead will
-% reference/describe all of them (a), (b), etc., within the main caption.
-
-
-% An example of a floating table. Note that, for IEEE style tables, the 
-% \caption command should come BEFORE the table. Table text will default to
-% \footnotesize as IEEE normally uses this smaller font for tables.
-% The \label must come after \caption as always.
-%
-%\begin{table}[!t]
-%% increase table row spacing, adjust to taste
-%\renewcommand{\arraystretch}{1.3}
-% if using array.sty, it might be a good idea to tweak the value of
-% \extrarowheight as needed to properly center the text within the cells
-%\caption{An Example of a Table}
-%\label{table_example}
-%\centering
-%% Some packages, such as MDW tools, offer better commands for making tables
-%% than the plain LaTeX2e tabular which is used here.
-%\begin{tabular}{|c||c|}
-%\hline
-%One & Two\\
-%\hline
-%Three & Four\\
-%\hline
-%\end{tabular}
-%\end{table}
-
-
-% Note that IEEE does not put floats in the very first column - or typically
-% anywhere on the first page for that matter. Also, in-text middle ("here")
-% positioning is not used. Most IEEE journals use top floats exclusively.
-% Note that, LaTeX2e, unlike IEEE journals, places footnotes above bottom
-% floats. This can be corrected via the \fnbelowfloat command of the
-% stfloats package.
-
-
-
-% if have a single appendix:
-%\appendix[Proof of the Zonklar Equations]
-% or
-%\appendix  % for no appendix heading
-% do not use \section anymore after \appendix, only \section*
-% is possibly needed
-
-% use appendices with more than one appendix
-% then use \section to start each appendix
-% you must declare a \section before using any
-% \subsection or using \label (\appendices by itself
-% starts a section numbered zero.)
-%
-
-
-\subsection{Submit the Manuscript and Copyright Form}
-
-After you have obtained the Xplore-compatible PDF file, you have to submit it to the paper submission web site. Be aware that PDF files that are not Xplore-compatible will not be included in the Conference Record CD.
-
-
-An IEEE Copyright Form should be submitted electronically at the same time your Xplore-compatible manuscript is submitted. Details on how to submit an IEEE copyright form will be given on the Conference web site.  Each manuscript submitted to the Conference Record must be accompanied by a corresponding copyright form. 
-
-
-\section{Software Defined System on Chip, SDSoC with Zynq}
 
 \section{Future Work}
 \subsection{OpenCL for Parallel Processing}
@@ -249,8 +122,7 @@ OpenCL is a programming model developed by the Khronos group for the parallel pr
 
 \subsection{on FPGA}
 
-%\begin{table}[h!t]
-\begin{table}.
+\begin{table}[h!t]
 %	\setlength\tabcolsep{3.8pt}
 \centering
 \caption{Software Modules}
@@ -300,6 +172,7 @@ OpenCL is a programming model developed by the Khronos group for the parallel pr
 
 \section{Conclusion}
 %가속기, 핵융합, 천체 망원경과 같은 거대 과학 실험 장치는 그 특성상 분산된 이기종 제어 장치들의 통일성이 요구되며, 특정 장치에 대해서는 빠른 응답성이 요구된다. 더욱이 이 두가지 요구사항은 동시에 만족되어야 한다.TCP/UDP/IP protocol Ethernet-based EPICS middleware framework는 여러 이기종 제어장치들을 하나의 단일 제어시스템으로 구현할 수 있는 환경을 제공한다.
+% 또한 향 후에는 OpenCL를 이용하여 특정 하드웨어들에 대한 병렬처리 부분에 대한 추상화 layer를 제공하고 EPICS와 통합할 수 있을 것으로 생각된다.
 
 Timing system can distribute the fine synchronized event signal at a high speed. The objective of the stepper motor control testbed is to know how to operate the timing system and how to apply it to the high speed controller. The overall implementation is still underway, however if the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to implement this high-speed control system.
 
@@ -340,11 +213,21 @@ H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
 \bibitem{IEEEPDFRequirement401}
 IEEE Content Engineering, \emph{IEEE PDF Specification Version 4.10}. Available: http://www.ieee.org/documents/31296\_IEEE\_PDF\_Spec.zip.
 
+\bibitem{opencl}
+OpenCL, https://www.khronos.org/opencl/
+
 \bibitem{linaro}
 Linaro Document website, https://en.wikipedia.org/wiki/Linaro
 
 \bibitem{opencl_on_altera}
 OpenCL on Altera, https://www.altera.com/en\_US/pdfs/literature/wp/wp-01173-opencl.pdf
+
+\bibitem{analog}
+Analog Devices website, http://www.analog.com
+
+
+\bibitem{iio}
+Industrial I/O Document website, https://wiki.analog.com/resources/tools-software/linux-software/libiio
 
 
 \end{thebibliography}
