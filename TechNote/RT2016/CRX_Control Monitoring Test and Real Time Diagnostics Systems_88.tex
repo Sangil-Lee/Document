@@ -105,36 +105,12 @@ Figure~\ref{controller} shows the controller and low voltage drive board of the 
 \subsection{FPGA Interface}
 reuses the Hardware Description Lanaguage (HDL) code which is provided by the Analog Devices. FPGA HDL code is develeped by VerilogHDL using Vivado of Xilinx. When the motor controller was purchased from Analog Devices, it operated on ZedBoard. It should be changed to operate the ZC706 board as well as ZedBoard. It is going to transplant the code of ZedBoard into ZC706 board. In addition, It is being implemented FPGA code to drive the motor receiving the input signals (EVR TTL signals) via user clock port of ZC706 board.
 
-
-\section{Software Defined System on Chip}
-The SDSoC (Software Defined System On Chip) environment is an Eclipse-based Integrated Development Environment (IDE) for implementing  embedded systems using the zynq programmable SoC platform.
-
-The SDSoC environment 2015.2.1 release includes support for the ZC702, ZC706, MicroZed,ZedBoard and Zybo development boards featuring the Zynq-7000 AP SoC.
-\clearpage
-
-\section{Future Work}
-\subsection{OpenCL for Parallel Processing}
-OpenCL is a programming model developed by the Khronos group for the parallel processing on the specific hardwares like GPU and FPGA.
-
-
-\begin{figure}[!htb]
-	\centering
-	\includegraphics*[width=75mm, height=50mm]{img02.png}
-	\caption{OpenCL-based Parallel Control System Configuration}
-	\label{opencl_control_system}
-\end{figure}
-
-
-
-\subsection{on GPU}
-
-
-\subsection{on FPGA}
-
+\hfill\break
+TABLE \ref{sw-conf} 은 
 \begin{table}[h!t]
-%	\setlength\tabcolsep{3.8pt}
-\centering
-\caption{Software Modules}
+	%	\setlength\tabcolsep{3.8pt}
+	\centering
+	\caption{Software Modules}
 	\label{sw-conf}
 	
 	\begin{tabular}{@{}lll@{}}
@@ -175,15 +151,51 @@ OpenCL is a programming model developed by the Khronos group for the parallel pr
 \end{table}
 
 
+
+\section{Software Defined System on Chip Platforms}
+The SDSoC (Software Defined System On Chip)\cite{sdsoc} environment is an Eclipse-based Integrated Development Environment (IDE) for implementing embedded systems using the zynq programmable SoC platform.The SDSoC environment includes support for the ZC702, ZC706, MicroZed, ZedBoard and Zybo development boards featuring the Zynq-7000 AP SoC.
+\hfil\break\hfil\break
+An SDSoC platform can define as follows:
+\begin{itemize}
+ 	\item Hardware and Software Architecture
+ 	\item Application Context including Linux OS
+ 	\item Bootloader
+ 	\item Device Drivers for I/O or AXI Interface
+ 	\item Root File System
+	\item External Memory Interface
+	\item Custom Input/Output
+	\item User-defined Libraries
+\end{itemize}
+A series of the works that were previously described in chapter [2,3] can be easily configured using the SDSoC platform as shown in Fig.\ref{sdsoc_control_system}. 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=95mm, height=80mm]{img03.png}
+	\caption{Control System Configuration using SDSoC}
+	\label{sdsoc_control_system}
+\end{figure}
+Fig.\ref{sdsoc_control_system} shows the configuration of the software platform to perform the application context using SDSoC on zynq PS, such as a linux kernel image, boot loader, root file system, device tree, and  the hardware platform to generate the FPGA logic through vivado on zynq PL. After this configuration, EPICS middleware that cross-compiled on the linux OS is interconnected with the C libraries through the SDSoC. Therefore it does not need to develope the AXI interface linux device driver.
+
+\section{Future Work}
+In order to connect the distributed processing system and parallel processing system more effectively, it should provide a unified interface layer for the specific various parallel processing hardwares. For the purpose of developing the unified parallel processing interface layer it can be used  Open Computer Lanaguage (OpenCL).
+
+\subsection{OpenCL for Parallel Processing}
+OpenCL\cite{opencl} is a framework or programming model for writing programs that execute across heterogeneous platforms consisting of CPUs, GPUs, DSPs, FPGAs and other processors or hardware accelerators and was developed by the Khronos group. 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=90mm, height=70mm]{img02.png}
+	\caption{OpenCL-based Parallel Control System Configuration}
+	\label{opencl_control_system}
+\end{figure}
+Hardware manufacturer must provide application program interface libraries to satisfy the specification according to OpenCL version. Fig.\ref{opencl_control_system} shows the configuration of the unified interface layer for the parallel processing of GPU (NVIDIA or AMD) and FPGA (Xilinx or Altera) using OpenCL. The data interface between the parallel processing hardware and the host make up with PCI Express (PCIe) bus. This configuration for the FPGA hardware is required the DDR memory separately. The GPU already uses the built-in DDR memory. Eventually the kernel code of OpenCL is performed as parallel processing code through OpenCL interface API. The integration of the OpenCL code and the EPICS IOC code means the integration of the distributed system and parallel system.
 \subsection{EPICS v4 PV Access}
+EPICS v3 is not enough to hold the contents of the much more complex scientfic data structure. 
 
-\newpage
-
+%병렬 처리에서 처리되는 대량의 데이터 및 복잡한 데이터를 
 \section{Conclusion}
 %가속기, 핵융합, 천체 망원경과 같은 거대 과학 실험 장치는 그 특성상 분산된 이기종 제어 장치들의 통일성이 요구되며, 특정 장치에 대해서는 빠른 응답성이 요구된다. 더욱이 이 두가지 요구사항은 동시에 만족되어야 한다.TCP/UDP/IP protocol Ethernet-based EPICS middleware framework는 여러 이기종 제어장치들을 하나의 단일 제어시스템으로 구현할 수 있는 환경을 제공한다.
 % 또한 향 후에는 OpenCL를 이용하여 특정 하드웨어들에 대한 병렬처리 부분에 대한 추상화 layer를 제공하고 EPICS와 통합할 수 있을 것으로 생각된다.
 
-Timing system can distribute the fine synchronized event signal at a high speed. The objective of the stepper motor control testbed is to know how to operate the timing system and how to apply it to the high speed controller. The overall implementation is still underway, however if the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to implement this high-speed control system.
+If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to implement this high-speed control system.
 
 Utilizing the OpenCL standard on an FPGA may offer significantly higher performance and at much lower power than is available today from hardware architectures (CPU, GPUs, etc). In addition, an FPGA-based heterogeneous system (CPU + FPGA) using the OpenCL standard has a significant time-to-market advantage compared to traditional FPGA development using lower level hardware description languages (HDLs) such as Verilog or VHDL. Altera joined The Khronos Group in 2010 and is an active contributor to the standard. To stay up to date on Altera’s OpenCL program for FPGAs, please register at www.altera.com/opencl.
 
@@ -238,6 +250,8 @@ Analog Devices website, http://www.analog.com
 \bibitem{iio}
 Industrial I/O Document website, https://wiki.analog.com/resources/tools-software/linux-software/libiio
 
+\bibitem{sdsoc}
+SDSoC Document, http://www.xilinx.com/support/documentation/sw\_manuals/xilinx2016\_1/ug1146-sdsoc-platforms-and-libraries.pdf
 
 \end{thebibliography}
 
