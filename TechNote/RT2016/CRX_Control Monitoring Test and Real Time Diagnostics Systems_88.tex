@@ -99,14 +99,17 @@ EPICS IOC is being implemented using the libiio library that abstracted the low-
 %\cleardoublepage
 \section{Parallel Processing Environment}
 \subsection{Zynq Evaluation Board}
-The ZC706 evaluation board for All Programmable SoC (AP SoC) provides a hardware environment for developing and evaluating designs targeting the Zynq®-7000 AP SoC.\cite{zc706-doc} The ZC706 board has the SMA port which is the programmable user clock for the TTL out signal of the EVR timing board. The reason which selected the board is to have the user clock port to receive input from the external trigger.
+The ZC706 evaluation board for All Programmable SoC (AP SoC) provides a hardware environment for developing and evaluating designs targeting the Zynq-7000 AP SoC. The ZC706 board has the SMA port which is the programmable user clock for the TTL out signal of the EVR timing board. The reason which selected the board is to have the user clock port to receive input from the external trigger.
+
 \subsection{Controller for Motor Drive}
-Figure~\ref{controller} shows the controller and low voltage drive board of the Analog Devices to drive the motor. Controller board communicates with ZC706 via FPGA Mezzanine Card (FMC) connector. FMC connector of the controller board is connected to XADC interface, digital I/O and sensors, two gigabit ethernet modules, power line and so on. XADC and digital I/O signals among those connections are delivered to the low voltage drive board via the drive board connector. The low voltage drive board received those signals generates Pulse Width Modulation (PWM) signal through the MOSFET gate driver and drives the stepper motor. The low voltage drive board is operated in 12${\sim}$24V DC power from the external power source.
+As shown Figure~\ref{control_system}, controller board communicates with ZC706 via FPGA Mezzanine Card (FMC) connector. FMC connector of the controller board is connected to XADC interface, digital I/O and sensors, two gigabit ethernet modules, power line and so on. XADC and digital I/O signals among those connections are delivered to the low voltage drive board via the drive board connector. The low voltage drive board received those signals generates Pulse Width Modulation (PWM) signal through the MOSFET gate driver and drives the stepper motor. The low voltage drive board is operated in 12${\sim}$24V DC power from the external power source.
+
 \subsection{FPGA Interface}
-reuses the Hardware Description Lanaguage (HDL) code which is provided by the Analog Devices. FPGA HDL code is develeped by VerilogHDL using Vivado of Xilinx. When the motor controller was purchased from Analog Devices, it operated on ZedBoard. It should be changed to operate the ZC706 board as well as ZedBoard. It is going to transplant the code of ZedBoard into ZC706 board. In addition, It is being implemented FPGA code to drive the motor receiving the input signals (EVR TTL signals) via user clock port of ZC706 board.
+FPGA code reuses the Hardware Description Lanaguage (HDL) code which is provided by the Analog Devices. FPGA HDL code is develeped by VerilogHDL using Vivado of Xilinx. When the motor controller was purchased from Analog Devices, it operated on ZedBoard. It should be changed to operate the ZC706 board as well as ZedBoard. It is going to transplant the code of ZedBoard into ZC706 board.
 
 \hfill\break
 TABLE \ref{sw-conf} 은 
+
 \begin{table}[h!t]
 	%	\setlength\tabcolsep{3.8pt}
 	\centering
@@ -132,15 +135,6 @@ TABLE \ref{sw-conf} 은
 		& In-house code                         &                       \\
 		
 		\hline
-		VxWorks      & Real-time OS for VME                  & Timing                \\
-		& including BSP                         &                       \\         
-		MRFIOC2      & EPICS IOC for timing                  &                       \\
-		
-		\hline
-		SRSIOC       & IOC for rubidium clock                &                       \\
-		
-		\hline
-		Workbench    & Workbench3.3 for VxWorks              & Development           \\
 		Vivado       & Vivado14.4 including SDK              & Tool                  \\        
 		& with node lock license                &                       \\            
 		Busybox      & for rootfs system (free)              &                       \\
@@ -187,17 +181,14 @@ OpenCL\cite{opencl} is a framework or programming model for writing programs tha
 	\label{opencl_control_system}
 \end{figure}
 Hardware manufacturer must provide application program interface libraries to satisfy the specification according to OpenCL version. Fig.\ref{opencl_control_system} shows the configuration of the unified interface layer for the parallel processing of GPU (NVIDIA or AMD) and FPGA (Xilinx or Altera) using OpenCL. The data interface between the parallel processing hardware and the host make up with PCI Express (PCIe) bus. This configuration for the FPGA hardware is required the DDR memory separately. The GPU already uses the built-in DDR memory. Eventually the kernel code of OpenCL is performed as parallel processing code through OpenCL interface API. The integration of the OpenCL code and the EPICS IOC code means the integration of the distributed system and parallel system.
-\subsection{EPICS v4 PV Access}
-EPICS v3 is not enough to hold the contents of the much more complex scientfic data structure. 
+\subsection{EPICS Version 4}
+EPICS v3 is not enough to hold the contents of the much more complex scientfic data structure like a image data.
+Reflecting this requirement, EPICS v4\cite{epics_v4} provides efficient storage, access, and communication, of memory resident structured data. The EPICS v4 Normative Types\cite{epics_v4_normative} are a collection of structured data types that can be used by the application level of EPICS V4 network endpoints, to interoperably exchange scientific data. Adopting EPICS v4 as the distributed system it will be interfaced large amounts of data and complex data to be processed in the parallel processing of a variety of experimental devices.
 
-%병렬 처리에서 처리되는 대량의 데이터 및 복잡한 데이터를 
 \section{Conclusion}
-%가속기, 핵융합, 천체 망원경과 같은 거대 과학 실험 장치는 그 특성상 분산된 이기종 제어 장치들의 통일성이 요구되며, 특정 장치에 대해서는 빠른 응답성이 요구된다. 더욱이 이 두가지 요구사항은 동시에 만족되어야 한다.TCP/UDP/IP protocol Ethernet-based EPICS middleware framework는 여러 이기종 제어장치들을 하나의 단일 제어시스템으로 구현할 수 있는 환경을 제공한다.
-% 또한 향 후에는 OpenCL를 이용하여 특정 하드웨어들에 대한 병렬처리 부분에 대한 추상화 layer를 제공하고 EPICS와 통합할 수 있을 것으로 생각된다.
+%다양한 이기종형태의 병렬처리 Hardware의 사용을 위해 단일화된 software abstract layer에 대한 요구사항 증가 할 것으로 보인다.
 
-If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to implement this high-speed control system.
-
-Utilizing the OpenCL standard on an FPGA may offer significantly higher performance and at much lower power than is available today from hardware architectures (CPU, GPUs, etc). In addition, an FPGA-based heterogeneous system (CPU + FPGA) using the OpenCL standard has a significant time-to-market advantage compared to traditional FPGA development using lower level hardware description languages (HDLs) such as Verilog or VHDL. Altera joined The Khronos Group in 2010 and is an active contributor to the standard. To stay up to date on Altera’s OpenCL program for FPGAs, please register at www.altera.com/opencl.
+The big scientific experiment facilities such as accelerators, nuclear fusion, and telescope are  required by the unity of the heterogenous distributed control system and the fast response  according to its characteristic. These requirements for the distributed and parallel environments must be satisfied at the same time. If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to satisfy with the distributed and high-speed parallel control system at the same time. More and more, the control environment of devices used in the big science experiment of the future will be used the distributed processing environment combined with the parallel processing environment. Therefore, it expect to be increased the requirements for the unified software abstraction layer to operate the heterogenous parallel proccessing hardwares. Utilizing the OpenCL standard on the heterogeneous parallel processing hardwares may offer significantly higher performance and the unified abastract layer at much lower power.
 
 % use section* for acknowledgement
 \section*{Acknowledgment}
@@ -253,10 +244,13 @@ Industrial I/O Document website, https://wiki.analog.com/resources/tools-softwar
 \bibitem{sdsoc}
 SDSoC Document, http://www.xilinx.com/support/documentation/sw\_manuals/xilinx2016\_1/ug1146-sdsoc-platforms-and-libraries.pdf
 
+
+\bibitem{epics_v4}
+EPICS Version 4, http://epics-pvdata.sourceforge.net/
+
+\bibitem{epics_v4_normative}
+EPICS Version 4 Normative Types, http://epics-pvdata.sourceforge.net/docbuild/normativeTypesCPP/tip/documentation/ntCPP.html
 \end{thebibliography}
-
-
-
 
 % that's all folks
 \end{document}
