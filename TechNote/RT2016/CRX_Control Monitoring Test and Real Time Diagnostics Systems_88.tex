@@ -63,7 +63,7 @@ This paper describes the content and configuration of the distributed and parall
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
 \IEEEPARstart{R}{AON} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications\cite{risp}. RAON, which is a colossal machine, is composed of many control devices, experimental equipments, and additional utilities. A big scientific experiment is required by the unity of the heterogenous distributed control system according to its characteristic and the fast response for a particular device. Furthermore, these requirements for the distributed and parallel environments must be satisfied at the same time. The distributed processing is to handle dividing one job into several processes and the parallel processing is to handle the multiple jobs at the same time. 
-To satisfy the general requirements under the distributed environment, it needs to the middle-ware layer to support for the distributed control system. For the purpose of  implementing it, the control system of RAON has decided to apply the EPICS (Experimental Physics and Industrial Control System) software framework. "EPICS is a set of open source software tools, libraries and applications developed collaboratively and used worldwide to create distributed soft real-time control systems for scientific instruments such as a particle accelerators, telescopes and other large scientific experiments"\cite{epics}. Additionally FPGA chips are used in general for monitoring or control system of the fast response time. There are also many control systems that adopted FPGA among the RAON equipments, such as timing system, LLRF control system, power supply cotrol system and so on. A lot of devices or systems have implemented the control system configuring CPUs with OS and FPGA chips using VME or cPCI interface. The low-power clustering application for parallel computing is also one of the fields utilizing the GPU or FPGA. Likewise, the configuration of the specific hardwares, such as GPU processing elements or FPGA gate logics, it can be saved the prorated cost of the CPU for control and analysis algorithms. Zynq series of Xilinx FPGA chips are called the programmable SoC. Within the one chip it consists of the arm-based CPU and the logic gates of FPGA. PS with the dual-core ARM Cortex–A9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level FPGA is connecting with a lot of I/O peripherals for real-time control system. Utilizing Zynq SoC, it could configure an environment of the distributed and parallel processing at a time. In addition, I guess that the control system may provide an abstract layer of the parallel processing integrated with EPICS middleware using Open Computing Lanaguage (OpenCL)\cite{opencl} for the specific heterogenous hardwares in future plan.
+To satisfy the general requirements under the distributed environment, it needs to the middle-ware layer to support for the distributed control system. For the purpose of  implementing it, the control system of RAON has decided to apply the EPICS (Experimental Physics and Industrial Control System) software framework. "EPICS is a set of open source software tools, libraries and applications developed collaboratively and used worldwide to create distributed soft real-time control systems for scientific instruments such as a particle accelerators, telescopes and other large scientific experiments"\cite{epics}. Additionally FPGA chips are used in general for monitoring or control system of the fast response time. There are also many control systems that adopted FPGA among the RAON equipments, such as timing system, LLRF control system, power supply cotrol system and so on. A lot of devices or systems have implemented the control system configuring CPUs with OS and FPGA chips using VME or cPCI interface. The low-power clustering application for parallel computing is also one of the fields utilizing the GPU or FPGA. Likewise, the configuration of the specific hardwares, such as GPU processing elements or FPGA gate logics, it can be saved the prorated cost of the CPU for control and analysis algorithms. Zynq series of Xilinx FPGA chips are called the programmable SoC. Within the one chip it consists of the arm-based CPU and the logic gates of FPGA. PS with the dual-core ARM Cortex–A9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level FPGA is connecting with a lot of I/O peripherals for real-time control system. Utilizing zynq SoC, it could configure an environment of the distributed and parallel processing at a time. In addition, the control system may provide an abstract layer integrated with EPICS middleware using Open Computing Lanaguage (OpenCL)\cite{opencl} for the heterogenous parallel processing hardwares in future plan.
 
 \section{Distributed Processing Environment}
 Configuration of Fig.\ref{control_system} shows the overall of the control system for the distributed and parallel processing. The PS of zynq is equipped with the EPICS software framework on the cross-compiled linux OS of the ARM processor. The parameter values for the motor control is set through the EPICS interface on PS. The data communication between PS and PL uses the AXI interface of the ARM Advanced Microcontroller Bus Architecture (AMBA). Software module for AXI interface between both should be also developed in the linux device driver. The types of motor which can be supported by a low voltage drive board of the Analog Device\cite{analog} are brushless DC, PMSM, brushed DC or stepper motor.
@@ -85,30 +85,28 @@ To operate linux OS on the ARM processor of the zynq PS there consists of:
 	\item Root File System (Busybox)
 \end{itemize}
 \hfil\break
-Linaro\cite{linaro} is a not-for-profit engineering organization that works on free and open-source software such as the Linux kernel, the GNU Compiler Collection (GCC), power management, graphics and multimedia interfaces for the ARM family of instruction sets and implementations thereof as well as for the heterogeneous system architecture. The linaro kernel source is the ubuntu-based kernel source including a lot of device driver such as zynq device tree. 
-The bootloader of PS uses U-Boot\cite{u-boot} supporting for the zynq device of Xilinx. To boot the zynq device, it should be made up the boot.bin file created by Vivado\cite{vivado} tool. The boot.bin\cite{boot-bin} file consists of fsbl.elf (First Stage BootLoader), u-boot.elf (Second BootLoader), uImage (kernel zImage for uboot ), zynq.bif (Boot Image Format file) and user.bit (bitstream file of FPGA). The linux kernel is using the root file system generated by the Busybox\cite{busybox} tool.
+"Linaro is a engineering organization that works on free and open-source software such as the Linux kernel, the GNU Compiler Collection (GCC), power management, graphics and multimedia interfaces for the ARM family of instruction sets and implementations thereof as well as for the heterogeneous system architecture"\cite{linaro}. The linaro kernel source is the ubuntu-based kernel source including a lot of device driver such as zynq device tree. The bootloader of PS uses U-Boot\cite{u-boot} supporting for the zynq device of Xilinx. To boot the zynq device, it should be made up the boot.bin file created by Vivado tool. The boot.bin file consists of fsbl.elf (First Stage BootLoader), u-boot.elf (Second BootLoader), uImage (kernel zImage for uboot ), zynq.bif (Boot Image Format file) and user.bit (bitstream file of FPGA). The linux kernel is using the root file system generated by the Busybox\cite{busybox} tool.
 
 
 \subsection{Device Driver on Linux}
 Linux device driver for zynq PS uses Industrial IO (IIO) module of the Analog Devices. Libiio\cite{iio} is a library that has been developed by Analog Devices for easy interface with IIO devices. Localbackend module of Fig.~\ref{control_system} goes into kernel mode from user mode through the system call and accesses the iio device driver via "struct file\_operations". Basically the iio device driver is a character device type.
 
 \subsection{EPICS Middleware Framework}
-EPICS IOC is being implemented using the libiio library that abstracted the low-level details of the hardware, as shown in Fig.~\ref{control_system}. EPICS is a set of open source software tools, libraries and applications developed collaboratively and used worldwide to create distributed soft real-time control systems for scientific instruments such as a particle accelerators, telescopes and other large scientific experimental facilities\cite{epics}. The device support routine of EPICS is implemented using the libiio library to read or write the parameter values for the motor control. The motor control parameters become the Process Variables (PVs) of EPICS and are carried out the EPICS database processing according to EPICS scan rate. Also, it is going to develop additional EPICS waveform PV to monitor the PWM signal of the low voltage drive board.
-
+EPICS IOC is being implemented using the libiio library that abstracted the low-level details of the hardware, as shown in Fig.~\ref{control_system}. The device support routine of EPICS is implemented using the libiio library to read or write the parameter values for the motor control. The motor control parameters become the Process Variables (PVs) of EPICS and are carried out the EPICS database processing according to EPICS scan rate. Also, it is going to develop additional EPICS waveform PV to monitor the Pulse Width Modulation (PWM) signal of the low voltage drive board.
 
 %\cleardoublepage
 \section{Parallel Processing Environment}
 \subsection{Zynq Evaluation Board}
-The ZC706 evaluation board for All Programmable SoC (AP SoC) provides a hardware environment for developing and evaluating designs targeting the Zynq-7000 AP SoC. The ZC706 board has the SMA port which is the programmable user clock for the TTL out signal of the EVR timing board. The reason which selected the board is to have the user clock port to receive input from the external trigger.
+The ZC706 evaluation board for All Programmable SoC (AP SoC) provides a hardware environment for developing and evaluating designs targeting the Zynq-7000 AP SoC. The ZC706 board has the SubMiniature version A (SMA) port which is the programmable user clock for the Transistor-Transistor Logic (TTL) out signal of the timing board. The reason which selected the board is to have the user clock port to receive input from the external trigger.
 
 \subsection{Controller for Motor Drive}
-As shown Figure~\ref{control_system}, controller board communicates with ZC706 via FPGA Mezzanine Card (FMC) connector. FMC connector of the controller board is connected to XADC interface, digital I/O and sensors, two gigabit ethernet modules, power line and so on. XADC and digital I/O signals among those connections are delivered to the low voltage drive board via the drive board connector. The low voltage drive board received those signals generates Pulse Width Modulation (PWM) signal through the MOSFET gate driver and drives the stepper motor. The low voltage drive board is operated in 12${\sim}$24V DC power from the external power source.
+As shown Fig.~\ref{control_system}, controller board communicates with ZC706 via FPGA Mezzanine Card (FMC) connector. FMC connector of the controller board is connected to XADC interface, digital I/O and sensors, two gigabit ethernet modules, power line and so on. XADC and digital I/O signals among those connections are delivered to the low voltage drive board via the drive board connector. The low voltage drive board received those signals generates PWM signal through the Metal-Oxide-Semiconductor Field Effect Transister (MOSFET) gate driver and drives the stepper motor. The low voltage drive board is operated in 12${\sim}$24V DC power from the external power source.
 
 \subsection{FPGA Interface}
 FPGA code reuses the Hardware Description Lanaguage (HDL) code which is provided by the Analog Devices. FPGA HDL code is develeped by VerilogHDL using Vivado of Xilinx. When the motor controller was purchased from Analog Devices, it operated on ZedBoard. It should be changed to operate the ZC706 board as well as ZedBoard. It is going to transplant the code of ZedBoard into ZC706 board.
 
 \hfill\break
-TABLE \ref{sw-conf} 은 
+TABLE \ref{sw-conf} shows the software modules that used to incorporate a distributed process control system and a parallel processing control system.
 
 \begin{table}[h!t]
 	%	\setlength\tabcolsep{3.8pt}
@@ -144,8 +142,6 @@ TABLE \ref{sw-conf} 은
 	\end{tabular}
 \end{table}
 
-
-
 \section{Software Defined System on Chip Platforms}
 The SDSoC (Software Defined System On Chip)\cite{sdsoc} environment is an Eclipse-based Integrated Development Environment (IDE) for implementing embedded systems using the zynq programmable SoC platform.The SDSoC environment includes support for the ZC702, ZC706, MicroZed, ZedBoard and Zybo development boards featuring the Zynq-7000 AP SoC.
 \hfil\break\hfil\break
@@ -173,7 +169,7 @@ Fig.\ref{sdsoc_control_system} shows the configuration of the software platform 
 In order to connect the distributed processing system and parallel processing system more effectively, it should provide a unified interface layer for the specific various parallel processing hardwares. For the purpose of developing the unified parallel processing interface layer it can be used  Open Computer Lanaguage (OpenCL).
 
 \subsection{OpenCL for Parallel Processing}
-OpenCL\cite{opencl} is a framework or programming model for writing programs that execute across heterogeneous platforms consisting of CPUs, GPUs, DSPs, FPGAs and other processors or hardware accelerators and was developed by the Khronos group. 
+OpenCL\cite{opencl_wiki} is a framework or programming model for writing programs that execute across heterogeneous platforms consisting of CPUs, GPUs, DSPs, FPGAs and other processors or hardware accelerators and was developed by the Khronos group. 
 \begin{figure}[!htb]
 	\centering
 	\includegraphics*[width=90mm, height=70mm]{img02.png}
@@ -186,9 +182,7 @@ EPICS v3 is not enough to hold the contents of the much more complex scientfic d
 Reflecting this requirement, EPICS v4\cite{epics_v4} provides efficient storage, access, and communication, of memory resident structured data. The EPICS v4 Normative Types\cite{epics_v4_normative} are a collection of structured data types that can be used by the application level of EPICS V4 network endpoints, to interoperably exchange scientific data. Adopting EPICS v4 as the distributed system it will be interfaced large amounts of data and complex data to be processed in the parallel processing of a variety of experimental devices.
 
 \section{Conclusion}
-%다양한 이기종형태의 병렬처리 Hardware의 사용을 위해 단일화된 software abstract layer에 대한 요구사항 증가 할 것으로 보인다.
-
-The big scientific experiment facilities such as accelerators, nuclear fusion, and telescope are  required by the unity of the heterogenous distributed control system and the fast response  according to its characteristic. These requirements for the distributed and parallel environments must be satisfied at the same time. If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to satisfy with the distributed and high-speed parallel control system at the same time. More and more, the control environment of devices used in the big science experiment of the future will be used the distributed processing environment combined with the parallel processing environment. Therefore, it expect to be increased the requirements for the unified software abstraction layer to operate the heterogenous parallel proccessing hardwares. Utilizing the OpenCL standard on the heterogeneous parallel processing hardwares may offer significantly higher performance and the unified abastract layer at much lower power.
+Big scientific experiment facilities such as accelerators, nuclear fusion, and telescope are  required by the unity of the heterogenous distributed control system and the fast response  according to its characteristic. These requirements for the distributed and parallel environments must be satisfied at the same time. If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to satisfy with the distributed and high-speed parallel control system at the same time. More and more, the control environment of devices used in the big science experiment of the future will be used the distributed processing environment combined with the parallel processing environment. Therefore, it expect to be increased the requirements for the unified software abstraction layer to operate the heterogenous parallel proccessing hardwares."FPGA-based heterogeneous system (CPU + FPGA) using the OpenCL standard has a significant time-to-market advantage compared to traditional FPGA development using lower level hardware description languages (HDLs) such as Verilog or VHDL"\cite{opencl_on_altera}.  As a result, utilizing the OpenCL standard on the heterogeneous parallel processing hardwares may offer significantly higher performance and the unified abastract layer at much lower power. 
 
 % use section* for acknowledgement
 \section*{Acknowledgment}
@@ -214,42 +208,43 @@ This work is supported by the Rare Isotope Science Project funded by Ministry of
 \bibitem{risp} Y.~K.~Kwon, {\it et. al},``Status of Rare Isotope Science Project in Korea'',
 Few-Body Syst 54, 961-966, (2013).
 
-
 \bibitem{epics}
 EPICS website, http://www.aps.anl.gov/epics/
-
-\bibitem{IEEEhowto:kopka}
-H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
-  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
-
-\bibitem{IEEEPDFRequirement401}
-IEEE Content Engineering, \emph{IEEE PDF Specification Version 4.10}. Available: http://www.ieee.org/documents/31296\_IEEE\_PDF\_Spec.zip.
 
 \bibitem{opencl}
 OpenCL, https://www.khronos.org/opencl/
 
+\bibitem{analog}
+Analog Devices website, http://www.analog.com
+
 \bibitem{linaro}
 Linaro Document website, https://en.wikipedia.org/wiki/Linaro
 
-\bibitem{opencl_on_altera}
-OpenCL on Altera, https://www.altera.com/en\_US/pdfs/literature/wp/wp-01173-opencl.pdf
+\bibitem{u-boot}
+U-Boot Document website, http://www.denx.de/wiki/U-Boot
 
-\bibitem{analog}
-Analog Devices website, http://www.analog.com
+\bibitem{busybox}
+Busybox Document website, http://www.busybox.net/
 
 
 \bibitem{iio}
 Industrial I/O Document website, https://wiki.analog.com/resources/tools-software/linux-software/libiio
 
 \bibitem{sdsoc}
-SDSoC Document, http://www.xilinx.com/support/documentation/sw\_manuals/xilinx2016\_1/ug1146-sdsoc-platforms-and-libraries.pdf
+SDSoC Document,\\ http://www.xilinx.com/support/documentation/sw\_manuals/xilinx2016\_1/ug1146-sdsoc-platforms-and-libraries.pdf
 
+\bibitem{opencl_wiki}
+OpenCL Definition, https://en.wikipedia.org/wiki/OpenCL
 
 \bibitem{epics_v4}
 EPICS Version 4, http://epics-pvdata.sourceforge.net/
 
 \bibitem{epics_v4_normative}
-EPICS Version 4 Normative Types, http://epics-pvdata.sourceforge.net/docbuild/normativeTypesCPP/tip/documentation/ntCPP.html
+EPICS Version 4 Normative Types,\\ http://epics-pvdata.sourceforge.net/docbuild/normativeTypesCPP/tip/\\documentation/ntCPP.html
+
+\bibitem{opencl_on_altera}
+OpenCL on Altera, https://www.altera.com/en\_US/pdfs/literature/wp/wp-01173-opencl.pdf
+
 \end{thebibliography}
 
 % that's all folks
