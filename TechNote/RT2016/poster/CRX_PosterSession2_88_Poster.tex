@@ -9,6 +9,8 @@
 \usepackage{tabularx}
 \usepackage[framemethod=TikZ]{mdframed}
 \usepackage{lipsum}
+\usepackage{sectsty}
+
 
 % landscape
 % portrait
@@ -121,170 +123,125 @@
 
 \vspace{2cm}
 
-
 \begin{multicols}{3}
-\section*{Abstract}
+\section*{\centering {Abstract}}
 Zynq series of Xilinx FPGA chips are divided into Processing System (PS) and Programmable Logic (PL), as a kind of SoC (System on Chip). PS with the dual-core ARM Cortex?A9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level Field Programmable Gate Array (FPGA) built on high-performance, low-power, and high-k metal gate process technology is connecting with a lot of I/O peripherals for real-time control system. EPICS (Experimental Physics and Industrial Control System) is a set of open-source-based software tools which supports for the Ethernet-based middleware layer. In order to configure the environment of the distributed control system, EPICS middleware is equipped on the linux operating system of the Zynq PS. In addition, a lot of digital logic gates of the Zynq PL of FPGA-Zynq evaluation board (ZedBoard) are connected with I/O pins of the daughter board via FPGA Mezzanine Connector (FMC) of ZedBoard. An interface between the Zynq PS and PL is interconnected with AMBA4 AXI. For the organic connection both the PS and PL, it also used the linux device driver for AXI interface.
 This paper describes the content and configuration of the distributed and parallel real-time control system applying FPGA-Zynq and EPICS middleware.
 
-\section*{The RAON Introduction}
+\section*{\centering RAON Introduction}	
 \vspace{2mm}
-The RAON\cite{TSHOO:NIMB} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications. To produce the isotopes to fulfill the requirements we have planed the several modes of operation scheme which require fine-tuned synchronous controls, asynchronous controls, or both among the accelerator complexes.
+The RAON\cite{risp} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications. To produce the isotopes to fulfill the requirements we have planed the several modes of operation scheme which require fine-tuned synchronous controls, asynchronous controls, or both among the accelerator complexes.
 
-\section*{Timing System of RAON}
+\section*{\centering Environment for Distributed and Parallel Control System}
+\vspace{2mm}
 \begin{mdframed}[roundcorner=10pt]
+	\begin{figure}[H]
+		\centering
+%		\includegraphics[width=1\textwidth]{./images/WEPGF124f3.eps}
+		\includegraphics[width=25cm,height=23cm]{./images/img01.png}
+	\end{figure}
 \begin{itemize}
-\item Characteristics of MRF Timing System\cite{mrf}:
-   \begin{itemize}
-   	\item[-] Event Driven System, to 256 event codes
-   	\item[-] External RF Reference Clock
-   	\item[-] 50 $\sim$ 120 MHz Frequency
-   	\item[-] Multi Counters
-   	\item[-] Event Cascaded
-   	\item[-] Different Clock Synchronization
-   \end{itemize}
-  
+  	\item Distributed Control Environment
+  	\begin{itemize}
+	  	\item Linux OS on Zynq PS (ARM Processor)
+  	  	\begin{itemize}
+	  		\item ARM Cross Compile Tool Chain (arm-linuxgnueabihf)
+	  		\item Linux Kernel Source (Linaro)
+	  		\item Bootloader (BOOT.BIN: FSBL.elf, U-Boot.elf, uImage, Zynq.bif, User.bit)
+	  		\item Board Support Package (Linux Device Tree)
+	  		\item Root File System (Busybox)
+	  	\end{itemize}  	
+  		\item Linux Device Driver : Interface between PS and PL is through the AXI of AMBA
+  		\item EPICS Framework
+  		\begin{itemize}
+	  		\item  Base R3.14.15.2
+			\item  Control System Studio (CSS)	
+		\end{itemize}  		  	  		
+  		\item Libiio Library of Analog Device
+	\end{itemize}  	
+   	\item Parallel Processing Control Envrionment (ZC706)
+  	\begin{itemize}
+	  	\item Zynq PL (FPGA)
+	  	\item FPGA VerilogHDL by Vivado (Used the HDL code of Analog Devices)
+		\item Controller and Low Voltage Drive Board of Analog Devices
+		\item Controller communicates with ZC706 via FMC Connector
+		\item FMC Connection: XADC, Digital I/O, 2xGB Ethernet
+		\item XADC and digital I/O signals to LVDB
+		\item PWM Signal Generation through MOSFET Gate Drivers
+		\item External Power: 12 $\sim$24 DC to LVDB	  			  		
+  	\end{itemize}
 \end{itemize}
 \end{mdframed}
 
-\subsection*{Timing System Prototype}
+\subsection*{Software Defined System on Chip (SDSoC) Environment}
+\vspace{2mm}
 \begin{mdframed}[roundcorner=10pt]
- \vspace{4mm}
- \begin{figure}[H]
-  \centering
-%  \includegraphics[width=1\columnwidth]{./images/timing_test.eps}
-  \includegraphics[width=25cm,height=23cm]{./images/timing_test.eps}
- \end{figure}
-	  
+\begin{figure}[H]
+\centering
+  %\includegraphics[width=.9\columnwidth]{./images/img03.png}
+  \includegraphics[width=25cm,height=20cm]{./images/img03.png}
+%\caption{The timing system prototyping}
+\label{fig:timing_prototype}
+\end{figure}
+The SDSoC environment is an Eclipse-based Integrated Development Environment (IDE) for implementing embedded systems using the zynq programmable SoC platform. The SDSoC environment includes support for the ZC702, ZC706, MicroZed, ZedBoard and Zybo development boards featuring the Zynq-7000 AP SoC.
+
+Using SDSoC platform can implement as follows:
 \begin{itemize}
-      \item Hardware Configurations :
-   \begin{itemize}
-   	\item[-] XLi GPS Time System
-   	\item[-] Rubidium Frequency Standard Clock Source (FS725)
-   	\item[-] Event Trigger System (EVG/EVR, Fan-out Repeater)
-   	\item[-] MVME 6100 / MVME 3100 Controller
-   	\item[-] SMA 100a RF Signal Generator
-   	\item[-] VME Wiener Crate
-   \end{itemize}
-   \item Software Configurations :
-   \begin{itemize}
-   	\item[-] Workbench 3.3, VxWorks IDE
-   	\item[-] VxWorks 6.9 Real-time OS (on MVME 6100, EVG)
-   	\item[-] RTEMS Real-time OS (on MVME 3100, EVR)
-   	\item[-] EPICS framework (R3.14.15.2)
-   	\item[-] MRFIOC2 / SRSIOC
-   	\item[-] Network Time Protocol (NTP)
-   \end{itemize}
+\item Hardware and Software Architecture
+\item Application Context including Linux OS
+\item Bootloader
+\item Root File System
+\item High Level Libraries and Applications for Interface with PL
+\end{itemize}
+
+In addition, EPICS Framework on Linux Built using SDSoC :
+\begin{itemize}
+\item EPICS Base R3.14.15.2
+\item EPICS Device Suport Routine with High Level Library Interface which developed and deployed with SDSoC
+\end{itemize}
+\end{mdframed}
+
+\section*{\centering Future Plan}
+\vspace{2mm}
+\begin{mdframed}[roundcorner=10pt]
+In order to connect the distributed processing system and parallel processing system more effectively, it should provide a unified interface layer for the specific various parallel processing hardwares. For the purpose of developing the unified parallel processing interface layer it can be used Open Computer Lanaguage (OpenCL).
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=25cm,height=15cm]{./images/img02.png}
+\end{figure}
+
+OpenCL is a framework or programming model for writing programs that execute across heterogeneous platforms
+consisting of CPUs, GPUs, DSPs, FPGAs and other processors or hardware accelerators and was developed by the
+Khronos group.
+\begin{itemize}
+\item Abstract layer using OpenCL for Parallel Processing
+	\begin{itemize}
+		\item  GPU: 
+		\item  Control System Studio (CSS)	
+	\end{itemize}  			
+\end{itemize}
+EPICS v3 is not enough to hold the contents of the much more complex scientfic data structure like a image data.
+
+\begin{itemize}
+\item EPICS Version 4 for Distributed Control Environment
+	\begin{itemize}
+		\item  Base R3.14.15.2
+		\item  Control System Studio (CSS)	
+	\end{itemize}  			
 \end{itemize}
 \end{mdframed}
 
 \columnbreak
 
-\subsection*{Timing Network}
-\begin{mdframed}[roundcorner=10pt]
+\section*{\centering Conclusion}
 \vspace{2mm}
-\begin{figure}[H]
-  \centering
-%  \includegraphics[width=1\columnwidth]{./images/Timing_network.eps}
-  \includegraphics[width=25cm, height=12cm]{./images/Timing_network.eps}
-  %\caption{Overall architecture of the RAON control system}
-  \label{fig:architecture}
-\end{figure}
-
-\begin{itemize}
-\item GPS receiver synchronizes with RB clock and EVG to 1PPS
-\item Master OSC. generates reference RF (81.25 MHz) to EVG
-\item Two signals of EVG are synchronized by locking phase
-\item Synchronized signal of EVG is generated and distributed to EVR according to event code of MRFIOC2 on VME system
-\end{itemize}
-\end{mdframed}
-
-\section*{Application using Timing Signal}
-%\subsection*{Fast Stepper Motor Control Testbed}
 \begin{mdframed}[roundcorner=10pt]
-	\begin{figure}[H]
-		\centering
-%		\includegraphics[width=1\textwidth]{./images/WEPGF124f3.eps}
-		\includegraphics[width=25cm,height=23cm]{./images/WEPGF124f3.eps}
-	\end{figure}
-\begin{itemize}
-  	\item System on Chip: FPGA - Zynq\cite{xilix,zynq}
-  	\begin{itemize}
-		\item Zynq as SoC is divided into PS and PL
-  		\item[-] Interface between PS and PL is through the AXI of AMBA\cite{amba-bus}
-  	\end{itemize}
-  	\item ZC706 Evaluation Board\cite{zc706-doc}
-  	\item Linux on Zynq PS (ARM Processor)
-  	\begin{itemize}
-  		\item[-] ARM Cross Compile Tool Chain (arm-linuxgnueabihf)
-  		\item[-] Linux Kernel Source (Linaro)\cite{linaro}
-  		\item[-] Bootloader (BOOT.BIN: FSBL.elf, U-Boot.elf, uImage, Zynq.bif, User.bit)\cite{boot-bin,u-boot}
-  		\item[-] Board Support Package (Linux Device Tree)
-  		\item[-] Root File System (Busybox)\cite{busybox}
-  	\end{itemize}
-  	\item Linux Device Driver
-  	\begin{itemize}
-  		\item[-] Industrial IO linux device driver of Analog Devices\cite{analog}
-  		\item[-] Libiio library\cite{iio}
-  	\end{itemize}  	
-  	\item Software Interface
-  	\begin{itemize}
-  		\item[-] EPICS Base R3.14.15.2 : IOC developed using Libiio
-  		\item[-] FPGA VerilogHDL by Vivado\cite{vivado} (Used the HDL code of Analog Devices)
-  	\end{itemize}  	
-\end{itemize}
+Big scientific experiment facilities such as accelerators, nuclear fusion, and telescope are  required by the unity of the heterogenous distributed control system and the fast response  according to its characteristic. These requirements for the distributed and parallel environments must be satisfied at the same time. If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to satisfy with the distributed and high-speed parallel control system at the same time. More and more, the control environment of devices used in the big science experiment of the future will be used the distributed processing environment combined with the parallel processing environment. Therefore, it expect to be increased the requirements for the unified software abstraction layer to operate the heterogenous parallel proccessing hardwares."FPGA-based heterogeneous system (CPU + FPGA) using the OpenCL standard has a significant time-to-market advantage compared to traditional FPGA development using lower level hardware description languages (HDLs) such as Verilog or VHDL"\cite{opencl_on_altera}.  As a result, utilizing the OpenCL standard on the heterogeneous parallel processing hardwares may offer significantly higher performance and the unified abastract layer at much lower power. 
 \end{mdframed}
 
-
-\subsection*{Controller / Low Voltage Drive Board}
-\begin{mdframed}[roundcorner=10pt]
-\begin{figure}[H]
-\centering
-  \includegraphics[width=.9\columnwidth]{./images/WEPGF124f2.eps}
-%\caption{The timing system prototyping}
-\label{fig:timing_prototype}
-\end{figure}
-\begin{itemize}
-\item Controller and Low Voltage Drive Board of Analog Devices
-\item Controller communicates with ZC706 via FMC Connector
-\item FMC Connection: XADC, Digital I/O, 2xGB Ethernet
-\item XADC and digital I/O signals to LVDB
-\item PWM Signal Generation through MOSFET Gate Drivers
-\item External Power: 12 $\sim$24 DC to LVDB
-\end{itemize}
-\end{mdframed}
-
-\subsection*{Test Stepper Mortor}
-\begin{mdframed}[roundcorner=10pt]
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=25cm,height=15cm]{./images/hw_conf.eps}
-\end{figure}
-\begin{itemize}
-\item Not fully implemented, still is developing FPGA code to receive the timing EVR input signal
-\item Left shows to drive stepper motor using EPICS interface
-\item Right shows the connection for timing signal between EVR and ZC706
-\end{itemize}
-\end{mdframed}
-
-
-\section*{Summary}
-
-\begin{mdframed}[roundcorner=10pt]
-	\begin{figure}[H]
-		\centering
-%		\includegraphics[width=25cm, height=22cm]{./images/conf_table.eps}
-		\includegraphics[width=1\textwidth]{./images/conf_table.eps}
-	\end{figure}
-\end{mdframed}
-
-
-\section*{Conclusion}
-\begin{mdframed}[roundcorner=10pt]
-Timing system can distribute the fine synchronized event signal at a high speed. The objective of the stepper motor control testbed is to know how to operate the timing system and how to apply it to the high speed controller. The overall implementation is still underway, however if the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to implement this high-speed control system.
-\end{mdframed}
-
-\section*{Acknowledgement}
+\section*{\centering Acknowledgement}
+\vspace{2mm}
 This work is supported by the Rare Isotope Science Project funded by 
 Ministry of Science, ICT and Future Planning (MSIP) 
 and National Research Foundation (NRF) of KOREA.
@@ -292,65 +249,49 @@ and National Research Foundation (NRF) of KOREA.
 \begin{thebibliography}{13}   % Use for  1-9  references
 %\begin{thebibliography}{99} % Use for 10-99 references
 
-\bibitem{TSHOO:NIMB} Y.~K.~Kwon, {\it et. al},``Status of Rare Isotope Science Project in Korea'', Few-Body Syst 54, 961-966, (2013).
+\bibitem{risp} Y.~K.~Kwon, {\it et. al},``Status of Rare Isotope Science Project in Korea'',
+Few-Body Syst 54, 961-966, (2013).
 
-\bibitem{mrf}
-Micro-Research Finland Oy: \texttt{http://www.mrf.fi}%
+\bibitem{epics}
+EPICS website, http://www.aps.anl.gov/epics/
 
-
-\bibitem{xilix}
-Xilinx-FPGA website:
-\texttt{http://www.xilinx.com}
-
-\bibitem{zynq}
-Zynq-Book Document website:
-\texttt{http://www.zynqbook.com}
-
-\bibitem{amba-bus}
-Advanced ~Microcontroller ~Bus~ Architecture\\ \texttt{~http://en.wikipedia.org/wiki/\\Advanced\_Microcontroller\_Bus\_Architecture}%
-
-\bibitem{zc706-doc}
-ZC706 ~Evaluation ~Board ~Document:\\
-\texttt{http://www.xilinx.com/support/documentation/boards\_and\_kits\\/zc706/ug954-zc706-eval-boardxc7z045-ap-soc.pdf}%
-
-\bibitem{linaro}
-Linaro Document website:\\
-\texttt{https://en.wikipedia.org/wiki/Linaro}
-
-
-\bibitem{boot-bin}
-Boot ~Image ~Document ~website:\\
-\texttt{http://www.wiki.xilinx.com/Prepare+boot+image}
-
-\bibitem{u-boot}
-U-Boot Document website :
-\texttt{http://www.denx.de/wiki/U-Boot}
-
-
-\bibitem{busybox}
-Busybox Document website :
-\texttt{http://www.busybox.net/}
+\bibitem{opencl}
+OpenCL, https://www.khronos.org/opencl/
 
 \bibitem{analog}
-Analog Devices website:
-\texttt{http://www.analog.com}
+Analog Devices website, http://www.analog.com
+
+\bibitem{linaro}
+Linaro Document website, https://en.wikipedia.org/wiki/Linaro
+
+\bibitem{u-boot}
+U-Boot Document website, http://www.denx.de/wiki/U-Boot
+
+\bibitem{busybox}
+Busybox Document website, http://www.busybox.net/
+
 
 \bibitem{iio}
-Industrial ~I/O ~Document ~website:\\
-\texttt{https://wiki.analog.com/resources/tools-software\\/linux-software/libiio}
+Industrial I/O Document website, https://wiki.analog.com/resources/tools-software/linux-software/libiio
 
+\bibitem{sdsoc}
+SDSoC Document,\\ http://www.xilinx.com/support/documentation/sw\_manuals/xilinx2016\_1/ug1146-sdsoc-platforms-and-libraries.pdf
 
-\bibitem{vivado}
-Xilinx Vivado Document website:\\
-\texttt{http://www.xilinx.com/products/design-tools/vivado.html}
+\bibitem{opencl_wiki}
+OpenCL Definition, https://en.wikipedia.org/wiki/OpenCL
 
-%\bibitem{XAL}
-%J. Galambos, {\it et. al.}, ``SNS Application Programming Environment'', EPAC 2002, Paris, France (2002).
+\bibitem{epics_v4}
+EPICS Version 4, http://epics-pvdata.sourceforge.net/
 
-%\bibitem{esstechnote0005}
-%G. Trahern, ``ESS Naming Convention'', ESS AD Technical Note.
+\bibitem{epics_v4_normative}
+EPICS Version 4 Normative Types,\\ http://epics-pvdata.sourceforge.net/docbuild/normativeTypesCPP/tip/\\documentation/ntCPP.html
+
+\bibitem{opencl_on_altera}
+OpenCL on Altera, https://www.altera.com/en\_US/pdfs/literature/wp/wp-01173-opencl.pdf
+
 \end{thebibliography}
 \end{multicols}
+
 %\vspace{13mm}
 
 %\begin{minipage}[b]{1\linewidth}
@@ -362,10 +303,6 @@ Xilinx Vivado Document website:\\
 %\end{figure}
 
 %\end{minipage}
-
-
-
-
 
 \end{document}
 
