@@ -146,18 +146,18 @@ The RAON\cite{risp} is a new heavy ion accelerator under construction in South K
 	  	\item Linux OS on Zynq PS (ARM Processor)
   	  	\begin{itemize}
 	  		\item ARM Cross Compile Tool Chain (arm-linuxgnueabihf)
-	  		\item Linux Kernel Source (Linaro)
-	  		\item Bootloader (BOOT.BIN: FSBL.elf, U-Boot.elf, uImage, Zynq.bif, User.bit)
+	  		\item Linux Kernel Source (Linaro)\cite{linaro}
+	  		\item Bootloader (BOOT.BIN: FSBL.elf, U-Boot.elf, uImage, Zynq.bif, User.bit) \cite{u-boot}
 	  		\item Board Support Package (Linux Device Tree)
-	  		\item Root File System (Busybox)
+	  		\item Root File System (Busybox)\cite{busybox}
 	  	\end{itemize}  	
   		\item Linux Device Driver : Interface between PS and PL is through the AXI of AMBA
-  		\item EPICS Framework
+  		\item EPICS Framework \cite{epics}
   		\begin{itemize}
 	  		\item  Base R3.14.15.2
 			\item  Control System Studio (CSS)	
 		\end{itemize}  		  	  		
-  		\item Libiio Library of Analog Device
+  		\item Libiio Library of Analog Device\cite{analog,iio}
 	\end{itemize}  	
    	\item Parallel Processing Control Envrionment (ZC706)
   	\begin{itemize}
@@ -183,7 +183,7 @@ The RAON\cite{risp} is a new heavy ion accelerator under construction in South K
 %\caption{The timing system prototyping}
 \label{fig:timing_prototype}
 \end{figure}
-The SDSoC environment is an Eclipse-based Integrated Development Environment (IDE) for implementing embedded systems using the zynq programmable SoC platform. The SDSoC environment includes support for the ZC702, ZC706, MicroZed, ZedBoard and Zybo development boards featuring the Zynq-7000 AP SoC.
+The SDSoC\cite{sdsoc} environment is an Eclipse-based Integrated Development Environment (IDE) for implementing embedded systems using the zynq programmable SoC platform. The SDSoC environment includes support for the ZC702, ZC706, MicroZed, ZedBoard and Zybo development boards featuring the Zynq-7000 AP SoC.
 
 Using SDSoC platform can implement as follows:
 \begin{itemize}
@@ -204,30 +204,36 @@ In addition, EPICS Framework on Linux Built using SDSoC :
 \section*{\centering Future Plan}
 \vspace{2mm}
 \begin{mdframed}[roundcorner=10pt]
-In order to connect the distributed processing system and parallel processing system more effectively, it should provide a unified interface layer for the specific various parallel processing hardwares. For the purpose of developing the unified parallel processing interface layer it can be used Open Computer Lanaguage (OpenCL).
+In order to connect the distributed processing system and parallel processing system more effectively, it should provide a unified interface layer for the specific various parallel processing hardwares. For the purpose of developing the unified parallel processing interface layer it can be used Open Computer Lanaguage (OpenCL)\cite{opencl}.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=25cm,height=15cm]{./images/img02.png}
+	\includegraphics[width=25cm,height=13cm]{./images/img02.png}
 \end{figure}
 
 OpenCL is a framework or programming model for writing programs that execute across heterogeneous platforms
 consisting of CPUs, GPUs, DSPs, FPGAs and other processors or hardware accelerators and was developed by the
 Khronos group.
 \begin{itemize}
-\item Abstract layer using OpenCL for Parallel Processing
+\item Hardwares Support for OpenCL for Parallel Control Environment
 	\begin{itemize}
-		\item  GPU: 
-		\item  Control System Studio (CSS)	
+		\item  GPU: AMD Radeon or NVIDIA GeForce
+		\item  FPGA: Xilinx - SDAccel or Altera - OpenCL SDK
 	\end{itemize}  			
-\end{itemize}
-EPICS v3 is not enough to hold the contents of the much more complex scientfic data structure like a image data.
-
+\item Abstract layer using OpenCL for Parallel Processing
 \begin{itemize}
-\item EPICS Version 4 for Distributed Control Environment
+	\item  OpenCL (1.2 or 2.0)
+	\item  Host Code: OpenCL API-Serial, Sequence code
+	\item  Kernel Code: Parallel Code for GPUs, FPGAs
+	\item  EPICS Device Support IOC code + Host Code	
+\end{itemize}  			
+\end{itemize}
+Adopting EPICS v4, it will be interfaced large amounts of data and complex data to be processed in the parallel processing of a variety of experimental devices.
+\begin{itemize}
+\item EPICS Version 4\cite{epics_v4} for Distributed Control Environment
 	\begin{itemize}
-		\item  Base R3.14.15.2
-		\item  Control System Studio (CSS)	
+		\item  Normative Types - Collection of Structured Data Types \cite{epics_v4_normative}
+		\item  pvCommon, pvData, pvAccess, pvaSrv Modules	
 	\end{itemize}  			
 \end{itemize}
 \end{mdframed}
@@ -237,14 +243,12 @@ EPICS v3 is not enough to hold the contents of the much more complex scientfic d
 \section*{\centering Conclusion}
 \vspace{2mm}
 \begin{mdframed}[roundcorner=10pt]
-Big scientific experiment facilities such as accelerators, nuclear fusion, and telescope are  required by the unity of the heterogenous distributed control system and the fast response  according to its characteristic. These requirements for the distributed and parallel environments must be satisfied at the same time. If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to satisfy with the distributed and high-speed parallel control system at the same time. More and more, the control environment of devices used in the big science experiment of the future will be used the distributed processing environment combined with the parallel processing environment. Therefore, it expect to be increased the requirements for the unified software abstraction layer to operate the heterogenous parallel proccessing hardwares."FPGA-based heterogeneous system (CPU + FPGA) using the OpenCL standard has a significant time-to-market advantage compared to traditional FPGA development using lower level hardware description languages (HDLs) such as Verilog or VHDL"\cite{opencl_on_altera}.  As a result, utilizing the OpenCL standard on the heterogeneous parallel processing hardwares may offer significantly higher performance and the unified abastract layer at much lower power. 
+Big scientific experiment facilities such as accelerators, nuclear fusion, and telescope are  required by the unity of the heterogenous distributed control system and the fast response according to its characteristic. These requirements for \textbf{\textit{\underline{the distributed and parallel environments}}} must be satisfied at the same time. If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. \textbf{\textit{\underline{Zynq SoC}}} can be considered as an ideal device to satisfy with \textbf{\textit{\underline{the distributed and high-speed parallel control system}}} at the same time. More and more, the control environment of devices used in the big science experiment of the future will be used the distributed processing environment combined with the parallel processing environment. Therefore, it expect to be increased the requirements for the unified software abstraction layer to operate the heterogenous parallel proccessing hardwares."FPGA-based heterogeneous system (CPU + FPGA) using the OpenCL standard has a significant time-to-market advantage compared to traditional FPGA development using lower level hardware description languages (HDLs) such as Verilog or VHDL"\cite{opencl_on_altera}.  As a result, utilizing the \textbf{\textit{\underline{OpenCL standard}}} on the heterogeneous parallel processing hardwares may offer significantly \textbf{\textit{\underline{higher performance}}} and \textbf{\textit{\underline{the unified abastract layer}}} at much lower power. 
 \end{mdframed}
 
 \section*{\centering Acknowledgement}
 \vspace{2mm}
-This work is supported by the Rare Isotope Science Project funded by 
-Ministry of Science, ICT and Future Planning (MSIP) 
-and National Research Foundation (NRF) of KOREA.
+This work is supported by the Rare Isotope Science Project funded by Ministry of Science, ICT and Future Planning \textbf{(MSIP)} and National Research Foundation \textbf{(NRF)} of KOREA.
 
 \begin{thebibliography}{13}   % Use for  1-9  references
 %\begin{thebibliography}{99} % Use for 10-99 references
@@ -272,7 +276,7 @@ Busybox Document website, http://www.busybox.net/
 
 
 \bibitem{iio}
-Industrial I/O Document website, https://wiki.analog.com/resources/tools-software/linux-software/libiio
+Industrial I/O Document website, \\ https://wiki.analog.com/resources/tools-software/linux-software/libiio
 
 \bibitem{sdsoc}
 SDSoC Document,\\ http://www.xilinx.com/support/documentation/sw\_manuals/xilinx2016\_1/ug1146-sdsoc-platforms-and-libraries.pdf
