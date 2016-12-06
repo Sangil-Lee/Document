@@ -23,7 +23,7 @@
 \newcommand{\technumber}{
   RAON Control-Document Series\\
   Revision : v1.0,   Release : 2016-12-02 fixed date}
-\title{\textbf{EPICS V4 PVAccess Gateway 프로토타입 개발 완료보고서}}
+\title{\textbf{EPICS V4 PVAccess Gateway 프로토타입 개발 결과보고서}}
 
 \author{이상일\thanks{silee7103@ibs.re.kr} \\
 
@@ -40,7 +40,7 @@
 \maketitle
 
 \begin{abstract}
-본 문서는 EPICS Version 4 통신 프로토콜 "pvAccess"를 정의하고, 그에 따른 "pvAccess Gateway"의 프로토타입 개발 구현에 대한 결과를 설명하는 보고서이다. 
+본 문서는 EPICS Version 4 통신 프로토콜 "pvAccess"를 정의하고, 그에 따른 "pvAccess Gateway"의 프로토타입 개발 구현에 대한 결과를 설명하는 보고서이다. 또한 본 문서의 pvAccess Gateway 프로토타입 개발은 RAON 중이온가속기에서의 초기 개발 비용을 시작으로 다른 해외연구기관이 그 바통을 이어 받아 향 후 안정화 운영시기까지 계속 개발 및 버전 업데이트가 이루어 질 목적이다. 
 \end{abstract}
 
 pvAccess는 계측센서 신호에 대한 모니터링 및 과학적 데이터 서비스를 상호 연결하는 고 성능 네트워크 통신 프로토콜을 말한다. 이는 제어시스템의 양끝단의 최적화된 내부통신을 위해서 pvData라는 EPICS 버전 4 공유메모리 기반의 통신 오브젝트 객체로써, 구조화된 사용자 정의 데이터 타입을 지원하며, EPICS version 3 "channel access" 프로토콜을 계승한다. EPICS V4 pvAccess 프로토콜 및 기본 구현은 EPICS 워킹그룹에 의해 작성된다. EPICS를 한마디로 정의하면, 대형실험 과학 장치의 제어시스템을 구축하기 위한 모든 컴퓨터의 플랫폼으로 정의된다.EPICS에 대한 자세한 내용은 "Experimental Physics and Industrial Control System(http://www.aps.anl.gov/epics/)"의 홈 페이지를 참조한다. 본 문서에서는 게이트웨이의 클라이언트를 "외부"로 지칭되며, 게이트웨이 외부 클라이언트를 대신하여 연결하는 서버 (예 : IOC)는 "내부"로 지칭한다. 이는 게이트웨이의 양면 사이를 명확히 구별하기 위함이다.
@@ -52,6 +52,24 @@ pvAccess는 계측센서 신호에 대한 모니터링 및 과학적 데이터 �
 
 \section{이슈 사항}
 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=1\textwidth]{./images/flat_network.png}
+	\caption{
+		Flat Network 상에서의 문제점
+	}
+	\label{fig:flat_network}   
+\end{figure}
+
+\section{Gateway 구성}
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=1\textwidth]{./images/gateway.png}
+	\caption{
+		Gateway 구성
+	}
+	\label{fig:gateway}   
+\end{figure}
 \hfil\break
 
 \chapter{EPICS v4 PVAccess Gateway Prototype 구현}
@@ -92,8 +110,19 @@ In an EPICS installation it is expected that control and module support would be
 EPICS Version 4 is composed of a number of core standards and APIs, reference implementations of those standards in C++ and Java, plus associated other components and tools. The intention is for the standards and APIs to go through a public review process, leading to published protocols and APIs that may be independently implemented.
 
 The Developer Guide provides a description of the various modules that are provide with each EPICS V4 release.
-\section{특성}
+
+
+\section{동기 및 특성}
 EPICS v3의 CA(channel access) gateway 구성요소와 유사하게 EPICS v4 PV(PVAccess) gateway 구성요소는 CA(v3)와 PV(v4)로 명명된 클라이언트 및 서버를 포함한 어플리케이션을 말한다.그것의 주된 기능은 IP 네트워크 경계를 가로지르는 proxy connection 이다. 이는 gateway의 클라이언트 측에서 서버(IOC) 를 보호하기 위하여 채널 이름을 고유하게 해석하고, 데이터의 update를 클라이언트로 보내는 작업을 gateway측으로 옮기는 역할을 한다. 이를 위하여 PV gateway는 더많은 네트워크 연결 및 컴퓨터 자원 할당이 가능한 장치가 사용되어야 한다. 
+
+In a distributed control system, there are hundreds of nodes that are part of the
+plant. These nodes make up the controllers and the operator consoles. There
+are many clients that may want to view the state of equipment outside of the
+control network. A “gateway” allows clients outside of the control system to
+view the equipment while limiting the additional traffic on the control network.
+The gateway marshals all external requests and makes only one request into the
+control system. This limits the effect of external requests on the control system,
+thus maintaining the determinism required for robust operation of a facility.
 
 \section{Fuctional Requirements}
 \subsection{Requirements Identification}
@@ -234,16 +263,36 @@ The Gateway should be able to make use of SMP architectures, distributing load o
 
 
 
-\section{PVAccess Gateway 구현}
+\section{PVAccess Gateway 프로토타입 설계 및 구현}
+\subsection{용어}
+
+\subsubsection{IP}
+Internet Protocol (v4 and/or v6)
+
+\subsubsection{PV}
+Process Variable. Addressable unit in PVA.
+
+\subsubsection{PVA}
+PVAccess network protocol
+
+\subsubsection{GW}
+Gateway
+
+\subsubsection{CLI}
+An arbitrary PVAccess client (end user or another gateway)
+
+\subsubsection{GWS}
+Gateway server side (CLI communicates with this)
+
+\subsubsection{GWC}
+Gateway client side (SRV communicates with this)
+
+\subsubsection{SRV}
+An arbitrary PVAccess server (may be another gateway)
 
 
 
-
-
-
-
-
-
+\subsection{시험 결과}
 
 
 
