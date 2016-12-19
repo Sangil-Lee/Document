@@ -40,10 +40,10 @@
 \maketitle
 
 \begin{abstract}
-본 문서는 EPICS Version 4 통신 프로토콜 "pvAccess"를 정의하고, 그에 따른 "pvAccess Gateway"의 프로토타입 개발 구현에 대한 결과를 설명하는 보고서이다. 또한 본 문서의 pvAccess Gateway 프로토타입 개발은 RAON 중이온가속기에서의 초기 개발 비용을 시작으로 다른 해외연구기관이 그 바통을 이어 받아 향 후 안정화 운영시기까지 계속 개발 및 버전 업데이트가 이루어 질 목적이다. 
+본 문서는 EPICS Version 4 통신 프로토콜 "pvAccess"를 정의하고, 그에 따른 "pvAccess Gateway"의 프로토타입 개발 구현에 대한 결과를 설명하는 보고서이다. 또한 본 문서의 pvAccess Gateway 프로토타입 개발은 RAON 중이온가속기에서의 초기 개발 비용을 시작으로 다른 해외연구기관이 그를 이어 받아 향 후 안정화 운영시기까지 계속 개발 및 버전 업데이트가 이루어 질 목적이다. 
 \end{abstract}
 
-pvAccess는 계측센서 신호에 대한 모니터링 및 과학적 데이터 서비스를 상호 연결하는 고 성능 네트워크 통신 프로토콜을 말한다. 이는 제어시스템의 양끝단의 최적화된 내부통신을 위해서 pvData라는 EPICS 버전 4 공유메모리 기반의 통신 오브젝트 객체로써, 구조화된 사용자 정의 데이터 타입을 지원하며, EPICS version 3 "channel access" 프로토콜을 계승한다. EPICS V4 pvAccess 프로토콜 및 기본 구현은 EPICS 워킹그룹에 의해 작성된다. EPICS를 한마디로 정의하면, 대형실험 과학 장치의 제어시스템을 구축하기 위한 모든 컴퓨터의 플랫폼으로 정의된다.EPICS에 대한 자세한 내용은 "Experimental Physics and Industrial Control System(http://www.aps.anl.gov/epics/)"의 홈 페이지를 참조한다. 본 문서에서는 게이트웨이의 클라이언트를 "외부"로 지칭되며, 게이트웨이 외부 클라이언트를 대신하여 연결하는 서버 (예 : IOC)는 "내부"로 지칭한다. 이는 게이트웨이의 양면 사이를 명확히 구별하기 위함이다.
+EPICS를 한마디로 정의하면, 대형실험 과학 장치의 제어시스템을 구축하기 위한 모든 컴퓨터의 플랫폼으로 정의된다.EPICS에 대한 자세한 내용은 "Experimental Physics and Industrial Control System(http://www.aps.anl.gov/epics/)"의 홈 페이지를 참조한다. pvAccess는 계측센서 신호에 대한 모니터링 및 과학적 데이터 서비스를 상호 연결하는 고 성능 네트워크 통신 프로토콜을 말한다. 이는 제어시스템의 양끝단의 최적화된 내부통신을 위해서 pvData라는 EPICS 버전 4 공유메모리 기반의 통신 오브젝트 객체로써, 구조화된 사용자 정의 데이터 타입을 지원하며, EPICS version 3 "channel access" 프로토콜을 계승한다. EPICS V4 pvAccess 프로토콜 및 기본 구현은 EPICS 워킹그룹에 의해 작성된다.  본 문서에서는 게이트웨이의 클라이언트를 "외부"로 지칭하며, 게이트웨이 외부 클라이언트를  연결하는 서버 (예:IOC)를 "내부"로 지칭한다. 이는 게이트웨이의 양면 사이를 명확히 구별하기 위함이다.
 
 \clearpage
 
@@ -73,8 +73,19 @@ pvAccess는 계측센서 신호에 대한 모니터링 및 과학적 데이터 �
 \hfil\break
 
 \chapter{EPICS v4 PVAccess Gateway Prototype 구현}
-\section{EPICS Version 4}
-EPICS Version 4 is the most powerful and versatile EPICS yet. The familiar EPICS you use every day extended with complex data structures, a new network-accessible application framework, and Service Oriented Architecture (SOA).
+\section{EPICS Version 4 PVAccess}
+EPICS 버전 4는 대형 실험 시설의 제어 시스템 및 온라인 과학 서비스를 작성하기위한 소프트웨어 툴킷입니다.EPICS Version 4는 현재 EPICS 버전 중 성능에 있어서 가장 우수하며, 다양한 기능을 갖는다. 또한, EPICS Version 4는 기존 EPICS Version 3에 추가적으로 복잡한 Scientfic complex 데이터 구조를 사용자 정의가 가능하도록 구현되는 Service 관점의 아키텍쳐로 확장된다. 더욱 넓은 의미로, EPICS는 공동으로 개발되고 전 세계에서 분산 소프트 실시간 제어 시스템을 작성하는 데 사용되는 일련의 오픈 소스 소프트웨어 도구, 라이브러리 및 응용 프로그램이기도 하다.EPICS Version 4 는 관리 분산 데이터 수집, 서비스 지향 아키텍처 및 복잡한 데이터 구조를 지원합니다. EPICS V4 워킹 그룹은 EPICS V4 기반 프로토콜 및 소프트웨어의 표준에 대한 참조 구현, 정의 및 제공하기 위한  노력을 기울인다.
+
+EPICS Version 4 is a set of software modules that add to the base of the EPICS toolkit for advanced control systems. Version 4 adds the possibility of process variable (PV) values of structured data, an introspection interface for dynamic typing plus some standard types, high-performance streaming, and a new front-end processing database for managing complex data I/O. A synchronous RPC-style facility has also been added so that the EPICS environment supports service-oriented architecture.
+
+The new "pvDatabase" module of EPICS Version 4 implements a framework for a memory resident database of records defined in terms of pvData structures. Like the IOC database of classic EPICS, the records of pvDatabase can process on I/O events; unlike the IOC the records may be of any structure the engineer wishes, and may pull in data from any pvAccess-ible data source, plus Channel Access. pvDatabase images may be standalone, or hosted within an IOC, where they might interface directly to base records, asynchronous device driver support (asynDriver), or detector control (areaDetector). pvDatabase is then useful for complex optimal control tasks, data assembly, and preprocessing. Combined with pvAccess streaming, it can be used as the basis of a data processing pipeline.
+
+In an EPICS installation it is expected that control and module support would be done with EPICS Base IOCs, possibly including the new version 4 modules for accessing the base IOC database (pvaSrv), and for processing complex data (pvDatabase). Middle layer and SOA operations would be done with standalone pvDatabase instances at host level, and with the RPC facility. Version includes support for protocol interoperability with Base IOCs.
+
+EPICS Version 4 is composed of a number of core standards and APIs, reference implementations of those standards in C++ and Java, plus associated other components and tools. The intention is for the standards and APIs to go through a public review process, leading to published protocols and APIs that may be independently implemented.
+
+The Developer Guide provides a description of the various modules that are provide with each EPICS V4 release.
+
 
 Release 4.6
 The latest release, v4.6 consists of the following modules:
@@ -95,21 +106,10 @@ pvaPy
 Several changes since last release.
 exampleJava and exampleCPP
 Many new examples since last release
+
 Several examples that were in pvaClient and pvDatabase have been moved to here.
 A lot of changes were made to Developer Guide. It is a good way to understand the various v4.6 modules.
 
-EPICS Version 4 is a software toolkit for writing the control system and online scientific services of large experimental facilities. More broadly, EPICS is a set of open source software tools, libraries and applications developed collaboratively and used worldwide to create distributed soft real-time control systems. EPICS Version 4 (V4) brings support for managed distributed data acquisition, service oriented architecture, and complex data structures to EPICS. The EPICS V4 Working Group is a collaborative effort to define, publish, and provide reference implementations for, the standards of the protocols and software on which EPICS V4 is based. The working group uses this SourceForge project to coordinate and distribute that work. EPICS V4 has been in active development since December 2011.
-This section lists some of the features of EPICS Version 4, which make it suitable as a platform for a unified controls and services environment for large experimental facilities.
-
-EPICS Version 4 is a set of software modules that add to the base of the EPICS toolkit for advanced control systems. Version 4 adds the possibility of process variable (PV) values of structured data, an introspection interface for dynamic typing plus some standard types, high-performance streaming, and a new front-end processing database for managing complex data I/O. A synchronous RPC-style facility has also been added so that the EPICS environment supports service-oriented architecture.
-
-The new "pvDatabase" module of EPICS Version 4 implements a framework for a memory resident database of records defined in terms of pvData structures. Like the IOC database of classic EPICS, the records of pvDatabase can process on I/O events; unlike the IOC the records may be of any structure the engineer wishes, and may pull in data from any pvAccess-ible data source, plus Channel Access. pvDatabase images may be standalone, or hosted within an IOC, where they might interface directly to base records, asynchronous device driver support (asynDriver), or detector control (areaDetector). pvDatabase is then useful for complex optimal control tasks, data assembly, and preprocessing. Combined with pvAccess streaming, it can be used as the basis of a data processing pipeline.
-
-In an EPICS installation it is expected that control and module support would be done with EPICS Base IOCs, possibly including the new version 4 modules for accessing the base IOC database (pvaSrv), and for processing complex data (pvDatabase). Middle layer and SOA operations would be done with standalone pvDatabase instances at host level, and with the RPC facility. Version includes support for protocol interoperability with Base IOCs.
-
-EPICS Version 4 is composed of a number of core standards and APIs, reference implementations of those standards in C++ and Java, plus associated other components and tools. The intention is for the standards and APIs to go through a public review process, leading to published protocols and APIs that may be independently implemented.
-
-The Developer Guide provides a description of the various modules that are provide with each EPICS V4 release.
 
 
 \section{동기 및 특성}
