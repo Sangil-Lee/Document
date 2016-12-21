@@ -43,15 +43,16 @@
 본 문서는 EPICS Version 4 통신 프로토콜 "pvAccess"를 정의하고, 그에 따른 "pvAccess Gateway"의 프로토타입 개발 구현에 대한 결과를 설명하는 보고서이다. 또한 본 문서의 pvAccess Gateway 프로토타입 개발은 RAON 중이온가속기에서의 초기 개발 비용을 시작으로 다른 해외연구기관이 그를 이어 받아 향 후 안정화 운영시기까지 계속 개발 및 버전 업데이트가 이루어 질 목적이다. 
 \end{abstract}
 
-EPICS를 한마디로 정의하면, 대형실험 과학 장치의 제어시스템을 구축하기 위한 모든 컴퓨터의 플랫폼으로 정의된다.EPICS에 대한 자세한 내용은 "Experimental Physics and Industrial Control System(http://www.aps.anl.gov/epics/)"의 홈 페이지를 참조한다. pvAccess는 계측센서 신호에 대한 모니터링 및 과학적 데이터 서비스를 상호 연결하는 고 성능 네트워크 통신 프로토콜을 말한다. 이는 제어시스템의 양끝단의 최적화된 내부통신을 위해서 pvData라는 EPICS 버전 4 공유메모리 기반의 통신 오브젝트 객체로써, 구조화된 사용자 정의 데이터 타입을 지원하며, EPICS version 3 "channel access" 프로토콜을 계승한다. EPICS V4 pvAccess 프로토콜 및 기본 구현은 EPICS 워킹그룹에 의해 작성된다.  본 문서에서는 게이트웨이의 클라이언트를 "외부"로 지칭하며, 게이트웨이 외부 클라이언트를  연결하는 서버 (예:IOC)를 "내부"로 지칭한다. 이는 게이트웨이의 양면 사이를 명확히 구별하기 위함이다.
+EPICS는 대형실험 과학 장치의 제어시스템을 구축하기 위한 모든 컴퓨터의 플랫폼으로 정의된다. 또한, 더욱 넓은 의미로, EPICS는 EPICS community에서 공동으로 개발되고 전 세계에서 실시간 분산 소프트웨어 제어 시스템을 작성하는데 사용되는 일련의 오픈 소스 소프트웨어 도구, 라이브러리 및 응용 프로그램이기도 하다. 그 중 EPICS version4의 pvAccess는 계측센서 신호에 대한 모니터링 및 과학적 데이터 서비스를 상호 연결하는 고성능 네트워크 통신 프로토콜을 말한다. 이는 제어시스템의 양끝단의 최적화된 내부통신을 위해서 pvData라는 EPICS version 4 공유메모리 기반의 통신 오브젝트 객체로써, 구조화된 사용자 정의 데이터 타입을 지원하며, EPICS version 3 "channel access" 프로토콜을 계승한다. EPICS V4 pvAccess 프로토콜 및 기본 구현은 EPICS 워킹그룹에 의해 작성된다. pvAccess gateway의 클라이언트를 "외부"로 지칭하며, 게이트웨이 외부 클라이언트를  연결하는 서버 (예:IOC)를 "내부"로 지칭한다. 이는 게이트웨는의 양면 사이를 명확히 구별하기 위함이다. EPICS에 대한 자세한 내용은 "Experimental Physics and Industrial Control System(http://www.aps.anl.gov/epics/)"의 홈 페이지를 참조한다. 
 
 \clearpage
 
-\chapter{EPICS v3 Channel Access Gateway 이해}
+\chapter{EPICS v3 Channel Access Gateway}
+pvAccess gateway를 이해하기 위하여, EPICS V3의 channel access 기반의 gateway에 대한 기본특성을 설명한다.
+
 \section{특성}
-
-\section{이슈 사항}
-
+EPICS V3 channel access 통신프로토콜은 TCP/IP 기반의 서버/클라이언트 통신 구조를 갖는다. 이러한 구조에서 사용자측에서 EPICS IOC 서버에 데이터 요청이 있을 경우에 대하여 Flat한 네트워크상에서 연결이 이루어진다면 Figure \ref{fig:flat_network}과 같은 구성이된다. 이러한 구성은 EPICS IOC 서버단에서 통신 연결에 대한 리소스를 많이 부담해야 하고, 동일한 데이터 패킷이 네트워크 상에 중복 분포되어 네트워크 부하를 유발하는 원인이 된다.
+ 
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=1\textwidth]{./images/flat_network.png}
@@ -61,7 +62,19 @@ EPICS를 한마디로 정의하면, 대형실험 과학 장치의 제어시스�
 	\label{fig:flat_network}   
 \end{figure}
 
-\section{Gateway 구성}
+이런 문제 발생을 사전에 막기위하여 proxy 서버 역할 및 네트워크 연결을 효율적으로 관리하는 software 가 필요하다. 
+
+\section{Channel Access Gateway 구성 및 주요기능}
+EPICS V3 channel access gateway는 Figure \ref{fig:gateway}와 같이 네트워크를 계층적, 물리적으로 나누어 구성 할 수 있다. 이와 같은 proxy 서버의 역할을 위한 gateway는 channel access 통신 프로토콜의 server 역할 및 client 역할을 모두 수행 할 수 있어야 한다. 즉, OPI를 바라보는 입장에서는 channel access server 역할을 IOC를 바라보는 입장에서 channel access client 역할을 수행한다. 주요 channel access 기능을 살펴보면 아래와 같다.
+
+\begin{itemize}
+	\item TCP/IP Communication management
+	\item Caching of Process Variable for data deduplication.
+	\item Aliasing for Process Variable name
+	\item Access Security for PV name
+	\item Report for connection status
+\end{itemize}
+ 
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=1\textwidth]{./images/gateway.png}
@@ -70,68 +83,36 @@ EPICS를 한마디로 정의하면, 대형실험 과학 장치의 제어시스�
 	}
 	\label{fig:gateway}   
 \end{figure}
-\hfil\break
 
-\chapter{EPICS v4 PVAccess Gateway Prototype 구현}
-\section{EPICS Version 4 PVAccess}
-EPICS 버전 4는 대형 실험 시설의 제어 시스템 및 온라인 과학 서비스를 작성하기위한 소프트웨어 툴킷입니다.EPICS Version 4는 현재 EPICS 버전 중 성능에 있어서 가장 우수하며, 다양한 기능을 갖는다. 또한, EPICS Version 4는 기존 EPICS Version 3에 추가적으로 복잡한 Scientfic complex 데이터 구조를 사용자 정의가 가능하도록 구현되는 Service 관점의 아키텍쳐로 확장된다. 더욱 넓은 의미로, EPICS는 공동으로 개발되고 전 세계에서 분산 소프트 실시간 제어 시스템을 작성하는 데 사용되는 일련의 오픈 소스 소프트웨어 도구, 라이브러리 및 응용 프로그램이기도 하다.EPICS Version 4 는 관리 분산 데이터 수집, 서비스 지향 아키텍처 및 복잡한 데이터 구조를 지원합니다. EPICS V4 워킹 그룹은 EPICS V4 기반 프로토콜 및 소프트웨어의 표준에 대한 참조 구현, 정의 및 제공하기 위한  노력을 기울인다.
-
-EPICS Version 4 is a set of software modules that add to the base of the EPICS toolkit for advanced control systems. Version 4 adds the possibility of process variable (PV) values of structured data, an introspection interface for dynamic typing plus some standard types, high-performance streaming, and a new front-end processing database for managing complex data I/O. A synchronous RPC-style facility has also been added so that the EPICS environment supports service-oriented architecture.
-
-The new "pvDatabase" module of EPICS Version 4 implements a framework for a memory resident database of records defined in terms of pvData structures. Like the IOC database of classic EPICS, the records of pvDatabase can process on I/O events; unlike the IOC the records may be of any structure the engineer wishes, and may pull in data from any pvAccess-ible data source, plus Channel Access. pvDatabase images may be standalone, or hosted within an IOC, where they might interface directly to base records, asynchronous device driver support (asynDriver), or detector control (areaDetector). pvDatabase is then useful for complex optimal control tasks, data assembly, and preprocessing. Combined with pvAccess streaming, it can be used as the basis of a data processing pipeline.
-
-In an EPICS installation it is expected that control and module support would be done with EPICS Base IOCs, possibly including the new version 4 modules for accessing the base IOC database (pvaSrv), and for processing complex data (pvDatabase). Middle layer and SOA operations would be done with standalone pvDatabase instances at host level, and with the RPC facility. Version includes support for protocol interoperability with Base IOCs.
-
-EPICS Version 4 is composed of a number of core standards and APIs, reference implementations of those standards in C++ and Java, plus associated other components and tools. The intention is for the standards and APIs to go through a public review process, leading to published protocols and APIs that may be independently implemented.
-
-The Developer Guide provides a description of the various modules that are provide with each EPICS V4 release.
+상위 Figure \ref{fig:gateway}와 같이 gateway는 계층적, 물리적 분리된 네트워크 상에 최적화된 네트워크 연결 구성 및 접근 보안성을 통하여 효율적인 제어 네트워크 구성을 가능하게 한다.
 
 
-Release 4.6
-The latest release, v4.6 consists of the following modules:
+\chapter{EPICS v4 PVAccess Gateway Prototype}
+\section{EPICS Version 4 pvAccess}
+EPICS Version 4의 pvAccess 통신프로토콜은 Version 3의 Channel Access 통신프로토콜의 제한 사항을 확장 시킨 프로토콜이다.EPICS Version 4는 기존 EPICS Version 3에 추가적으로 복잡한 scientfic complex 데이터 구조를 사용자 정의가 가능하도록 구현되는 Service 관점의 아키텍쳐로 확장된다. EPICS version 4는 현재 EPICS 버전 중 성능에 있어서 가장 우수하며, 분산 데이터 수집, 서비스 지향 아키텍처 및 복잡한 데이터 구조를 지원합니다. EPICS v4 워킹 그룹은 EPICS v4 기반 프로토콜 및 소프트웨어의 표준에 대한 참조 구현 및 정의를 제공하기 위한 노력을 기울인다. 
+\hfil\break\hfil\break
+EPICS v4는 EPICS base에 아래와 같은 주요기능이 추가 되었다.
+\begin{itemize}
+	\item 사용자 정의 complex data I/O 확장(Image data 및 HDF5 file format)
+	\item High-performance streaming
+	\item New front-end processing database for managing complex data
+	\item Synchronous RPC(Remote Procedure Call) for service-oriented architecture
+	\item Asnynchronous device/driver support
+	\item Data processing pipeline
+\end{itemize}
 
-pvDataJava and pvDataCPP
-Minor changes since previous release
-normativeTypesJava and normativeTypesCPP
-Minor changes since previous release
-pvAccessJava and pvAccessCPP
-Minor changes since previous release
-pvaClientJava and pvaClientCPP
-More robust than previous release.
-easyPva Java no longer supported.
-pvDatabaseJava and pvDatabaseCPP
-pvaSrv
-Minor changes since last release.
-pvaPy
-Several changes since last release.
-exampleJava and exampleCPP
-Many new examples since last release
-
-Several examples that were in pvaClient and pvDatabase have been moved to here.
-A lot of changes were made to Developer Guide. It is a good way to understand the various v4.6 modules.
-
-
+EPICS version4는 수많은 표준 C++/Java APIs 라이브러리로 구성되며, 다른 EPICS 구성요소 및 툴들과 연동 될 수 있다. 이러한 목적은 public-review 과정을 통하여 공개된 표준 APIs이 플랫폼에 독립적으로 구현 될 수 있게 하기 위함이며, 이에 충실히 따른 개발로 진행되었다.
 
 \section{동기 및 특성}
-EPICS v3의 CA(channel access) gateway 구성요소와 유사하게 EPICS v4 PV(PVAccess) gateway 구성요소는 CA(v3)와 PV(v4)로 명명된 클라이언트 및 서버를 포함한 어플리케이션을 말한다.그것의 주된 기능은 IP 네트워크 경계를 가로지르는 proxy connection 이다. 이는 gateway의 클라이언트 측에서 서버(IOC) 를 보호하기 위하여 채널 이름을 고유하게 해석하고, 데이터의 update를 클라이언트로 보내는 작업을 gateway측으로 옮기는 역할을 한다. 이를 위하여 PV gateway는 더많은 네트워크 연결 및 컴퓨터 자원 할당이 가능한 장치가 사용되어야 한다. 
+EPICS v3의 CA(channel access) gateway 구성요소와 유사하게 EPICS v4 PV(PVAccess) gateway 구성요소는 CA(v3)와 PV(v4)로 명명된 클라이언트 및 서버를 포함한 어플리케이션을 말한다. 그것의 주된 기능은 IP 네트워크 경계를 가로지르는 proxy connection 이다. 이는 gateway의 클라이언트 측에서 서버(IOC) 를 보호하기 위하여 채널 이름을 고유하게 해석하고, 데이터 update를 클라이언트로 보내는 작업을 gateway 측으로 옮기는 역할을 한다. 이를 위하여 PV gateway는 더많은 네트워크 연결 및 컴퓨터 자원 할당이 가능한 장치가 사용되어야 한다. 
 
-In a distributed control system, there are hundreds of nodes that are part of the
-plant. These nodes make up the controllers and the operator consoles. There
-are many clients that may want to view the state of equipment outside of the
-control network. A “gateway” allows clients outside of the control system to
-view the equipment while limiting the additional traffic on the control network.
-The gateway marshals all external requests and makes only one request into the
-control system. This limits the effect of external requests on the control system,
-thus maintaining the determinism required for robust operation of a facility.
-
-\section{Fuctional Requirements}
-\subsection{Requirements Identification}
-The component identifier of the PV Gateway is 'PVGW'. The requirement identifiers are formatted as \newline
+\section{기능 요구사항}
+\subsection{요구사항 ID}
+pvAccess gateway에 대한 요구사항 ID는 아래와 같은 포맷으로 정의된다.
+ \newline
 \hfil\break
 
 PVGW-REQ-\{req-category\}-\{req-number\} \newline
-
-The requirement categories used in this document are:
 
 \begin{center}
 	\begin{longtable}[t]{>{\raggedleft\arraybackslash} p{3cm} |p{2cm}}
@@ -156,7 +137,7 @@ The requirement categories used in this document are:
 	\end{longtable}
 \end{center}
 
-\subsection{EPICS Network Protocol Requirements}
+\subsection{EPICS Network Protocol 요구사항}
 \subsubsection{PVGW-REQ-F-001 pvAccess Client}
 The Gateway should be able to connect to internal servers using the pvAccess network protocol of EPICS V4.
 
@@ -182,8 +163,7 @@ It should be possible to configure if the Channel Access server (PVGW-REQ-F-012)
 On machines with multiple network interfaces, the Gateway should allow configuration of the network interfaces that its server(s) bind to. This configuration should be defined at start-up, and is not required to be changeable at runtime.
 
 
-\subsection{Data Flow Engine Requirements}
-
+\subsection{Data Flow Engine 요구사항}
 \subsubsection{PVGW-REQ-F-101 Full pvData Support}
 The Gateway should support transport of all pvData structures without restrictions. No legal pvData type should require recompilation or restart of the Gateway.
 
@@ -225,11 +205,11 @@ If the Gateway receives a name resolution request from an external client for a 
 The Gateway should cache connections, i.e. keep the channel connection open with subscription disabled, for a configurable time after the last external client disconnected.
 
 
-\subsection{Authentication/Authorization Requirements}
+\subsection{Authentication/Authorization 요구사항}
 
 \subsubsection{PVGW-REQ-F-201 Local AuthN/AuthZ}
 The Gateway should support a local layer of authentication and authorization, where authN/authZ for requests is decided possibly using an independent authN/authZ server, but without querying the internal server.
-
+항
 \subsubsection{PVGW-REQ-F-202 Run-Time Configurable Local AuthN/AuthZ}
 The "Local AuthN/AuthZ" feature (PVGW-REQ-F-201) should be configurable at run-time. Activating a new configuration should not require a restart of the Gateway. Connections whose authZ does not change by the new configuration should not be affected.
 
@@ -239,17 +219,16 @@ The Gateway should support proxy authentication and authorization, where authori
 \subsubsection{PVGW-REQ-F-211 Transparent AuthZ Forwarding}
 The Gateway should transparently forward authorization changes on the internal connections to its external clients.
 
-\subsection{External Interface Requirements}
+\subsection{External Interface 요구사항}
 \subsubsection{PVGW-REQ-I-001 Statistics Data}
 The Gateway should provide statistical and performance data as pvData NT structures.
 
 \subsubsection{PVGW-REQ-I-002 Network Binding for Statistics Data}
-On machines with multiple network interfaces, the Gateway should allow configuration of the network interfaces that the statistics data (PVGW-REQ-I-001) server(s) bind to, independent from the equivalent setting of the data server(s) (PVGW-REQ-F-021). This configuration should be defined at start-up, and is not required to be changeable at runtime.
-
+On machines with multiple network interfaces, the Gateway should allow configuration of the network interfaces that the statistics data (PVGW-REQ-I-001) server(s) bind to, independent from the equivalent setting of the data server(s) (PVGW-REQ-F-021). This configuration should be defined at start-up, and is not required to be changeable at runtime.항
 \subsubsection{PVGW-REQ-I-011 Debugging Shell}
 The Gateway should provide a shell for debugging purposes, allowing to inspect its internal structures and lists, trace requests, set up debug log output filtered by channel or external client or internal server, etc.
 
-\subsection{Other Requirements}
+\subsection{Other 요구사항}
 \subsubsection{PVGW-REQ-O-001 Build Environment}
 The Gateway component should compile in a standard EPICS V4 build environment, using the standard EPICS V4 tools and compilers.
 
@@ -259,8 +238,20 @@ The Gateway should be supported on all host type architectures/platforms officia
 \subsubsection{PVGW-REQ-O-003 SMP Support}
 The Gateway should be able to make use of SMP architectures, distributing load onto the available CPUs.
 
+\section{PVAccess Gateway 프로토타입 설계 및 구현}
+\subsection{pvAccess Gateway Sequence}
+Figure \ref{fig:search}에서와 같이 CLI\#1에서 PV(Process Variable)를 요청을 의뢰하면 gateway의 GWS는 해당 unicast 메시지를 받아 cache list를 검색한다.
 
-\clearpage
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=0.8\textwidth, height=0.5\textheight]{./images/search.png}
+	\caption{
+		Search Logic Time Line 차트
+	}
+	\label{fig:search}   
+\end{figure}
+
+ 해당 list에서 cache hit을 실패하면 GWC는 해당 unicast 메시지를 설정된 SRV에 포워딩하거나 broadcast 메시지를 전송한다. 각 끝단의 EPICS IOC SRV들 중에서 전송된 메시지에 해당하는 PV를 가지고 있다면 해당 PV에 대하여 응답메시지를 gateway의 GWC에 전달한다. 이때 gateway의 GWC는 해당 IOC SRV에 TCP 소켓 통신 연결을 요청하고 이에 대해 TCP connection을 맺은 후 gateway의 cache list에 추가하며, CLI\#1에 TCP 소켓 통신을 연결을 수락한다. 이후 cycle 부터는 cache hit에 의한 PV 데이터를 획득한다. 동시에 CLI\#2에서 CLI\#1에서 요청하였던 PV에 대하여 요청 할 경우 gateway의 GWS는 cache hit에 의해 바로 CLI\#2에 해당 PV 데이터를 응답하여 전송한다. 이후 설정된 PV 데이터의 경우 IOC SRV는 변경된 데이터에 대하여 event메시지를 발생하며, gateway의 GWC는 해당 event를 queue에 넣는다. gateway GWS는 해당 queue list에서 해당 PV 데이터를 pop하여 연결 설정된 CLI\#1 및 CLI\#2에 PV 데이터를 전송한다. 
 
 
 \begin{figure}[!htb]
@@ -268,18 +259,8 @@ The Gateway should be able to make use of SMP architectures, distributing load o
 	\includegraphics[width=1\textwidth, height=0.7\textheight]{./images/work_flow.png}
 	\caption{
 		Work Flow 차트
-	}
+	}		
 	\label{fig:workflow}   
-\end{figure}
-
-
-\begin{figure}[!htb]
-	\centering
-	\includegraphics[width=0.8\textwidth, height=0.6\textheight]{./images/search.png}
-	\caption{
-		Search Logic Time Line 차트
-	}
-	\label{fig:search}   
 \end{figure}
 
 
@@ -310,6 +291,8 @@ The Gateway should be able to make use of SMP architectures, distributing load o
 	\label{fig:connections}   
 \end{figure}
 
+\subsection{pvAccess Gateway 환경변수}
+
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=1\textwidth, height=0.6\textheight]{./images/osprey_dcs.png}
@@ -323,9 +306,8 @@ The Gateway should be able to make use of SMP architectures, distributing load o
 \clearpage
 
 
-\section{PVAccess Gateway 프로토타입 설계 및 구현}
-\subsection{용어}
 
+\section{용어}
 \subsubsection{IP}
 Internet Protocol (v4 and/or v6)
 
@@ -358,8 +340,29 @@ An arbitrary PVAccess server (may be another gateway)
 
 
 
+\subsection{Appendix A}
+Release 4.6
+The latest release, v4.6 consists of the following modules:
 
+pvDataJava and pvDataCPP
+Minor changes since previous release
+normativeTypesJava and normativeTypesCPP
+Minor changes since previous release
+pvAccessJava and pvAccessCPP
+Minor changes since previous release
+pvaClientJava and pvaClientCPP
+More robust than previous release.
+easyPva Java no longer supported.
+pvDatabaseJava and pvDatabaseCPP
+pvaSrv
+Minor changes since last release.
+pvaPy
+Several changes since last release.
+exampleJava and exampleCPP
+Many new examples since last release
 
+Several examples that were in pvaClient and pvDatabase have been moved to here.
+A lot of changes were made to Developer Guide. It is a good way to understand the various v4.6 modules.
 
 
 
