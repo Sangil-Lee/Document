@@ -142,6 +142,21 @@ Vivado_System_Edition
 *********************************************
 \end{lstlisting}
 
+
+\chapter{MATLAB-System Generator 사용을 위한 VM 구성}
+Xilinx의 System Generator를 사용하여 MATLAB HDL Coder를 이용하기 위하여 Ubuntu14.4\_64-bit 가상머신을 구성하였다.이는 Matlab2014a 버전의 HDL Coder를 사용하기 위한 구성요소가 포함되어 있으며, Vivado 2014.4 버전이 설치되어 있으며,위의 두가지(LM\_LICENSE\_FILE,XILINXD\_LICENSE\_FILE) 환경 변수가 설정되어 있다. 해당 VM 이미지는 VMPlayer 또는 VirtualBox를 통하여 사용이 가능하다.
+
+\chapter{MAC Address 구성}
+Xilinx의 Vivado Floating license는 받기 위하여 hostid/hostname 을 구성하였으며, hostid에 대한 정보는 Network Interface 카드의 MAC address 정보를 사용하게 된다. 따라서, VM 상에서의 가상의 MAC 정보를 이용한 hostid/hostname 구성하여 해당 VM을 사용하는 어느 개발환경에서라도 MATLAB-System Generator를 사용하여 HDL 코드를 개발 할 수 있게 된다.
+
+\begin{lstlisting}[style=termstyle, escapechar=!]
+===Ubuntu14.1\_64 VM Network MAC Address Info======
+00:0c:29:73:36:d9
+\end{lstlisting}
+
+상위의 가상 MAC address 정보를 맞춘다면 어느 VM 에서 라도, Matlab 2014a - Vivado 2014.4~2015.2 버전까지 사용 할 수 있다.
+
+
 \clearpage
 \bibliographystyle{unsrtnat}
 \bibliography{./refs}
