@@ -1,0 +1,886 @@
+﻿본 문서는 타이밍 시스템 세팅 방법에 대해서 상세하게 기록한다.
+타이밍 시스템에 관련된 일반적인 지식을 정리해놓은 문서는 다음(*)을 참고한다.
+
+타이밍 시스템은 타이밍 모듈과 네트워크로 구성되어 있다.
+물리적으로 타이밍 모듈은 MRF 사의 EVG, EVR로 구성하며 이들의 폼펙터는 VME이다.
+이 모듈들은 VME crate에 설치되며 VME 모듈을 제어하기 위해서 VME controller 인 
+Emerson 사의 MVME6100 을 사용한다.
+본 메뉴얼에서 다루는 내용은 EVG, EVR 로 구성되는 타이밍 시스템이며 따라서
+EVG, EVR, MVEM6100 모듈을 세팅하는 방법과 제어하는 방법에 대해서 이야기한다.
+
+
+1. VME 모듈들의 초기 세팅 값들
+먼저 각 모듈이 초기에 가지고 있는 세팅 값들에 대해서 설명한다.
+
+1.1 MVME6100
+
+MVME61006E-0163  (Date : 130606)
+COD #: 103326056 COD Line #: 001 COD SS #: 001
+Assembly (P) : 01-W3878F23E
+Serial #: E1021B0
+
+1.2 VME-EVG-230
+이 메뉴얼에서는 EVR을 가지고 세팅을 했다. EVG 세팅은 EPICS 부분을 제외한 EVR 세팅방법과 동일하다.
+
+1.3 VME-EVR-230
+Vendor: 00000eb2,  Michro Research Finland
+VME64
+Firmware Version 0x12000006
+
+
+
+2. 하드웨어 세팅방법
+현재 하드웨어 세팅은 단순하다. VME crate에 2개 모듈을 설치한다. 
+MVME6100에는 RJ45 포트(흔히들 사용하는 LAN 포트)가 3개가 있다. 맨 오른쪽에 CPU BFL을 Debug케이블로
+ctrlport1에 물린다. 나머지 두개는 ethernet용 포트이다. 가운데 것만 활성화 되어있다. 
+(주: 나머지 포트도 활성화시키려면 VxWorks bootrom 을 만들어서 config.h 를 수정한 후 이걸 MVME6100의
+플래시메모리에 올려야한다. bootrom을 만들고 플래시메모리에 넣는 과정은 이후에 나온다. 끝까지 보도록)
+가운데 포트를 랜케이블을 사용하여 스위치허브에 물리도록한다. 
+즉, MVEM6100은 PC와 두 채널로 접속하는데 
+1. PC -> ctrlport1 -> MVME6100 (Debug)
+2. PC -> Switch hub -> MVME6100 (Ethernet)
+
+1은 MVME6100를 세팅하고 나아가서 EVG와 EVR을 세팅하는 터미널 역할을 한다.
+2는 MVME6100이 네트워크를 통해서 PC 하드 드라이브에 접근하여 부팅이미지를 다운로드 받는 경로이다.
+(주: VxWorks교육을 통해서 알겠지만 이 접속은 호스트 연결 방식이다.)
+
+ctrlport1에 접속은 telnet으로 한다. ctrlport1을 세팅하는 방법은 부록에서 다룬다.
+본인의 PC에서 ctrlport1을 통해 MVME6100에 접근하려면 다음과 같이 입력한다.
+
+-------------------------------------------------------------------------
+ctrluser@ctrlport0:~$ telnet ctrlport1 2001
+Trying 10.1.5.161...
+Connected to ctrlport1.risp.net.
+Escape character is '^]'.
+-------------------------------------------------------------------------
+
+ctrlport1은 접속대상이고 2001은 ctrlport가 MVME6100과 접속 중인 포트를 의미한다.
+
+터미널에서 별다른 반응이 없을 것이다. VME crate의 전원을 넣어야 메세지가 뜰 것이다.
+현재 상태에서 빠져나가려면 ^] 을 입력하면 telnet > 이라고 뜬다. 이 상태에서는 
+telnet 명령어들이 듣게 되니 원하는 명령을 치면 된다.
+crate에 전원을 넣고 다음 설명으로 넘어가자.
+
+
+3. VxWorks 시작 및 MVME6100 설정
+crate에 전원을 넣으면 다음과 같은 메시지가 terminal에 나타난다.
+
+
+-------------------------------------------------------------------------
+
+                            VxWorks System Boot
+
+
+Copyright 1984-2002  Wind River Systems, Inc.
+
+
+
+CPU: Motorola MVME6100-0163 - MPC 7457
+Version: VxWorks5.5.1
+BSP version: 1.2/3
+Creation date: Oct 29 2008, 17:13:07
+
+
+Press any key to stop auto-boot...
+
+[VxWorks Boot]:
+-------------------------------------------------------------------------
+
+
+위의 내용에서 알수 있는 것이 Motorola 사의 MPC 7475 cpu가 들어 있으며
+MVME6100의 플래쉬메모리에는 VxWorks 5.5.1 bootrom이 들어있다.
+BSP 버전이 1.2/3 이고 부트롬이 만들어진 날짜도 알수 있다.
+
+우리가 해야 할 것은 위의 bootrom을 새로 만들고 MVME6100에 심어 넣는 일이다.
+그러기 전에 값이 어떻게 세팅이 되어 있는지 알고 넘어가자. 현 상태에서 Command 는 
+MVME6100 메뉴얼에 보면 자세하게 나와 있다. p를 입력하면 현재 세팅 값들이 나온다.
+-------------------------------------------------------------------------
+[VxWorks Boot]: p
+
+boot device          : geisc
+unit number          : 0 
+processor number     : 0 
+host name            : host
+file name            : vxWorks
+inet on ethernet (e) : 192.168.100.180
+host inet (h)        : 192.168.100.7
+user (u)             : mv6100
+ftp password (pw)    : 1234
+flags (f)            : 0x0 
+-------------------------------------------------------------------------
+
+설명을 하면 boot device는 geisc 이다. 이건 LAN 0 을 의미한다. 
+원래는 geisc0인데 0이 빠져도 무관한 모양이다.
+
+이제 이 세팅 값을 변경하도록 하자. c를 누르고 변경한다.
+-------------------------------------------------------------------------
+[VxWorks Boot]: c
+
+'.' = clear field;  '-' = go to previous field;  ^D = quit
+
+boot device          : geisc0 [blank]
+processor number     : 0 [blank]
+host name            : host ctrlpc0
+file name            : vxWorks /home/ctrluser/sysboot/mvtest
+inet on ethernet (e) : 192.168.100.180 10.1.5.107:ffffff00
+inet on backplane (b): [blank]
+host inet (h)        : 192.168.100.7 10.1.5.40
+gateway inet (g)     : 10.1.5.254
+user (u)             : mv6100 ctrluser
+ftp password (pw) (blank = use rsh): 1234 .
+flags (f)            : 0x0  [blank]
+target name (tn)     : ctrlvme7
+startup script (s)   : sysboot/elma1
+other (o)            : 
+-------------------------------------------------------------------------
+
+설명: 
+host name은 ethernet을 통해서 부팅 이미지를 불러오는 pc를 의미한다.
+file name은 pc안에 있는 부팅 이미지의 경로. 절대 경로를 쓴다.
+inet on ethernet은 현재 MVME6100의 ip 주소 및 subnet mask (필요하면기입)
+inet on backplan은 잘 모름.
+host inet 은 pc의 아이피
+gateway inet 은 gateway 주소
+user는 pc에서 유저 이름
+ftp password 는 유저의 암호를 치는 건데 우리는 rsh를 사용하므로 입력하지 않는다.
+여기서 실수가 자주 발생하는데 pc에서 rsh 접속하도록 방화벽을 내리고 rsh서버가 돌아가야 하며 
+rsh에서 인증할 수 있도록 .rhosts 파일에 해당 모듈의 ip주소를 입력을 해둬야 한다. 
+flags 는 vxWorks 교육에서 배운대로 아니면 Kernel module programming 책에 각 모드들에 대한 설명이 나와있다.
+
+target name은 본 모듈의 host name을 지정하는 것이다.
+startup script는 본 모듈의 시작 스크립트를 지정한다. 지금 설정은 pc의 ctrluser 계정의 $HOME/sysboot/elma1 파일을 사용하도록 지정한다. 따라서 pc의 $HOME/sysboot/elma1이란 파일이 있어야 한다. (없다고해도 무방하다.)
+
+이제 @을 입력해보자. 그러면 모듈을 재시작한다.
+
+-------------------------------------------------------------------------
+[VxWorks Boot]: @
+
+boot device          : geisc
+unit number          : 0 
+processor number     : 0 
+host name            : ctrlpc0
+file name            : /home/ctrluser/sysboot/mvtest
+inet on ethernet (e) : 10.1.5.107:ffffff00
+host inet (h)        : 10.1.5.40
+gateway inet (g)     : 10.1.5.254
+user (u)             : ctrluser
+flags (f)            : 0x0 
+target name (tn)     : ctrlvme7
+startup script (s)   : sysboot/elma1
+
+Attached TCP/IP interface to geisc0.
+Attaching network interface lo0... done.
+Loading... 2392272
+Starting at 0x100000...
+
+Loading symbol table from ctrlpc0:/home/ctrluser/sysboot/mvtest.sym ...done
+
+
+                VxWorks
+
+Copyright 1984-2014  Wind River Systems, Inc.
+
+             CPU: Motorola MVME6100-0163 - MPC 7457
+    Runtime Name: VxWorks
+ Runtime Version: 6.9
+     BSP version: 6.9/0
+         Created: May  3 2014, 16:58:00
+ED&R Policy Mode: Deployed
+   WDB Comm Type: WDB_COMM_END
+             WDB: Ready.
+
+Executing startup script 'sysboot/elma1'...
+
+Done executing startup script 'sysboot/elma1'.
+
+-> 
+
+-------------------------------------------------------------------------
+
+
+
+
+
+
+3. VxWorks 설정 및 컴파일
+
+사업단이 보유한 VxWorks 는 6.9.2 버전이며 캐비넷이 비치되어 있다. 
+VxWorks 라이센스는 Node-locked 라이센스 2개 이며 이는 두대의 PC 만 설치해서 사용가능하다.
+그러나 현 시점(14년 5월 11일)에 VxWorks 는 총 3대에 설치되어 있는데
+ctrlpc0, ctrlpc3에 각각 설치되어 있고 지금 Cosylab 용역에 나가있는 델 렙탑에 설치되어 있다. 
+라이센스 변경에 대해서 문의는 에이스트로닉스의 김진영씨(전화: ) 에 해당 양식을 작성하여 요청하면
+쉽게 변경해준다. 
+너무 자주 변경하지말고 각 피씨에 대한 라이센스를 잘 받아 뒀다가 여차할때 쓰면 된다.
+양식 작성법은 부록에서 따로 다룬다.
+
+
+VxWorks를 리눅스에 설치하는 일은 그리 어려운 일이 아니나 단 64비트에 설치하려면 ia32 관련
+패키지들을 깔아야만 하니 되도록이면 32비트로 설치하기를 권장한다.
+VxWorks를 윈도우에 설치하면 같은 pc여도 라이센스를 변경해야 한다는 점을 유의하기 바란다.
+VxWorks 설치 과정에 대해서 역시 부록에서 다룬다.
+
+VxWorks로 OS 이미지를 만들어야 한다. 새 이미지를 만들때 유의점은 반드시 
+PROFILE_DEVELOPMENT을 선택 해야 한다는 점이다. 다른 것을 선택하면 재부팅을 할 수 없다.
+
+
+4.BSP 수정하기
+이전까지 VME는 VME보드에 있는 레지스터에 직접 접근을 하여 제어를 했던 반면에
+VME64 에는 다소 새로운 방식으로 VME을 컨트롤 할 수 있게 되었다. 
+Control Register 영역을 따로 설정을 해두어 DMA로 직접 컨트롤 할 수 있도록 한다.
+이를 CR/CSR 영역이라고도 한다. 이는 PCI 콘트롤과 매우 유사한 점이다.
+VME-EVR(EVG)를 MRFIOC2로 제어를 하기 위해서는 CR/CSR 을 OS에서 지원하도록 해야 한다.
+불행하게도 MVME6100 BSP는 이것을 자동으로 지원하지 않기 때문에 직접 BSP를 수정하여 사용해야 한다.
+BSP 수정을 위해서는 mv6100 BSP 패키지에서 mv6100A.h 와 sysTempeMap.c 파일을 수정하면 된다.
+
+먼저 
+MVME6100A.h 의 505번째 줄부터 다음 바뀐 부분에 대해서 수정을 한다.
+
+#define IS_VME_ADDR_MOD(a) ((a == VME_AM_EXT_SUP_PGM) || \
+                            (a == VME_AM_EXT_SUP_DATA) || \
+                            (a == VME_AM_EXT_USR_PGM) || \
+                            (a == VME_AM_EXT_USR_DATA) || \
+                            (a == VME_AM_STD_SUP_PGM) || \
+                            (a == VME_AM_STD_SUP_DATA) || \
+                            (a == VME_AM_STD_USR_PGM) || \
+                            (a == VME_AM_STD_USR_DATA) || \
+                            (a == VME_AM_SUP_SHORT_IO) || \
+                            (a == VME_AM_USR_SHORT_IO) || \
+                            (a == VME_AM_CSR))
+
+/* 
+ * Note that VME_CRG_SLV_SIZE is the size of my CRG register group.
+ * This group will be mapped onto the VME bus.  VME_CRG_MSTR_SIZE is
+ * the size of 16 consecutive CRG groups.  This size will be used to
+ * map an outbound window so we can have access to up to 16 different
+ * boards's CRG groups (and hence their mailboxes) - allowing VxWorks
+ * shared memory to work with mailbox interrupts.
+ */
+
+#define VME_CRG_SLV_SIZE        (0x1000)
+#define VME_CRG_MSTR_SIZE       (16 * VME_CRG_SLV_SIZE)
+#define VME_CRG_MSTR_LOCAL      (VME_A32_MSTR_LOCAL + \
+				 VME_A32_MSTR_SIZE - \
+				 VME_CRG_MSTR_SIZE)
+#define VME_CRG_MSTR_BUS        (0xfb000000)
+#define VME_MBOX0_OFFSET	(TEMPE_GCSR_MBOX0 + 3)
+    
+#define VME_CRCSR_MSTR_SIZE		(0x01000000)
+#define VME_CRCSR_MSTR_LOCAL	(VME_CRG_MSTR_LOCAL - VME_CRCSR_MSTR_SIZE)
+#define VME_CRCSR_MSTR_BUS		(0x00000000)
+#define VME_CRCSR_MSTR_END		(VME_CRCSR_MSTR_LOCAL + VME_CRCSR_MSTR_SIZE)
+    
+
+/*
+ * Allocation of VME space to outbound windows, first set up the out0
+ * window to point to the CRG space to allow access to (among other
+ * things) other board's mailboxes - necessary for VxWorks shared memory.
+ */
+
+#define VME_OUT0_START		(VME_CRG_MSTR_LOCAL)
+#define VME_OUT0_SIZE		(VME_CRG_MSTR_SIZE)
+#define VME_OUT0_BUS            (VME_CRG_MSTR_BUS)
+
+/* Now out1 will point to some node zero system DRAM */
+
+#define VME_DRAM_ACCESS_SIZE	(0x00100000)
+#define VME_OUT1_START		(VME_A32_MSTR_LOCAL)
+#define VME_OUT1_SIZE		(VME_DRAM_ACCESS_SIZE)
+#define VME_OUT1_BUS            (VME_A32_MSTR_BUS)
+
+/* Finish up with A24 space (out2) and A16 space (out3) */
+
+#define VME_OUT2_START          (VME_A24_MSTR_LOCAL)
+#define VME_OUT2_SIZE           (VME_A24_MSTR_SIZE)
+#define VME_OUT2_BUS            (VME_A24_MSTR_BUS)
+
+#define VME_OUT3_START          (VME_A16_MSTR_LOCAL)
+#define VME_OUT3_SIZE           (VME_A16_MSTR_SIZE)
+#define VME_OUT3_BUS            (VME_A16_MSTR_BUS)
+
+#define VME_OUT4_START          (VME_CRCSR_MSTR_LOCAL)
+#define VME_OUT4_SIZE           (VME_CRCSR_MSTR_SIZE)
+#define VME_OUT4_BUS            (VME_CRCSR_MSTR_BUS)
+    
+    
+#define VME_OUT0_CFG_PARAMS \
+                TRUE,                   /* Window enabled */ \
+                0, VME_OUT0_START,      /* Local start addrs (upper = 0) */ \
+                0, VME_OUT0_SIZE,       /* Size (upper = 0) */ \
+                0, VME_OUT0_BUS,        /* VME bus addr (upper = 0) */ \
+                0,                      /* 2eSST broadcast select */ \
+                0,                      /* Unused */ \
+                FALSE,                  /* Read prefetch enable state */ \
+                VME_RD_PREFETCH_2_CACHE_LINES, \
+                VME_SST160,             /* 2esst xfer rate */ \
+                VME_SCT_OUT,            /* transfer mode */ \
+                VME_D32,                /* VME data bus width */ \
+                FALSE,                  /* nonsupervisor access */ \
+                FALSE,                  /* Not pgm but instead data access */ \
+                VME_MODE_A32            /* transfer mode */
+
+#define VME_OUT1_CFG_PARAMS \
+                TRUE,                   /* Window enabled */ \
+                0, VME_OUT1_START,      /* Local start addrs (upper = 0) */ \
+                0, VME_OUT1_SIZE,       /* Size (upper = 0) */ \
+                0, VME_OUT1_BUS,        /* VME bus addr (upper = 0) */ \
+                0,                      /* 2eSST broadcast select */ \
+                0,                      /* Unused */ \
+                TRUE,                   /* Read prefetch enable state */ \
+                VME_RD_PREFETCH_2_CACHE_LINES, \
+                VME_SST160,             /* 2esst xfer rate */ \
+                VME_MBLT_OUT,           /* transfer mode */ \
+                VME_D32,                /* VME data bus width */ \
+                TRUE,                   /* supervisor access */ \
+                FALSE,                  /* Not pgm but instead data access */ \
+                VME_MODE_A32            /* transfer mode */
+
+#define VME_OUT2_CFG_PARAMS \
+                TRUE,                   /* Window enabled */ \
+                0, VME_OUT2_START,      /* Local start addrs (upper = 0) */ \
+                0, VME_OUT2_SIZE,       /* Size (upper = 0) */ \
+                0, VME_OUT2_BUS,        /* VME bus addr (upper = 0) */ \
+                0,                      /* 2eSST broadcast select */ \
+                0,                      /* Unused */ \
+                TRUE,                   /* Read prefetch enable state */ \
+                VME_RD_PREFETCH_2_CACHE_LINES, \
+                VME_SST160,             /* 2esst xfer rate */ \
+                VME_MBLT_OUT,           /* transfer mode */ \
+                VME_D32,                /* VME data bus width */ \
+                FALSE,                  /* nonsupervisor access */ \
+                FALSE,                  /* Not pgm but instead data access */ \
+                VME_MODE_A24            /* transfer mode */\
+
+#define VME_OUT3_CFG_PARAMS \
+                TRUE,                   /* Window enabled */ \
+                0, VME_OUT3_START,      /* Local start addrs (upper = 0) */ \
+                0, VME_OUT3_SIZE,       /* Size (upper = 0) */ \
+                0, VME_OUT3_BUS,        /* VME bus addr (upper = 0) */ \
+                0,                      /* 2eSST broadcast select */ \
+                0,                      /* Unused */ \
+                TRUE,                   /* Read prefetch enable state */ \
+                VME_RD_PREFETCH_2_CACHE_LINES, \
+                VME_SST160,             /* 2esst xfer rate */ \
+                VME_MBLT_OUT,           /* transfer mode */ \
+                VME_D32,                /* VME data bus width */ \
+                FALSE,                  /* nonsupervisor access */ \
+                FALSE,                  /* Not pgm but instead data access */ \
+                VME_MODE_A16            /* transfer mode */
+    
+#define VME_OUT4_CFG_PARAMS  \
+                TRUE,                   /* Window enabled */ \
+                0, VME_OUT4_START,      /* Local start addrs (upper = 0) */ \
+                0, VME_OUT4_SIZE,       /* Size (upper = 0) */ \
+                0, VME_OUT4_BUS,        /* VME bus addr (upper = 0) */ \
+                0,                      /* 2eSST broadcast select */ \
+                0,                      /* Unused */ \
+                TRUE,                   /* Read prefetch enable state */ \
+                VME_RD_PREFETCH_2_CACHE_LINES, \
+                VME_SST160,             /* 2esst xfer rate */ \
+                VME_MBLT_OUT,           /* transfer mode */ \
+                VME_D32,                /* VME data bus width */ \
+                TRUE,                   /* nonsupervisor access */ \
+                FALSE,                  /* Not pgm but instead data access */ \
+                VME_MODE_CRCSR            /* transfer mode */
+
+
+
+sysTempeMap.c 파일의 621째 줄로 가서 다음 함수를 찾는다.
+STATUS sysVmeToPciAdrs
+    (
+    int     vmeAdrsSpace, /* VME bus adress space where busAdrs resides */
+    char *  vmeBusAdrs,   /* VME bus adress to convert */
+    char ** pPciAdrs      /* where to return converted local (PCI) adress */
+    )
+
+아래에 보면 다음 부분을 추가하도록 한다.
+
+  /* It is enabled */
+
+            switch (vmeAdrsSpace)
+                {
+                case VME_AM_CSR:
+            /* See if the window is CR/CSR enabled */
+            if((vmeOutWin[i].att & TEMPE_OTATx_AMODEx_MASK) ==
+             (TEMPE_OTATx_AMODE_VAL_CSR))
+            {
+            	vmeSpaceMask = 0x00ffffff;
+            	vmeAdrToConvert = (UINT32)vmeBusAdrs & vmeSpaceMask;
+            	break;
+            }
+            else
+            	continue;
+            
+                case VME_AM_EXT_SUP_PGM:
+                case VME_AM_EXT_SUP_DATA:
+                case VME_AM_EXT_USR_PGM:
+                case VME_AM_EXT_USR_DATA:
+
+		    /* See if the window is A32 enabled */
+
+		    if ( ((vmeOutWin[i].att & TEMPE_OTATx_AMODEx_MASK) ==
+			 (TEMPE_OTATx_AMODE_VAL_A32)) ||
+			 ((vmeOutWin[i].att & TEMPE_OTATx_AMODEx_MASK) ==
+			 (TEMPE_OTATx_AMODE_VAL_CSR)) )
+			{
+			vmeSpaceMask = 0xffffffff;
+			vmeAdrToConvert = (UINT32)vmeBusAdrs;
+			break;
+			}
+
+그리고 새로 빌드를 한 후에 종료하면 된다.
+
+
+5. Bootrom 업데이트
+
+부트롬을 업데이트 하려면 두가지가 준비되어야 한다. 먼저 MVME6100 점퍼를 바꿔야 하고, 
+부트롬을 다운받을 PC에 tftp를 설정하고 수퍼데몬을 이용하여 tftpd를 활성화 시켜야 한다.
+본 메뉴얼에서는 tftpd 활성화 시키는 방법에 대해서 다루지 않으니 알아서 활성화 시키도록한다.
+여기서는 tftpd의 루트 디렉토리를 /srv/tftp/ 로 설정해놓고 설명을 한다.
+또한, vxWorks의 부트롬 이미지를 bootrom.bin으로 링크 시켜놓았다. 
+ctrlpc0 에서는 vxWorks를 /opt/ 아래에 설치했으나 /usr/local에도 링크로 걸어두었다.
+그래서 부트이미지는 /usr/local/vxWorks6.9/vxworks-6.9/target/config/mv6100/bootrom.bin
+여기에 위치한다.
+
+Bootrom을 플래시메모리에 업데이트하려면 MVME6100의 점퍼 설정을 바꿔야 한다.
+S4 점퍼를 찾는다. 초기 값은 off off on off 이다. 여기서 두번째 점퍼를 On 시킨다.
+그러면 off, on, on, off 이렇게 될 것이다. (공교롭게도 여기서는 아래로 내려야 On 이다)
+모듈에 전원을 넣으면 다음과 같은 화면이 뜬다.
+
+-------------------------------------------------------------------------
+Copyright(C)2008-2009,Emerson Network Power-Embedded Computing,Inc.
+ All Rights Reserved
+ Copyright Motorola Inc. 1999-2007, All Rights Reserved
+ MOTLoad RTOS Version 2.0,  PAL Version 2.3 RM01
+ Fri Jan 23 14:47:54 MST 2009
+ 
+ MPU-Type             =MPC74x7
+ MPU-Int Clock Speed  =1266MHz
+ MPU-Ext Clock Speed  =133MHz
+ MPU-Int Cache(L2) Enabled, 512KB, L2CR =C0000000
+ MPU-Ext Cache(L3) Enabled, 2MB, 211MHz, L3CR =DC026000
+ 
+ PCI bus instance 0   =64 bit, 133 Mhz, PCI-X
+ PCI bus instance 1   =64 bit, PCI
+ 
+ Reset/Boot Vector    =Flash1
+ 
+ Local Memory Found   =20000000 (&536870912)
+ User Download Buffer =006B7000:008B6FFF
+ 
+ 
+ MVME6100>
+-------------------------------------------------------------------------
+
+ctrlpc0 에서 /srv/tftp/bootrom.bin 을 다운로드 한다.
+-------------------------------------------------------------------------
+MVME6100> tftpGet -c10.1.5.107 -fbootrom.bin -s10.1.5.40
+Network Loading from: /dev/enet0
+Loading File: bootrom.bin
+Load Address: 006B7000
+Download Buffer Size = 00200000
+ 
+Client IP Address      = 10.1.5.107
+Server IP Address      = 10.1.5.40
+Gateway IP Address     = 10.1.5.253
+Subnet IP Address Mask = 255.255.255.0
+ 
+Network File Load in Progress...
+ 
+Bytes Received =&367856, Bytes Loaded =&367856
+Bytes/Second   =&367856, Elapsed Time =1 Second(s)
+
+MVME6100> flashProgram -o03f00100 -nfff00 -v 
+Source Starting/Ending Addresses      =006B7000/007B6EFF
+Destination Starting/Ending Addresses =F7F00100/F7FFFFFF
+Number of Effective Bytes             =000FFF00 (&1048320)
+
+Program Flash Memory (Y/N)? y
+Virtual-Device-Number    =00
+Manufacturer-Identifier  =89
+Device-Identifier        =1D
+Virtual-Device-Number    =01
+Manufacturer-Identifier  =89
+Device-Identifier        =1D
+Address-Mask             =FC000000
+-------------------------------------------------------------------------
+
+여기서 입력한 명령어는 2가지 인데 첫번째는 
+MVME6100> tftpGet -c10.1.5.107 -fbootrom.bin -s10.1.5.40
+이 명령어는 tftp를 통해 bootrom.bin 파일을 플래시메모리A 에 다운로드 하는 것이고
+
+MVME6100> flashProgram -o03f00100 -nfff00 -v 
+이 명령어는 다운로드된 bootrom을 플래쉬메모리B 에 쓰는 작업을 한다.
+
+MVME6100 에는 플래시메모리가 2개가 있다. A,B 
+
+
+
+
+
+
+
+6. EPICS 모듈 생성 및 MVME6100에서 불러오기
+
+
+
+7. BSP 수정하기
+
+EPICS 모듈을 로딩을 하면 에러가 난다.
+
+-------------------------------------------------------------------------
+-> sysTempeWinShow
+
+Outbound window 0: ENABLED,  Size = 00000000_00010000
+
+raw: 00000000 8fff0000 00000000 8fff0000 00000000 6b010000 00000000 80040042
+PCI Base:  00000000_8fff0000    VME Base:  00000000_fb000000
+PCI Limit: 00000000_8fffffff    VME Limit: 00000000_fb00ffff
+     2eSST Broadcast Select: 0x00000
+     Attributes:
+        Memory Prefetch      - disabled
+        Prefetch size        - 2 cache lines
+        2eSST Mode           - 160 MB/s
+        Transfer Mode        - SCT (Single Cycle Transfer)
+        VME Data Bus Width   - 32 bit
+        VME AM code          - nonSupervisor, nonProgram
+        VME Address mode     - A32
+
+
+Outbound window 1: ENABLED,  Size = 00000000_00100000
+
+raw: 00000000 80000000 00000000 800f0000 ffffffff 88000000 00000000 80000262
+PCI Base:  00000000_80000000    VME Base:  00000000_08000000
+PCI Limit: 00000000_800fffff    VME Limit: 00000000_080fffff
+     2eSST Broadcast Select: 0x00000
+     Attributes:
+        Memory Prefetch      - enabled
+        Prefetch size        - 2 cache lines
+        2eSST Mode           - 160 MB/s
+        Transfer Mode        - MBLT (Multiplexed Block Transfer)
+        VME Data Bus Width   - 32 bit
+        VME AM code          - Supervisor, nonProgram
+        VME Address mode     - A32
+
+
+Outbound window 2: ENABLED,  Size = 00000000_01000000
+
+raw: 00000000 90000000 00000000 90ff0000 ffffffff 70000000 00000000 80000241
+PCI Base:  00000000_90000000    VME Base:  00000000_00000000
+PCI Limit: 00000000_90ffffff    VME Limit: 00000000_00ffffff
+     2eSST Broadcast Select: 0x00000
+     Attributes:
+        Memory Prefetch      - enabled
+        Prefetch size        - 2 cache lines
+        2eSST Mode           - 160 MB/s
+        Transfer Mode        - MBLT (Multiplexed Block Transfer)
+        VME Data Bus Width   - 32 bit
+        VME AM code          - nonSupervisor, nonProgram
+        VME Address mode     - A24
+
+
+Outbound window 3: ENABLED,  Size = 00000000_00010000
+
+raw: 00000000 91000000 00000000 91000000 ffffffff 6f000000 00000000 80000240
+PCI Base:  00000000_91000000    VME Base:  00000000_00000000
+PCI Limit: 00000000_9100ffff    VME Limit: 00000000_0000ffff
+     2eSST Broadcast Select: 0x00000
+     Attributes:
+        Memory Prefetch      - enabled
+        Prefetch size        - 2 cache lines
+        2eSST Mode           - 160 MB/s
+        Transfer Mode        - MBLT (Multiplexed Block Transfer)
+        VME Data Bus Width   - 32 bit
+        VME AM code          - nonSupervisor, nonProgram
+        VME Address mode     - A16
+
+
+
+Outbound window 4: NOT ENABLED
+
+
+Outbound window 5: NOT ENABLED
+
+
+Outbound window 6: NOT ENABLED
+
+
+Outbound window 7: NOT ENABLED
+
+Inbound window 0: ENABLED,  Size = 00000000_00040000
+
+raw: 00000000 08000000 00000000 0803fff0 ffffffff f8000000 80000faf
+VME Base:  00000000_08000000    PCI Base:  00000000_00000000
+VME Limit: 00000000_0803ffff    PCI Limit: 00000000_0003ffff
+     Attributes:
+        Read-ahead threshold - when FIFO competely empty
+        Virtual FIFO size    - 64 bytes
+        2eSST Mode           - 160 MB/s
+        Cycle response       - 2eSSTB (Two Edge Source Synchronous Broadcast)
+                               2eSST (Two Edge Source Synchronous nonBroadcast)
+                               2eVME (Two Edge VMEbus)
+                               MBLT (Multiplexed Block Transfer)
+                               BLT (Block Transfer)
+        Address space        - A32
+        VME AM response      - Supervisor, nonSupervisor, Program, Data
+
+
+
+Inbound window 1: NOT ENABLED
+
+
+Inbound window 2: NOT ENABLED
+
+
+Inbound window 3: NOT ENABLED
+
+
+Inbound window 4: NOT ENABLED
+
+
+Inbound window 5: NOT ENABLED
+
+
+Inbound window 6: NOT ENABLED
+
+
+Inbound window 7: NOT ENABLED
+value = 32 = 0x20 = ' '
+-> 
+-------------------------------------------------------------------------
+
+MVME6100의 메모리 공간에 대해서 설명을 해야 한다. 다음 테이블은 WorkBench의 도움말에서 
+MVME6100에 대해서 검색을 하면 나오는 문서의 일부다. 이것은 config.h 에서 볼 수 있다.
+필자는 VME관련된 부분만 가져왔다.
+
+-------------------------------------------------------------------------
+ * CPU Space                                PCI (|) or VME (}) Space
+ * (default values)                       
+ *
+ *                              :                 :
+ *                              :                 :
+ * VME_A32_MSTR_LOCAL =          -----------------  VME_A32_MSTR_BUS
+ *              (0x80000000)    |                 } (0x08000000)  
+ *                              | VME A32 space   } .
+ *                              |    256MB        } . Tempe outbound window 1
+ *                              | (0x10000000)    } .
+ *              (0x87ffffff)    |                 } (0x0fffffff) 
+ *                              |.................}
+ *                              | Unused A32      }
+ *              (0x8fff0000)    |.................} (0xfb000000)
+ *                              |                 } .
+ *                              |                 } . Tempe outbound window 0
+ *                              |                 } .
+ *              (0x8fffffff)    |                 } (0xfb00ffff)
+ * VME_A24_MSTR_LOCAL =          -----------------
+ * VME_A32_MSTR_LOCAL +         |                 } (0x00000000)
+ * VME_A32_MSTR_SIZE =          | VME A24 space   } .
+ *              (0x90000000)    |    16MB         } . Tempe outbound window 2
+ *                              | (0x01000000)    } .
+ *              (0x90ffffff)    |                 } (0x00ffffff)
+ * VME_A16_MSTR_LOCAL =          -----------------
+ * VME_A24_MSTR_LOCAL +         |                 } (0x00000000)
+ * VME_A24_MSTR_SIZE =          | VME A16 space   } .
+ *              (0x91000000)    |    64KB         } . Tempe outbound window 3
+ *                              | (0x00010000)    } . 
+ *              (0x910fffff)    |                 } (0x0000ffff)
+ *                               -----------------
+ *                              :                 :
+ *                              :  Not used       :
+ *                              :  239 MB         :
+ *                              : (0x0ef00000)    :
+ *                              : Available for   :
+ *                              : expansion of    :
+ *                              : VME space       :
+-------------------------------------------------------------------------
+
+
+CPU space 라는 것은 CPU 에서 보는 메모리 주소를 의미한다. 이 말은 d(주소) 해서 나오는 값을 의미한다.
+PCI or VME Space 라는 것은 PCI/VME 콘트롤 칩에서 바라보는 메모리 주소를 의미한다.
+실제로 VME를 제어 하기 위해서 우리가 입력하는 주소 값은 CPU space에서의 값을 말한다.
+또 하나 알아둬야하는 점은 Outbound/Inboudn Window 라는 용어다.
+Outbound Window 는 CPU에서 타겟 제어칩의 메모리주소공간에 대한 mapping을 의미한다.
+이게 무슨 말이냐면, 위의 이름에 Tempe outbound window 0 이라고 적힌 부분이 있을 것이다. 
+MVME6100 에는 VME/PCI용 콘트롤러가 Tempe(TSi148) Chip을 사용한다. Tempe를 DMA로 제어하기 위해서는
+CPU주소에서 Tempe로 주소를 매핑(mapping) 해야 한다. 따라서 CPU에서 출발하므로 Outbound 가 되고 
+매핑하는 영역을 Window라고 부른다.
+반대로 CPU의 주소공간을 다른 콘트롤 칩에서 사용하기 위해 매핑하는 공간을 Inbound Window 라고 한다.
+SystempeWinShow를 실행하면 Tempe칩에서 정의하는 Outbound, Inbound Window를 모두 보여주는데
+
+
+
+-------------------------------------------------------------------------
+-> mrmEvrSetupVME("EVRX",3,0x08000000,3,0xc0)
+Setting up EVR in VME Slot 3
+Found vendor: 00000eb2 board: 455246e6 rev.: 00000000
+Error: Address does not correspond to an EVR
+value = 0 = 0x0
+-> FWVersion 0x00000000
+-------------------------------------------------------------------------
+
+
+
+
+-------------------------------------------------------------------------
+-> d(0x80000000)
+NOTE: memory values are displayed in hexadecimal.
+0x80000000:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80000010:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80000020:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80000030:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80000040:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80000050:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80000060:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80000070:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80000080:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80000090:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x800000a0:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x800000b0:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x800000c0:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x800000d0:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x800000e0:  0000 0000 0000 0002 0250 3020 0250 3050  *.........P0 .P0P*
+0x800000f0:  0250 3038 0000 0002 0000 0003 0000 0000  *.P08............*
+value = 0 = 0x0
+-------------------------------------------------------------------------
+
+
+위에는 VME의 32비트 주소공간을 살펴본 내용이다. 이 공간에 무엇이 쓰여 있는 것을 알 수 있다.
+이는 위에서 언급한 SM_OFF_  = FALSE 로 맞춰져 있기 때문이다. 여기서 두가지 선택을 할 수 있다.
+
+(1) 부트롬을 바꾸는 방법
+(2) 다른 VME address 를 사용하는 방법
+
+(1)로 한다는 말은 공유 메모리 영역을 사용하지 않도록 BSP 설정을 바꾼 후에 bootrom을 컴파일하고
+만들어진 bootrom을 플래쉬메모리에 저장하는 방법이다.
+이번에는 (2)번으로 해보자. 다른 주소 공간을 사용하려면 32비트 주소공간에서 빈 곳이 어디인지 알아야 할 것이다.
+위에서 SM 영역은  00000000_08000000 에서 00000000_0803ffff 까지 사용했다. 따라서 우리는 VME space에서
+0x08040000 부터 사용하면 될 것이다. 우선 비어 있는지 확인해보자
+
+-------------------------------------------------------------------------
+-> d(0x80040000)
+NOTE: memory values are displayed in hexadecimal.
+0x80040000:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x80040010:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x80040020:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x80040030:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x80040040:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x80040050:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x80040060:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x80040070:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x80040080:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x80040090:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x800400a0:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x800400b0:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x800400c0:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x800400d0:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x800400e0:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+0x800400f0:  ffff ffff ffff ffff ffff ffff ffff ffff  *................*
+value = 0 = 0x0
+-------------------------------------------------------------------------
+
+비어 있는 것을 확인했으므로 mrmEvrSetupVME 명령어를 넣어보자.
+
+
+-> mrmEvrSetupVME("EVRX",3,0x08040000,3,0xc0)
+Setting up EVR in VME Slot 3
+Found vendor: 00000eb2 board: 455246e6 rev.: 00000000
+VME64 Out FP:7 FPUNIV:4 RB:16 IFP:2
+Using IRQ 3:192
+value = 0 = 0x0
+-> EVR FIFO task start
+FWVersion 0x12000006
+Found version 6
+
+정상적으로 올라 온 것을 확인할 수 있다. 기왕 여기까지 온거 메모리를 한번더 덤프를 하여 펌웨어버전이 제대로 쓰여 있는지 알아보자
+
+-------------------------------------------------------------------------
+-> d(0x80040000)                             
+NOTE: memory values are displayed in hexadecimal.
+0x80040000:  0001 0000 0080 0000 0000 0005 0000 0000  *................*
+0x80040010:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80040020:  0000 0000 0010 0000 0000 0000 1200 0006  *................*
+0x80040030:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80040040:  0000 0000 0000 0000 0000 0000 0000 007d  *...............}*
+0x80040050:  0000 0200 0000 0000 0000 0000 0000 0000  *................*
+0x80040060:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80040070:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x80040080:  0c92 8166 0000 0000 0000 0003 0000 0000  *...f............*
+0x80040090:  0000 0000 0000 00ff 0000 0000 0000 0000  *................*
+0x800400a0:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x800400b0:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x800400c0:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x800400d0:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x800400e0:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+0x800400f0:  0000 0000 0000 0000 0000 0000 0000 0000  *................*
+value = 0 = 0x0
+-------------------------------------------------------------------------
+
+펌웨어버전이 1200 0006 임을 쉽게 확인할 수 있다.
+
+
+이후에 카드 추가하기 EVR 카드를 계속 추가 하고 싶다면 위의 어드레스 스페이스를 피해야 한다.
+당연히 개체 이름과 슬롯 넘버도 바꿔야 한다. 어차피 같은 ISR을 사용해야 하니까 IRQ 레벨이나 
+IRQ 값은 그대로 둔다. 카드 하나당 어드레스 공간 크기는 0x00010000 즉 64KByte 이다.
+따라서 만약에 4번 슬롯에 추가를 한다면 0x08050000 로 넣어야 한다.
+
+-> mrmEvrSetupVME("EVRY",4,0x08050000,3,0xc0)
+
+
+
+
+
+
+
+-------------------------------------------------------------------------
+-> intConnectShow
+
+   Vector :  Handler  (Arg)
+
+ 14 (0x0e):  0x2ae4b0 (0x2421a80)
+ 32 (0x20):  0x2ae4b0 (0x252ae70)
+ 56 (0x38):  0x121398 (0xf104)
+ 57 (0x39):  0x121398 (0xf104)
+ 58 (0x3a):  0x121398 (0xf104)
+ 59 (0x3b):  0x121398 (0xf104)
+ 64 (0x40):  0x2ae4b0 (0x2421860)
+             0x2ae4b0 (0x2421930) - chained
+ 67 (0x43):  0x2ae4b0 (0x2421b50)
+ 71 (0x47):  0x2ae4b0 (0x252af00)
+ 84 (0x54):  0x2ae4b0 (0x2420730)
+ 96 (0x60):  0x2ae4b0 (0x231ce50)
+ 97 (0x61):  0x2ae4b0 (0x231cf20)
+ 98 (0x62):  0x2ae4b0 (0x2421450)
+ 99 (0x63):  0x2ae4b0 (0x2421520)
+100 (0x64):  0x2ae4b0 (0x24215f0)
+101 (0x65):  0x2ae4b0 (0x24216c0)
+102 (0x66):  0x2ae4b0 (0x2421790)
+192 (0xc0):  0x2ae4b0 (0x247d600)
+
+value = 1 = 0x1
+-> 
+-> isrShow
+ISR_ID     Name        Tag        Counts                HandlerRtn                 
+---------- ----------- ---------- --------------------- ------------------------
+0x2420730 isr1        84               1207/0          sysBusProbe  +0x2f4     
+0x231ce50 isr2        96                  0/0          sysBusProbe  +0x1a8     
+0x231cf20 isr3        97                  0/0          sysBusProbe  +0x1a8     
+0x2421450 isr4        98               1207/0          sysBusProbe  +0x1a8     
+0x2421520 isr5        99                  0/0          sysBusProbe  +0x1a8     
+0x24215f0 isr6        100                 0/0          sysBusProbe  +0x1a8     
+0x24216c0 isr7        101                 0/0          sysBusProbe  +0x1a8     
+0x2421790 isr8        102                 0/0          sysBusProbe  +0x1a8     
+0x2421860 isr9        64             136285/0          i8250Int                
+0x2421930 isr10       64             136366/0          i8250Int                
+0x2421a80 isr11       14                  0/0          mv64360EnetUnitHandleI >
+0x2421b50 isr12       67                  0/0          sysAlarmInt  +0x40      
+0x252ae70 isr13       32              12933/12631      gei64360EndHandleInts   
+0x252af00 isr14       71                  2/2          gei64360EndHandleLinkI >
+0x247d600 isr15       192              1208/0          _ZN6EVRMRM3isrEPv       
+value = 0 = 0x0
+-> 
+-------------------------------------------------------------------------
+
+
+인터럽트가 0xc0 에 제대로 연결되어 있는 것을 확인할 수 있다.
+
+
+
