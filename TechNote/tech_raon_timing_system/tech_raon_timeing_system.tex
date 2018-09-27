@@ -15,6 +15,10 @@
 \setlength{\hoffset}{-40pt}
 
 \parindent0em
+
+\newcommand\SEC[1]{\textbf{\uppercase{#1}}}
+
+
 \begin{document}
 
 \title{
@@ -36,35 +40,35 @@ RAON (Rare Isotope Accelerator complex for ON-line experiments) is a heavy-ion a
 This paper describes the results of the design and development for the RAON specific timing system.
 \end{abstract}
 
-\newpage
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%본 문서는 타이밍 시스템 세팅 방법에 대해서 상세하게 기록한다.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \section{Introduction}
-The RAON is the important facility of IBS and aims to realize the core infrastructure of the next generation basic science research in Korea. To control the large-scaled facility like RAON, the timing system plays a role as one of the important control systems.
+The RAON is the important facility of IBS and aims to realize the core infrastructure of the next generation basic science research in Korea. To control the large-scaled facility like RAON, the timing system plays a role as one of the important control systems. The RAON timing system is a system that precisely synchronizes the local devices (LLRF, Chopper, MPS, Beam Diagnostics and so on) of the whole accelerator. 
+As a time source, it provides accurate time information through all the site.
+Hardware event signal synchronized from GPS must be distributed to each local control system according to various operation and beam mode for RAON operation.
 
 
-본 메뉴얼에서 다루는 내용은 EVG, EVR 로 구성되는 타이밍 시스템이며 따라서
-EVG, EVR, MVEM6100 모듈을 하드웨어와 소프트웨어로 구성하는 방법과 제어하는 방법에 대해서 이야기한다.
-타이밍 시스템에 관련된 일반적인 지식을 정리해놓은 문서는 다음(*)을 참고한다.
-\\
-
-본 매뉴얼에서는 사용자가 이미 vxWorks와 EPICS base를 설치하였다고 가정한 상태에서 설명한다.
-2장에서는 시스템 구성을 위한 요구사항들에 대해서 정리해놓았다.
-여기서 하드웨어 구성과 소프트웨어 구성으로 둘로 나누었는데,
-본 메뉴얼에서는 편의상 VxWorks를 이용하여 MVME6100 모듈에 VME-EVR을 인식하는 과정까지를 하드웨어 구성이라고 부르고,
-mrfIoc2를 이용하여 VME-EVR을 제어하는 과정을 소프트웨어 구성이라고 부르겠다.
-3장과 4장에서는 하드웨어 구성과 소프트웨어 구성에 대해서 설명한다.
-%5장에서는 타이밍 시스템 데모를 시연하는 구성 방법에 대해서 설명을 하고자 한다.
-
-중이온가속기는 기초과학연구원의 핵심 시설로서 우리나라 차세대 기초과학 연구의 핵심 인프라 실현을 목표로 하고 있다.
-
-
-중이온 가속시설은 새로운 동위원소들의 발견과
- 그 구조 연구, 희귀동위원소들을 이용한 신물질 연구, 의학 응용 연구 등 다양한 연구 분야를 목적으로 건설되고 있는 중이다.
 
 \section{Requirements}
+
+The timing system consists of three sub-modules. One is the event generator (EVG) module, another is the event fan-out (EVF) module and the other is the event receiver (EVR) module.\newline
+The requirements for developing the RAON timing system are as follows:
+\begin{itemize}
+	\item Sub-modules (EVG, EVR, EVF) of the RAON timing system must be fully integrated on the EPICS middleware for interoperation with higher control systems.
+	\item Sub-modules have to provide for the health status with themselves.
+	\item Clock jitter must be less than 1ns and timing jitter must be less than 50ps.
+	\item EVG of the timing system must be able to take a sequence of events as input from control system. Time of occurrence for each event in sequence is pre-defined.
+	\item Granularity of EVG event emission in a timing sequence Tevent (1/Fevent) = 12.31ns. Fevent is equal to fundamental RF reference clock of 81.25MHz.
+	\item EVG of the timing system has to repeat the same timing sequence till receiving the new sequence (repetition rate: 1 – 100 Hz).
+	\item EVG of the timing system has to emit arbitrary event on user request without the need to run a sequence.
+	Granularity of EVR for setting event delay and width parameters of responses generated on hardware output signals must be Tevent (=12.31ns).
+	\item EVR of the timing system has to output synchronized timing system clock with configurable integer divider.
+	\item EVR of the timing system has to provide a timestamp for all configured and received timing signals.
+	\item All EVRs of the timing system has fallback mode to switch to local clock source for losing the recovery clock from the timing master clock (RF reference clock).
+	\item EVF of the timing system must fan out the timing event stream by an EVG to an array of EVRs through the timing network (optical link).
+	\item EVF of the timing system measures the compensation delay time between each node.
+\end{itemize}
+
+
+\section{Development}
 \vspace{0.5em}
 타이밍 시스템은 타이밍 모듈과 네트워크로 구성되어 있다.
 타이밍 모듈은 MRF 사의 EVG, EVR 제품을 사용하며 폼펙터는 VME이다.
@@ -96,6 +100,11 @@ ctrlpc0, ctrlpc3에 각각 설치되어 있고 지금 Cosylab 용역에 나가�
 새롭게 설치를 한다면 32비트 환경에서 설치하는 것이 여러모로 유리하다. \\
 
 EPICS 버전은 3.14.9 이상이 설치되어 있어야 한다. 이는 mrfIoc2의 요구사항이다.
+
+\section{Acknowledgment}
+This work is supported by the Rare Isotope Science Project funded by Ministry of Science, ICT and Future Planning\SEC{(MSIP)} and National Research Foundation\SEC{(NRF)} of Korea(Project No. 2011-0032011).
+
+
 \section{Development}
 \subsection{하드웨어 구성}
 들어가기 앞서, 지금 사용하는 MVME6100은 firmware 변경없이 수입업체(에이스트로닉스)에서 들여온 모듈 상태에서 진행하는 것임을 밝힌다.
