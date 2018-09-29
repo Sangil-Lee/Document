@@ -1,0 +1,263 @@
+%% RT09_Instructions.tex
+%% 4/2009
+%% By Bo Yu (yu@bnl.gov)
+%% based on:
+%% bare_jrnl.tex
+%% V1.3
+%% 2007/01/11
+%% by Michael Shell
+%% see http://www.michaelshell.org/
+%% for current contact information.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[journal]{IEEEtran}
+\pagestyle{empty}
+\usepackage{graphicx}
+
+\usepackage{booktabs}
+\usepackage{verbatim}
+\usepackage{framed}
+
+\usepackage{xcolor}
+\usepackage[utf]{kotex}
+\usepackage{ifpdf}
+\usepackage[unicode,bookmarks]{hyperref}
+\usepackage{alltt}
+\usepackage{authblk}
+
+
+\setlength{\textwidth}{425pt}
+\setlength{\hoffset}{-40pt}
+
+\parindent0em
+
+\newcommand\SEC[1]{\textbf{\uppercase{#1}}}
+\begin{document}
+\title{
+	\textbf{Timing System Development for RAON Operation} %\\ 
+	\vspace{0.5cm}
+	\Large
+}
+\author[1]{Sangil Lee\thanks{silee7103@ibs.re.kr}}
+\author[2]{Changwook Son\thanks{scwook@ibs.re.kr}}
+\affil[1,2]{Accelerator Engineering Team, Institute for Basic Science, Daejeon 34047}
+\author[3]{Cheol-Hoon Lee\thanks{clee@cnu.ac.kr}}
+\affil[3]{Corresponding author, Chungnam National University. Daejeon 34047}
+\date{}
+\maketitle
+\vspace{2em}
+
+\begin{abstract}
+RAON (Rare Isotope Accelerator complex for ON-line experiments) is a heavy-ion accelerator experiment facility under construction in Korea. This facility aims at beam energy of 200MeV/u and maximum beam power of 400kW. Also, it is expected to be completed by 2021. The large-scaled experiment facility like RAON requires the timing system for the precise-synchronized operation. For this purpose, domestic accelerator facilities mainly use the timing system of foreign products. The accelerator engineering team of RAON has successfully developed the RAON timing system in cooperation with the domestic company. The signals of RAON timing system synchronized with RF reference clock and GPS are distributed the whole RAON site through the dedicated timing network (3.25 Gbps). The time accuracy of the timing system is 12.3ns synchronized with the RF reference clock (81.25 MHz). All signals (triggers, pulse delayed clock, and external signals) of timing system developed using the EPICS (Experimental Physics and Industrial Control System) software module are configurable as well software definition. In addition to, the RAON timing system supports the more flexible system for the various beam operation mode and improves the performance of the control system. \newline
+This paper describes the results of the design and development for the RAON specific timing system.
+\end{abstract}
+
+%\begin{IEEEkeywords}
+%IEEEtran, journal, \LaTeX, paper, template.
+%\end{IEEEkeywords}
+
+
+\section{Introduction}
+% The very first letter is a 2 line initial drop letter followed
+% by the rest of the first word in caps.
+% 
+% form to use if the first word consists of a single letter:
+% \IEEEPARstart{A}{demo} file is ....
+% 
+% form to use if you need the single drop letter followed by
+% normal text (unknown if ever used by IEEE):
+% \IEEEPARstart{A}{}demo file is ....
+% 
+% Some journals put the first two words in caps:
+% \IEEEPARstart{T}{his demo} file is ....
+% 
+% Here we have the typical use of a "T" for an initial drop letter
+% and "HIS" in caps to complete the first word.
+
+\IEEEPARstart{R}{AON} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications\cite{risp}. The RAON is the important facility of IBS and aims to realize the core infrastructure of the next generation basic science research. To control the large-scaled facility like RAON, the timing system plays a role as one of the important control systems. There are two ways of RAON operation. One is a continuous wave operation and the other is a pulse width modulation operation. The RAON timing system is related to the pulse mode operation. The RAON timing system is a system that precisely synchronizes the local devices (LLRF, Chopper, MPS, Beam Diagnostics and so on) of the whole accelerator. Hardware event signals of the timing system synchronized from GPS must be distributed to each local control system according to various operation and beam mode for RAON operation. It also provides accurate time information through all the site as a time source.
+
+\section{Requirements}
+The timing system consists of three sub-modules. One is the event generator (EVG) module, another is the event fan-out (EVF) module and the other is the event receiver (EVR) module.
+The requirements for developing the RAON timing system are as follows:
+
+\begin{itemize}
+	\item Sub-modules (EVG, EVR, EVF) of the RAON timing system must be fully integrated on the EPICS middleware for interoperation with higher control systems.
+	\item Sub-modules have to provide for the health status with themselves.
+	\item Clock jitter must be less than 1ns and timing jitter must be less than 50ps.
+	\item EVG of the timing system must be able to take a sequence of events as input from control system. Time of occurrence for each event in sequence is pre-defined.
+	\item Granularity of EVG event emission in a timing sequence Tevent (1/Fevent) = 12.31ns. Fevent is equal to fundamental RF reference clock of 81.25MHz.
+	\item EVG of the timing system has to repeat the same timing sequence till receiving the new sequence (repetition rate: 1 – 100 Hz).
+	\item EVG of the timing system has to emit arbitrary event on user request without the need to run a sequence.
+	\item Granularity of EVR for setting event delay and width parameters of responses generated on hardware output signals must be Tevent (=12.31ns). 
+	\item EVR of the timing system has to output synchronized timing system clock with configurable integer divider.
+	\item EVR of the timing system has to provide a timestamp for all configured and received timing signals.
+	\item All EVRs of the timing system has fallback mode to switch to local clock source for losing the recovery clock from the timing master clock (RF reference clock).
+	\item EVF of the timing system must fan out the timing event stream by an EVG to an array of EVRs through the timing network (optical link).
+	\item EVF of the timing system measures the compensation delay time between each node.
+\end{itemize}
+
+%\cleardoublepage
+\section{Development}
+The RAON timing system was developed using Xilinx’s programmable SoC (Zynq) with built-in ARM processor and FPGA logic. Zynq of Xilinx FPGA series is divided into Programmable Logic (PL) and Processing System (PS). PS with the dual-core ARM CortexA9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level Field Programmable Gate Array (FPGA) is connecting with a lot of I/O peripherals for real-time control system. In order to set up the timing parameters connected with the higher control system, EPICS (Experimental Physics and Industrial Control System) middleware is equipped on the linux operating system of the Zynq PS. EPICS is a set of open-source-based software tools which supports for the Ethernet-based middleware layer. An interface between the Zynq PS and PL is interconnected with AMBA4 AXI. The event generator (EVG) of RAON timing system receives 16 TTL inputs, generates event codes and sends those to the specific timing optical network. The event fan-out (EVF) of the timing system provides the ability to distribute up to 24 ports (SFP fiber optical) on the timing network. The event receiver (EVR) should be synchronized with the event generator and provides the capability to generate up to 32 TTL pulses. 
+
+\subsection{Timing Structure Design}
+The timing data (32bit) is transmitted with an external clock of 81.25 MHz (RF reference clock). The timing data consists of Stream data (8bit), DBus (Distributed Bus 8bit), evCodeA (Event Code A 5bit), and evCodeB (Event Code B 11 bit). In Fig. 1, the timing operating clock of all equipment connected to the timing network is synchronized with the EVG external reference clock. A total signal sources (evSrc 31ea) generating in EVG are composed of external inputs (exIn 16ea), MXCs (Multiplexed Counter 14ea) and user trigger. Stream data of 8 bits includes the header, K-code, timestamp, event status, and tail. DBus data of 8 bits is 8 signals selected from inputs of EVG. Event code A of 5 bits is an event from 1 to 32 generated by selected 32 inputs from EVG. Event code B of 11 bits is an event generated in sequence A and B by the signals combining inputs of EVG. Event code A can also be mapped to event code B of 11 bits.
+
+\subsection{Event Generator}
+As shown Fig.~\ref{control_system}, controller board communicates with ZC706 via FPGA Mezzanine Card (FMC) connector. FMC connector of the controller board is connected to XADC interface, digital I/O and sensors, two gigabit ethernet modules, power line and so on. XADC and digital I/O signals among those connections are delivered to the low voltage drive board via the drive board connector. The low voltage drive board received those signals generates PWM signal through the Metal-Oxide-Semiconductor Field Effect Transister (MOSFET) gate driver and drives the stepper motor. The low voltage drive board is operated in 12${\sim}$24V DC power from the external power source.
+
+\subsection{Event Receiver}
+FPGA code reuses the Hardware Description Lanaguage (HDL) code which is provided by the Analog Devices. FPGA HDL code is develeped by VerilogHDL using Vivado of Xilinx. When the motor controller was purchased from Analog Devices, it operated on ZedBoard. It should be changed to operate the ZC706 board as well as ZedBoard. It is going to transplant the code of ZedBoard into ZC706 board.
+
+
+\subsection{Event Fan Out}
+
+\subsection{Firmware}
+
+\subsection{Software}
+\hfill\break
+TABLE \ref{sw-conf} shows the software modules that used to incorporate a distributed process control system and a parallel processing control system.
+
+\begin{table}[h!t]
+	%	\setlength\tabcolsep{3.8pt}
+	\centering
+	\caption{Software Modules}
+	\label{sw-conf}
+	
+	\begin{tabular}{@{}lll@{}}
+		%\begin{tabular}{clc}}
+		
+		\hline
+		\textbf{Software} & \textbf{Contents}                 & \textbf{Module}     \\
+		\hline
+		EPICS        & Base R3.14.15.2                       & PS of Zynq            \\
+		Libiio       & Industrial I/O library                &                       \\
+		& supplied Analog Devices               &                       \\         
+		Kernel       & Linaro kernel source                  &                       \\
+		& including iio device driver           &                       \\         
+		Bootloader   & U-Boot for zynq                       &                       \\
+		IOC          & In-house using Libiio                 &                       \\
+		
+		\hline
+		FPGA         & Analog Devices and                    & PL of Zynq            \\
+		& In-house code                         &                       \\
+		
+		\hline
+		Vivado       & Vivado14.4 including SDK              & Tool                  \\        
+		& with node lock license                &                       \\            
+		Busybox      & for rootfs system (free)              &                       \\
+		Toolchain    & for ARM cross-compile (GNU)           &                       \\        
+		\hline
+		
+	\end{tabular}
+\end{table}
+
+\section{Software Defined System on Chip Platforms}
+The SDSoC (Software Defined System On Chip)\cite{sdsoc} environment is an Eclipse-based Integrated Development Environment (IDE) for implementing embedded systems using the zynq programmable SoC platform.The SDSoC environment includes support for the ZC702, ZC706, MicroZed, ZedBoard and Zybo development boards featuring the Zynq-7000 AP SoC.
+\hfil\break\hfil\break
+An SDSoC platform can define as follows:
+\begin{itemize}
+ 	\item Hardware and Software Architecture
+ 	\item Application Context including Linux OS
+ 	\item Bootloader
+ 	\item Device Drivers for I/O or AXI Interface
+ 	\item Root File System
+	\item External Memory Interface
+	\item Custom Input/Output
+	\item User-defined Libraries
+\end{itemize}
+A series of the works that were previously described in chapter [2,3] can be easily configured using the SDSoC platform as shown in Fig.\ref{sdsoc_control_system}. 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=95mm, height=80mm]{img01.png}
+	\caption{Control System Configuration using SDSoC}
+	\label{sdsoc_control_system}
+\end{figure}
+
+Fig.\ref{sdsoc_control_system} shows the configuration of the software platform to perform the application context using SDSoC on zynq PS, such as a linux kernel image, boot loader, root file system, device tree, and  the hardware platform to generate the FPGA logic through vivado on zynq PL. After this configuration, EPICS middleware that cross-compiled on the linux OS is interconnected with the C libraries through the SDSoC. Therefore it does not need to develope the AXI interface linux device driver.
+
+\section{Future Work}
+In order to connect the distributed processing system and parallel processing system more effectively, it should provide a unified interface layer for the specific various parallel processing hardwares. For the purpose of developing the unified parallel processing interface layer it can be used  Open Computer Lanaguage (OpenCL).
+
+\subsection{OpenCL for Parallel Processing}
+OpenCL\cite{opencl_wiki} is a framework or programming model for writing programs that execute across heterogeneous platforms consisting of CPUs, GPUs, DSPs, FPGAs and other processors or hardware accelerators and was developed by the Khronos group. 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=90mm, height=70mm]{img02.png}
+	\caption{OpenCL-based Parallel Control System Configuration}
+	\label{opencl_control_system}
+\end{figure}
+Hardware manufacturer must provide application program interface libraries to satisfy the specification according to OpenCL version. Fig.\ref{opencl_control_system} shows the configuration of the unified interface layer for the parallel processing of GPU (NVIDIA or AMD) and FPGA (Xilinx or Altera) using OpenCL. The data interface between the parallel processing hardware and the host make up with PCI Express (PCIe) bus. This configuration for the FPGA hardware is required the DDR memory separately. The GPU already uses the built-in DDR memory. Eventually the kernel code of OpenCL is performed as parallel processing code through OpenCL interface API. The integration of the OpenCL code and the EPICS IOC code means the integration of the distributed system and parallel system.
+\subsection{EPICS Version 4}
+EPICS v3 is not enough to hold the contents of the much more complex scientfic data structure like a image data.
+Reflecting this requirement, EPICS v4\cite{epics_v4} provides efficient storage, access, and communication, of memory resident structured data. The EPICS v4 Normative Types\cite{epics_v4_normative} are a collection of structured data types that can be used by the application level of EPICS V4 network endpoints, to interoperably exchange scientific data. Adopting EPICS v4 as the distributed system it will be interfaced large amounts of data and complex data to be processed in the parallel processing of a variety of experimental devices.
+
+\section{Conclusion}
+Big scientific experiment facilities such as accelerators, nuclear fusion, and telescope are  required by the unity of the heterogenous distributed control system and the fast response  according to its characteristic. These requirements for the distributed and parallel environments must be satisfied at the same time. If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to satisfy with the distributed and high-speed parallel control system at the same time. More and more, the control environment of devices used in the big science experiment of the future will be used the distributed processing environment combined with the parallel processing environment. Therefore, it expect to be increased the requirements for the unified software abstraction layer to operate the heterogenous parallel proccessing hardwares."FPGA-based heterogeneous system (CPU + FPGA) using the OpenCL standard has a significant time-to-market advantage compared to traditional FPGA development using lower level hardware description languages (HDLs) such as Verilog or VHDL"\cite{opencl_on_altera}.  As a result, utilizing the OpenCL standard on the heterogeneous parallel processing hardwares may offer significantly higher performance and the unified abastract layer at much lower power. 
+
+% use section* for acknowledgement
+\section*{Acknowledgment}
+This work is supported by the Rare Isotope Science Project funded by Ministry of Science, ICT and Future Planning \textbf{(MSIP)} and National Research Foundation \textbf{(NRF)} of Korea (Project No. 2011-0032011).
+
+
+% references section
+
+% can use a bibliography generated by BibTeX as a .bbl file
+% BibTeX documentation can be easily obtained at:
+% http://www.ctan.org/tex-archive/biblio/bibtex/contrib/doc/
+% The IEEEtran BibTeX style support page is at:
+% http://www.michaelshell.org/tex/ieeetran/bibtex/
+%\bibliographystyle{IEEEtran}
+% argument is your BibTeX string definitions and bibliography database(s)
+%\bibliography{IEEEabrv,../bib/paper}
+%
+% <OR> manually copy in the resultant .bbl file
+% set second argument of \begin to the number of references
+% (used to reserve space for the reference number labels box)
+\begin{thebibliography}{3}
+
+\bibitem{risp} Y.~K.~Kwon, {\it et. al},``Status of Rare Isotope Science Project in Korea'',
+Few-Body Syst 54, 961-966, (2013).
+
+\bibitem{epics}
+EPICS website, http://www.aps.anl.gov/epics/
+
+\bibitem{opencl}
+OpenCL, https://www.khronos.org/opencl/
+
+\bibitem{analog}
+Analog Devices website, http://www.analog.com
+
+\bibitem{linaro}
+Linaro Document website, https://en.wikipedia.org/wiki/Linaro
+
+\bibitem{u-boot}
+U-Boot Document website, http://www.denx.de/wiki/U-Boot
+
+\bibitem{busybox}
+Busybox Document website, http://www.busybox.net/
+
+
+\bibitem{iio}
+Industrial I/O Document website, https://wiki.analog.com/resources/tools-software/linux-software/libiio
+
+\bibitem{sdsoc}
+SDSoC Document,\\ http://www.xilinx.com/support/documentation/sw\_manuals/xilinx2016\_1/ug1146-sdsoc-platforms-and-libraries.pdf
+
+\bibitem{opencl_wiki}
+OpenCL Definition, https://en.wikipedia.org/wiki/OpenCL
+
+\bibitem{epics_v4}
+EPICS Version 4, http://epics-pvdata.sourceforge.net/
+
+\bibitem{epics_v4_normative}
+EPICS Version 4 Normative Types,\\ http://epics-pvdata.sourceforge.net/docbuild/normativeTypesCPP/tip/\\documentation/ntCPP.html
+
+\bibitem{opencl_on_altera}
+OpenCL on Altera, https://www.altera.com/en\_US/pdfs/literature/wp/wp-01173-opencl.pdf
+
+\end{thebibliography}
+
+% that's all folks
+\end{document}
+
+
