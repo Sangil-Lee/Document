@@ -41,8 +41,10 @@
 \author[1]{Sangil Lee\thanks{silee7103@ibs.re.kr}}
 \author[2]{Changwook Son\thanks{scwook@ibs.re.kr}}
 \affil[1,2]{Accelerator Engineering Team, Institute for Basic Science, Daejeon 34047}
-\author[3]{Cheol-Hoon Lee\thanks{clee@cnu.ac.kr}}
-\affil[3]{Corresponding author, Chungnam National University. Daejeon 34047}
+\author[3]{Seung Yong Kim\thanks{laykim@durutronix.co.kr}}
+\affil[3]{Durutronix, Daejeon 34036}
+\author[4]{Cheol-Hoon Lee\thanks{clee@cnu.ac.kr}}
+\affil[4]{Corresponding author, Chungnam National University. Daejeon 34047}
 \date{}
 \maketitle
 \vspace{2em}
@@ -136,7 +138,7 @@ Table ~\ref{stream_data_packet} shows the sending data packet.
 	\caption{Stream Data Packet}
 	\label{stream_data_packet}
 	
-	\begin{tabular}{@{}lll@{}}
+	\begin{tabular}{@{}cll@{}}
 		%\begin{tabular}{clc}}
 		
 		\hline
@@ -164,14 +166,14 @@ Table ~\ref{stream_data_packet} shows the sending data packet.
 \end{table}
 
 \subsubsection{Event Trigger Source, evSrc}\hspace*{\fill} \\
-EVG 에서 DBus에 실리거나, evCodeA, evCodeB 를 발생시킬 수 있는 신호는 SW User Trigger 신호, MXC 14EA, 외부입력(TTL I/O Module – Slave Low Floor) 16EA 이다. 이하 이 신호들의 묶음을 evSrc 로 정의 한다.
+The signals of DBus, evCodeA or evCodeB in the EVG are the SW user trigger, MXC 14EA, and the external inputs (TTL I/O module - low floor) 16EA. The bundle of these signals is defined as the event source (evSrc).
 
 \begin{table}[h!t]
 	\centering
-	\caption{Event Trigger List}
+	\caption{Event Source List}
 	\label{event_tri_list}
 	
-	\begin{tabular}{@{}llll@{}}
+	\begin{tabular}{@{}c|c|c|c@{}}
 		%\begin{tabular}{clc}}
 		\hline
 		\textbf{Number}	& \textbf{Name}			& \textbf{Number}		& \textbf{Name}\\
@@ -191,14 +193,13 @@ EVG 에서 DBus에 실리거나, evCodeA, evCodeB 를 발생시킬 수 있는 �
 		12				& MXC\_11				& 27					& EXT\_IN\_SL\_12\\
 		13				& MXC\_12				& 28					& EXT\_IN\_SL\_13\\
 		14				& MXC\_13				& 29					& EXT\_IN\_SL\_14\\
-						& 						& 30					& EXT\_IN\_SL\_15\\
+		-				& -						& 30					& EXT\_IN\_SL\_15\\
 		\hline
 	\end{tabular}
 \end{table}
 
 \subsubsection{Ditributed Bus, DBus}\hspace*{\fill} \\
-DBus 는 8bit 신호이며, 타이밍네트웍으로 분배된다. 각 bit는 API 함수 set\_evg\_tx\_DBusSel (uint dBusNum, ev\_src evSrc) 로 evSrc 중 하나를 선택 한다.
-API 함수 set\_evg\_enable(dbus, evCodeA, evCodeB, mevCodeA, seqTrgA, seqTrgB, mxc) 의 dbus 인자를 1로 설정하여 enable 한다.
+In Fig.~\ref{timing_data_structure}, the signal of the DBus through the timing network defines as 8 bits. Immediately, Its signals deliver to all EVRs without generating an event or calculating of any logic. This function is used to transmit the external input signal as soon as possible. Each bit of the DBus signal, which is one of the input sources, can be output by the enable bit.\newline
 
 \subsubsection{Event Code A, evCodeA}\hspace*{\fill} \\
 evCodeA는 5bit 신호이며, 타이밍네트웍으로 분배된다. evCodeA는 1\~31까지 31개 Number Code 로서 API 함수 set\_evg\_evTrg(uint evTrgNum, ev\_src evSrc)로 각 evCodeA에 evSrc 중 하나를 선택한다. evCodeA는 evSrc 신호의 Rising Edge 를 감지하여 IRQ Register에 설정되고, evCodeA 출력 후 클리어 된다. 동시에 신호가 발생된 경우 우선순위가 가장 높은 1번부터 31번까지 순차적으로 전송된다.
@@ -223,6 +224,10 @@ FPGA code reuses the Hardware Description Lanaguage (HDL) code which is provided
 \subsection{Firmware}
 
 \subsection{Software}
+
+\subsection{Timestamp Synchronization}
+
+
 \hfill\break
 TABLE \ref{sw-conf} shows the software modules that used to incorporate a distributed process control system and a parallel processing control system.
 
@@ -322,11 +327,12 @@ This work is supported by the Rare Isotope Science Project funded by Ministry of
 % (used to reserve space for the reference number labels box)
 \begin{thebibliography}{3}
 
+\bibitem{risp_overview}
+Overview of the Rare Isotope Science Project of the Institute for Basic Science, Sunchan Jeong, New Physics: Sae Mulli, Vol. 66, No. 12, December 2016, pp. 1458~1464
+
 \bibitem{risp} Y.~K.~Kwon, {\it et. al},``Status of Rare Isotope Science Project in Korea'',
 Few-Body Syst 54, 961-966, (2013).
 
-\bibitem{epics}
-EPICS website, http://www.aps.anl.gov/epics/
 
 \bibitem{opencl}
 OpenCL, https://www.khronos.org/opencl/
