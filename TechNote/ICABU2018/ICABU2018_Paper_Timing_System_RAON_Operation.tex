@@ -202,12 +202,10 @@ The signals of DBus, evCodeA or evCodeB in the EVG are the SW user trigger, MXC 
 In Fig.~\ref{timing_data_structure}, the signal of the DBus through the timing network defines as 8 bits. Immediately, Its signals deliver to all EVRs without generating an event or calculating of any logic. This function is used to transmit the external input signal as soon as possible. Each bit of the DBus signal, which is one of the input sources, can be output by the enable bit.\newline
 
 \subsubsection{Event Code A, evCodeA}\hspace*{\fill} \\
-evCodeA는 5bit 신호이며, 타이밍네트웍으로 분배된다. evCodeA는 1\~31까지 31개 Number Code 로서 API 함수 set\_evg\_evTrg(uint evTrgNum, ev\_src evSrc)로 각 evCodeA에 evSrc 중 하나를 선택한다. evCodeA는 evSrc 신호의 Rising Edge 를 감지하여 IRQ Register에 설정되고, evCodeA 출력 후 클리어 된다. 동시에 신호가 발생된 경우 우선순위가 가장 높은 1번부터 31번까지 순차적으로 전송된다.
-mevCodeA는 발생된 evCodeA를 evCodeB로 매핑한 신호로서 mevCodeA BRAM Address 1 에서 31까지 유저가 설정한 evCodeB 를 발생시킨다. API 함수 set\_evg\_mevCodeA(uint trgNum, uint evCode) 로 mevCodeA BRAM 을 설정한다.
+The evCodeA is a number code from 1 to 31 expressed in 5 bits. An input signal can be selected by a combination of the 5 bits. The evCodeA detects the rising edge of the input signal, then set the IRQ register and is cleared after outputting the evCodeA. If a signal is generated at the same time, the highest proiority is transmitted sequentially from 1 to 31. The mevCodeA, which is a signal mapping the evCodeA to the evCodeB, generates a configurable evCodeB from BRAM address 1 to 31 by a user.\newline
 
 \subsubsection{Event Code B, evCodeB}\hspace*{\fill} \\
-evCodeB는 11bit 신호이며, 타이밍네트웍으로 분배된다. evCodeB는 0x001~0x7FF 의 값을 가지며, 0x7F0 ~ 0x7FF 까지 128개 code는 그 기능이 정해져 있다. 
-evCodeB는 seqA, seqB, mevCodeA와 set\_evUser() 로 구성 되며, 우선순위는 seqA 가 가장 높다. 
+The evCodeB of 11 bits has a value of 0x001 to 0x7FF. The range of 0x7F0 to 0x7FF (128 codes) is used to the predefined functions. The evCodeB with the priority-based consists of seqA, seqB, mevCodeA, and evUser ($seqA > seqB > mevCodeA > evUser$). \newline
 
 \subsubsection{Sequence A, B, seqA,B}\hspace*{\fill} \\
 타이밍시스템의 sequence 기능은 미리 정의 된 evCodeB의 열을 seqTrg (Sequence Trigger 신호) 에 의해 순차적으로 미리 설정한 시간에 맞춰 전송하는 기능이다. 타이밍시스템은 2개의 sequence seqA 와 seqB를 제공한다. seqTrg 신호는 evSrc 의 조합으로 발생될 수 있다. 각 evSrc에 매핑되는 seqTrgMsk 31bit Register에 Mask 되어 OR와 같이 동작한다. 4개의 seqTrgMsk 가 제공되며, A0 와 A1 Mask 를 AND 하는 조합과, B0와 B1을 AND 하는 조합까지 각 sequence는 총 6개의 seqTrg 조합을 선택할 수 있다. seqA, B는 FPGA BRAM에 미리 설정되어 
