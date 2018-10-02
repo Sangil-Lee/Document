@@ -208,10 +208,18 @@ The evCodeA is a number code from 1 to 31 expressed in 5 bits. An input signal c
 The evCodeB of 11 bits has a value of 0x001 to 0x7FF. The range of 0x7F0 to 0x7FF (128 codes) is used to the predefined functions. The evCodeB with the priority-based consists of seqA, seqB, mevCodeA, and evUser ($seqA > seqB > mevCodeA > evUser$). \newline
 
 \subsubsection{Sequence A, B, seqA,B}\hspace*{\fill} \\
-타이밍시스템의 sequence 기능은 미리 정의 된 evCodeB의 열을 seqTrg (Sequence Trigger 신호) 에 의해 순차적으로 미리 설정한 시간에 맞춰 전송하는 기능이다. 타이밍시스템은 2개의 sequence seqA 와 seqB를 제공한다. seqTrg 신호는 evSrc 의 조합으로 발생될 수 있다. 각 evSrc에 매핑되는 seqTrgMsk 31bit Register에 Mask 되어 OR와 같이 동작한다. 4개의 seqTrgMsk 가 제공되며, A0 와 A1 Mask 를 AND 하는 조합과, B0와 B1을 AND 하는 조합까지 각 sequence는 총 6개의 seqTrg 조합을 선택할 수 있다. seqA, B는 FPGA BRAM에 미리 설정되어 
-있는 evCode를 Time Stamp 에 맞춰 타이밍네트웍으로 전송한다. 이러한 기능은 Finite State Machine 으로 구현되었으며, set\_evg\_enable 함수를 호출하여 Enable 되고 Idle 상태가 된다. seqTrg 신호에 의해 Run 상태가 되어 BRAM으로부터 데이터를 읽어 기능을 수행한다. stop\_bit 가 1 인 데이터 열인 경우 Run 상태가 종료되고, 미리 설정 된 seq\_repeatReg 값을
-감소시킨다. seq\_repeatReg 이 0이 되면 pending 상태가 되고 API 함수 set\_evSeq\_Resume 함수를 호출하여 다시 Idle 상태로 변환할 수 있다. seq\_repeatReg 값을 0 으로 설정하면 seq는 한번 수행 후 pending 되며, 0xFFFF 로 설정하면 무한 반복한다. 무한 반복을 해제 하는 방법은 set\_evg\_enable 함수를 이용하여 disable 하도록 한다.
-Sequence BRAM 에 해당 데이터를 설정하는 API 함수는 set\_evg\_seqTable(seqNum,  offset, evCode, stopbit, timeStamp)의 형태로 제공된다. Sequence 에 설정할 수 있는 evCodeB 의 최대 열 개수는 2048개 이다.
+The sequence of the timing system is a function to transmit a sequence of the predefined evCodeB according to the preset time by the sequence trigger signal. The timing system provides two sequence procedures which are seqA and seqB. The sequence trigger signal can be generated with a combination of the input signals (evSrc). The sequence trigger mapped to each input signal is masked  by bitwise operation in the 31-bit register. A total of six sequence trigger combinations can be selected by masking the sequence trigger bit. 
+The sequence A and sequence B sends the event code preset in the FPGA BRAM to the timing network according to the timestamp. 
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.35\textwidth]{img17.png}
+	\caption{Sequence Finite State Machine}
+	\label{sequence_fsm}
+\end{figure}
+
+The Fig. ~\ref*{sequence_fsm} shows the finite state machine implemented for the sequence A and B. The register set of the set\_evg\_enable transits the stop state to the standby state. By the sequence trigger signal, it enters the run state and reads data from the BRAM to generate the event code. If the register of the stop\_bit is 1, the run state terminates and the predefined seq\_repeatReg register value decreases. When the seq\_repeatReg register is 0, it becomes the pending state and transits to the standby state by the register value of the set\_evSeq\_Resume. If the seq\_repeatReg register value is set to 0, the sequence will be pended once. If it is set to 0xFFFF, the sequence will repeat indefinitely. It should be set the register of the set\_evg\_enable to disable the infinite loop. The maximum number of the event code B that can be set in Sequence is 2048.
+
 
 \subsection{Event Receiver}
 FPGA code reuses the Hardware Description Lanaguage (HDL) code which is provided by the Analog Devices. FPGA HDL code is develeped by VerilogHDL using Vivado of Xilinx. When the motor controller was purchased from Analog Devices, it operated on ZedBoard. It should be changed to operate the ZC706 board as well as ZedBoard. It is going to transplant the code of ZedBoard into ZC706 board.
