@@ -9,7 +9,7 @@
 %% see http://www.michaelshell.org/
 %% for current contact information.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\documentclass[journal]{IEEEtran}
+\documentclass[journal,reqno]{IEEEtran}
 
 \pagestyle{empty}
 \usepackage{graphicx}
@@ -25,6 +25,7 @@
 \usepackage{alltt}
 \usepackage{authblk}
 \usepackage{caption}
+\usepackage{amsmath}
 
 %\setlength{\textwidth}{425pt}
 %\setlength{\hoffset}{-40pt}
@@ -125,7 +126,7 @@ The timing data (32bit) is transmitted with an external clock of 81.25 MHz (RF r
 
 
 \subsection{Event Generator}
-\subsubsection{Event Generaotr Watch, evgWatch}\hspace*{\fill} \\
+\subsubsection{Event Generator Watch, evgWatch}\hspace*{\fill} \\
 As shown Fig.~\ref{timing_data_structure}, evgWatch operates by receiving an external clock of 81.25 MHz (RF refernce clock) in the EVG mode. On the other hand, it operates by receiving on-board clock in the EVS mode. Only in the EVG mode, it synchronizes and decodes the IRIG-B signal from the GPS system. Arising the txAlarm signal at a cycle of 1 KHz, it generates the data of the stream data generator.\newline
 
 \subsubsection{Stream Data Generator}\hspace*{\fill} \\
@@ -208,8 +209,7 @@ The evCodeA is a number code from 1 to 31 expressed in 5 bits. An input signal c
 The evCodeB of 11 bits has a value of 0x001 to 0x7FF. The range of 0x7F0 to 0x7FF (128 codes) is used to the predefined functions. The evCodeB with the priority-based consists of seqA, seqB, mevCodeA, and evUser ($seqA > seqB > mevCodeA > evUser$). \newline
 
 \subsubsection{Sequence A, B, seqA,B}\hspace*{\fill} \\
-The sequence of the timing system is a function to transmit a sequence of the predefined evCodeB according to the preset time by the sequence trigger signal. The timing system provides two sequence procedures which are seqA and seqB. The sequence trigger signal can be generated with a combination of the input signals (evSrc). The sequence trigger mapped to each input signal is masked  by bitwise operation in the 31-bit register. A total of six sequence trigger combinations can be selected by masking the sequence trigger bit. 
-The sequence A and sequence B sends the event code preset in the FPGA BRAM to the timing network according to the timestamp. 
+The sequence of the timing system is a function to transmit a sequence of the predefined evCodeB according to the preset time by the sequence trigger signal. The timing system provides two sequence procedures which are seqA and seqB. The sequence trigger signal can be generated with a combination of the input signals (evSrc). The sequence trigger mapped to each input signal is masked  by bitwise operation in the 31-bit register. A total of six sequence trigger combinations can be selected by masking the sequence trigger bit. The sequence A and sequence B sends the event code preset in the FPGA BRAM to the timing network according to the timestamp. 
 
 \begin{figure}[!htb]
 	\centering
@@ -218,14 +218,103 @@ The sequence A and sequence B sends the event code preset in the FPGA BRAM to th
 	\label{sequence_fsm}
 \end{figure}
 
-The Fig. ~\ref*{sequence_fsm} shows the finite state machine implemented for the sequence A and B. The register set of the set\_evg\_enable transits the stop state to the standby state. By the sequence trigger signal, it enters the run state and reads data from the BRAM to generate the event code. If the register of the stop\_bit is 1, the run state terminates and the predefined seq\_repeatReg register value decreases. When the seq\_repeatReg register is 0, it becomes the pending state and transits to the standby state by the register value of the set\_evSeq\_Resume. If the seq\_repeatReg register value is set to 0, the sequence will be pended once. If it is set to 0xFFFF, the sequence will repeat indefinitely. It should be set the register of the set\_evg\_enable to disable the infinite loop. The maximum number of the event code B that can be set in Sequence is 2048.
-
+The Fig. ~\ref*{sequence_fsm} shows the finite state machine implemented for the sequence A and B. The register set of the set\_evg\_enable transits the stop state to the standby state. By the sequence trigger signal, it enters the run state and reads data from the BRAM to generate the event code. If the register of the stop\_bit is 1, the run state terminates and the predefined seq\_repeatReg register value decreases. When the seq\_repeatReg register is 0, it becomes the pending state and transits to the standby state by the register value of the set\_evSeq\_Resume. If the seq\_repeatReg register value is set to 0, the sequence will be pended once. If it is set to 0xFFFF, the sequence will repeat indefinitely. It should be set the register of the set\_evg\_enable to disable the infinite loop. The maximum number of the event code B that can be set in Sequence is 2048. The data structure of a single record field has offset (0$\sim$2047), event code (0x1$\sim$0x7FF), stop bit (0,1), and timestamp (0x1$\sim$0xFFFFFFFF).
 
 \subsection{Event Receiver}
-FPGA code reuses the Hardware Description Lanaguage (HDL) code which is provided by the Analog Devices. FPGA HDL code is develeped by VerilogHDL using Vivado of Xilinx. When the motor controller was purchased from Analog Devices, it operated on ZedBoard. It should be changed to operate the ZC706 board as well as ZedBoard. It is going to transplant the code of ZedBoard into ZC706 board.
+\subsubsection{Event Receiver Watch, evrWatch}\hspace*{\fill} \\
+The event receiver watch (evrWatch) decodes the stream data received from the timing network. It also provides the current time information to the system every 1 KHz.
+The timing system generates the stream data in a certain pattern. If it does not match up the pattern, it is regarded as timing network reception error. The EVRs recover the clock synchronized with the external clock of EVG from the stream data and provides 1 PPS signal synchronized with the EVG.\newline
 
+\subsubsection{Distributed Bus on Receiver }\hspace*{\fill} \\
+The register of set\_evr\_enable can select whether it receives the distributed bus signals on EVRs. \newline
 
-\subsection{Event Fan Out}
+\subsubsection{Programmable Delayed Pulse, pdpOutput}\hspace*{\fill} \\
+The register of set\_evr\_enable can select whether it receives the event code A or B. The event code B designates the address of the event mapping RAM. As a result, the programmable pulse trigger signals (pdpTrigger), which are the data bit decoded by the event code B of the corresponding address, are output. The pdptrigger 16 to 31 are selectively generated by the event code A or the decoded event code B. The pdpTrigger can be output the pulse width, delay, and polarity by the register of the cfg\_evr\_pdp.\newline
+
+\subsubsection{Signal Output, exOut32}\hspace*{\fill} \\
+The signal outputs (exOut32) of the event receiver is the final output sent to the device for control. In Table.~\ref*{evr_signal_output}, its source signal can be selected by the register of set\_evr\_pdpAndOut and cfg\_evr\_outSrcSel.
+
+\begin{table}[h!t]
+	\centering
+	\caption{EVR Signal Output}
+	\label{evr_signal_output}
+	
+	\begin{tabular}{@{}cll@{}}
+		
+		\hline
+		\textbf{Output}	& \textbf{Source 1}				& \textbf{Source 2}\\
+		\hline
+		0 $\sim$ 7			& DBus 0 $\sim$ 7			& pdbOutput 0 $\sim$ 7\\
+		8 $\sim$ 30			& pdpOutput 8 $\sim$ 30     \\
+		31				& 1PPS evrOut					& pdbOutput 31\\        								
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsubsection{Event Log, evLog}\hspace*{\fill} \\
+The event log (evLog) stores the timestamp information when the values of the evCodeA, evCodeB, and pdpOutput outputs change. It is saved as 128bit data in total.\newline
+
+\begin{itemize}
+	\item MSB :	Day [9bit], Year [6bit], Hour [5bit], Min [6bit], Sec [6bit] [2b0], mSec [10bit], Clock tick [20bit][11b0], evCodeA [5bit], [5b0], evCodeB [11bit]
+	\item LSB :	pdpOutput [32bit]
+\end{itemize}
+
+\subsection{Latency Calculation on Timing Network}
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.3\textwidth]{img15.png}
+	\caption{Latency Time Calculation Mode}
+	\label{latency_time_mode}
+\end{figure}
+To measure the latency of the optical cable length for the timestamp compensation (latency measurement mode), the UP-Link function is released. The cross point switch (CPS) setting of all devices except EVG is changed from FMC2 to FMC1. Then, the event fan-out of the timing system measures the delay time of each node by calculating the difference in data receiving time between GT0 and GT1 like the Fig.~\ref{latency_time_mode}.
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.23\textwidth]{img16.png}
+	\caption{Latency Time Calculation}
+	\label{latency_time}
+\end{figure}
+In Fig.~\ref{latency_time}, the latency time per node is the summation of AL and B.\\
+\noindent
+AL : Delay time proportional to the optical length\\
+\space B  : Delay time for CPS and SFP Circuit \\
+\space G  : Time of receiving EVG data from EVF \\
+\space T1 : Delay time proportional to the optical length
+
+\begin {align} \label{eqn_r}
+R = G + 2(AL + B) \nonumber \\
+R - G = 2(AL + B) 
+\end {align}
+R : Time received when EVF data was looped back in EVR \\
+(R - G) : Time difference between G and R measured in FPGA
+\begin {align*}
+T1 = 2(A*1 + B) \\
+T2 = 2(A*2 + B)
+\end {align*}
+T1 : Measuring R and G with 1x length of optical path \\
+T2 : Measuring R and G with 2x length of optical path
+\begin {align}
+A = (T2 - T1)/2 \\
+B = T1 - T2/2
+\end {align}
+In the equation (2) and (3), since the values of A and B are constants, the L value by the equation (1) can be estimated.
+As a result, the latency time per node can be calculated.
+
+The latency (Z) is the sum AL and B.
+
+\subsection{Timing System Configuration on Timing Network}
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.4\textwidth]{img14.png}
+	\caption{Timing System Configuration}
+	\label{timing_conf}
+\end{figure}
+In Fig.~\ref{timing_conf}, the timing data generated from the EVG is distributed by the EVF. The FMC1 and FMC2 of the EVG can constitute an UP-Link connection.
+
+ EVG를 제외한 EVF, EVR, EVR-UP 모드는 FMC1 SFP port 가 타이밍네트웍 데이터 수신 port 이며, EVF의 FMC2 SFP port 는 UP-Link 연결 Port로 구현되었다. EVF Fanout Module을 통해 각 EVR에 타이밍네트웍 데이터를 분배한다. EVR 및 EVR-UP 의 FMC2 SFP port를 이용하여 근거리 타이밍네트웍 확장 구성이 가능하다.
+
+위 타이밍네트웍 연결 예는 여러 개의 EVF를 거쳐서 UP-Link가 연결 되는 구성과 EVR-UP 에서 근거리로 타이밍네트웍이 확장되어 EVR에 연결 된 구성을 도시하였다.
 
 \subsection{Firmware}
 
@@ -289,16 +378,6 @@ An SDSoC platform can define as follows:
 A series of the works that were previously described in chapter [2,3] can be easily configured using the SDSoC platform as shown in Fig.\ref{sdsoc_control_system}. 
 
 Fig.\ref{sdsoc_control_system} shows the configuration of the software platform to perform the application context using SDSoC on zynq PS, such as a linux kernel image, boot loader, root file system, device tree, and  the hardware platform to generate the FPGA logic through vivado on zynq PL. After this configuration, EPICS middleware that cross-compiled on the linux OS is interconnected with the C libraries through the SDSoC. Therefore it does not need to develope the AXI interface linux device driver.
-
-\section{Future Work}
-In order to connect the distributed processing system and parallel processing system more effectively, it should provide a unified interface layer for the specific various parallel processing hardwares. For the purpose of developing the unified parallel processing interface layer it can be used  Open Computer Lanaguage (OpenCL).
-
-\subsection{OpenCL for Parallel Processing}
-OpenCL\cite{opencl_wiki} is a framework or programming model for writing programs that execute across heterogeneous platforms consisting of CPUs, GPUs, DSPs, FPGAs and other processors or hardware accelerators and was developed by the Khronos group. 
-Hardware manufacturer must provide application program interface libraries to satisfy the specification according to OpenCL version. Fig.\ref{opencl_control_system} shows the configuration of the unified interface layer for the parallel processing of GPU (NVIDIA or AMD) and FPGA (Xilinx or Altera) using OpenCL. The data interface between the parallel processing hardware and the host make up with PCI Express (PCIe) bus. This configuration for the FPGA hardware is required the DDR memory separately. The GPU already uses the built-in DDR memory. Eventually the kernel code of OpenCL is performed as parallel processing code through OpenCL interface API. The integration of the OpenCL code and the EPICS IOC code means the integration of the distributed system and parallel system.
-\subsection{EPICS Version 4}
-EPICS v3 is not enough to hold the contents of the much more complex scientfic data structure like a image data.
-Reflecting this requirement, EPICS v4\cite{epics_v4} provides efficient storage, access, and communication, of memory resident structured data. The EPICS v4 Normative Types\cite{epics_v4_normative} are a collection of structured data types that can be used by the application level of EPICS V4 network endpoints, to interoperably exchange scientific data. Adopting EPICS v4 as the distributed system it will be interfaced large amounts of data and complex data to be processed in the parallel processing of a variety of experimental devices.
 
 \section{Conclusion}
 Big scientific experiment facilities such as accelerators, nuclear fusion, and telescope are  required by the unity of the heterogenous distributed control system and the fast response  according to its characteristic. These requirements for the distributed and parallel environments must be satisfied at the same time. If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to satisfy with the distributed and high-speed parallel control system at the same time. More and more, the control environment of devices used in the big science experiment of the future will be used the distributed processing environment combined with the parallel processing environment. Therefore, it expect to be increased the requirements for the unified software abstraction layer to operate the heterogenous parallel proccessing hardwares."FPGA-based heterogeneous system (CPU + FPGA) using the OpenCL standard has a significant time-to-market advantage compared to traditional FPGA development using lower level hardware description languages (HDLs) such as Verilog or VHDL"\cite{opencl_on_altera}.  As a result, utilizing the OpenCL standard on the heterogeneous parallel processing hardwares may offer significantly higher performance and the unified abastract layer at much lower power. 
