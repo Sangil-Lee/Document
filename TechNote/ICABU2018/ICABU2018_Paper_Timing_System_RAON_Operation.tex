@@ -310,14 +310,19 @@ As a result, the latency time per node can be calculated.
 \end{figure}
 The timing data generated from the EVG is distributed by the EVF. The FMC1 and FMC2 of the EVG can constitute an UP-Link connection. In the EVF, EVR and EVR-UP mode except EVG, the FMC1 SFP port is the timing data reception port and the FMC2 SFP of the EVF is the UP-Link connection port. The FMC2 SFP port of the EVR and EVR-UP can be used to expand the timing network.The above Fig.~\ref{timing_conf} shows the example configuration of the expandable timing network in which an UP-Link is connected through several EVFs.
 
-\subsection{Firmware}
+\subsection{Post-Mortem Signal}
+To protect the superconducting accelerating module, the machine protection system (MPS) should operate within 50μs from the detection of the abnormal signal of the beam to the transmission of the beam shut-off signal. This beam shut-off signal is called a post-mortem signal in terms of the timing system. Each diagnostic and local device that receives the post-mortem signal generates a log of some data area before and after the signal. The first port of the EVG's external inputs and a specific event number (0x??) defines this as a post-mortem signal and pass it to each system.
 
 \subsection{Software}
 
-\subsection{Timestamp Synchronization}
 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.42\textwidth, height=0.35\textwidth]{img24.png}
+	\caption{Timing System Software Block Diagram}
+	\label{timing_sw_block}
+\end{figure}
 
-\hfill\break
 TABLE \ref{sw-conf} shows the software modules that used to incorporate a distributed process control system and a parallel processing control system.
 
 \begin{table}[h!t]
@@ -325,10 +330,8 @@ TABLE \ref{sw-conf} shows the software modules that used to incorporate a distri
 	\centering
 	\caption{Software Modules}
 	\label{sw-conf}
-	
 	\begin{tabular}{@{}lll@{}}
 		%\begin{tabular}{clc}}
-		
 		\hline
 		\textbf{Software} & \textbf{Contents}                 & \textbf{Module}     \\
 		\hline
@@ -350,39 +353,59 @@ TABLE \ref{sw-conf} shows the software modules that used to incorporate a distri
 		Busybox      & for rootfs system (free)              &                       \\
 		Toolchain    & for ARM cross-compile (GNU)           &                       \\        
 		\hline
-		
 	\end{tabular}
 \end{table}
 
+\subsection{Timestamp Synchronization}
+
+
+\hfill\break
+
+\section{Timing Structure for RAON Operation}
 
 \section{Results}
-The SDSoC (Software Defined System On Chip)\cite{sdsoc} environment is an Eclipse-based Integrated Development Environment (IDE) for implementing embedded systems using the zynq programmable SoC platform.The SDSoC environment includes support for the ZC702, ZC706, MicroZed, ZedBoard and Zybo development boards featuring the Zynq-7000 AP SoC.
-\hfil\break\hfil\break
-An SDSoC platform can define as follows:
-\begin{itemize}
- 	\item Hardware and Software Architecture
- 	\item Application Context including Linux OS
- 	\item Bootloader
- 	\item Device Drivers for I/O or AXI Interface
- 	\item Root File System
-	\item External Memory Interface
-	\item Custom Input/Output
-	\item User-defined Libraries
-\end{itemize}
-A series of the works that were previously described in chapter [2,3] can be easily configured using the SDSoC platform as shown in Fig.\ref{sdsoc_control_system}. 
+The test bench configuration for the performance and result test of the developed RAON timing system is shown in Fig.~\ref{timing_testbench} below. The EVG connected with the RF signal generator and the GPS server generates the events cofigurable by an operator and delivers them to the three EVRs through EVF.
 
-Fig.\ref{sdsoc_control_system} shows the configuration of the software platform to perform the application context using SDSoC on zynq PS, such as a linux kernel image, boot loader, root file system, device tree, and  the hardware platform to generate the FPGA logic through vivado on zynq PL. After this configuration, EPICS middleware that cross-compiled on the linux OS is interconnected with the C libraries through the SDSoC. Therefore it does not need to develope the AXI interface linux device driver.
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.12\textwidth]{img18.png}
+	\caption{Timing Testbench Configuration}
+	\label{timing_testbench}
+\end{figure}
+
+\subsection{Multiplexed Counter Generation and Distributed Bus Transmission Test}
+The multiplexed counter generation of the EVG is a function that can generate the variout user-defined clock synchronized with the reference clock (81.25 MHz). By using this function, it can be simultaneously provided to SCL2 and SCL3 with the each different pulse operation modes.
+As shown the left screen of Fig.~\ref{timing_result}, the user-defined clock (1,2,3KHz) of the EVG transmitted on the DBus can verify the result on each EVR.
+
+\subsection{Event Trigger and Polority Test}
+As shown the center screen of Fig.~\ref{timing_result}, each signal of the EVR can output with the value (Delay, Width) set by an operator.
+However, the polarity setting can be switched by hardware.
+ 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.15\textwidth]{img22.png}
+	\caption{Test Result}
+	\label{timing_result}
+\end{figure}
+
+\subsection{Event Sequence and Timestamp Test}
+The right screen of Fig.~\ref{timing_result} shows whether the events registered in the sequence table are sequentially transmitted and the Fig.~\ref*{event_log} shows whether the timestamp of the output is normally recorded.
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.13\textwidth]{img23.png}
+	\caption{Event Log}
+	\label{event_log}
+\end{figure}
 
 \section{Conclusion}
-Big scientific experiment facilities such as accelerators, nuclear fusion, and telescope are  required by the unity of the heterogenous distributed control system and the fast response  according to its characteristic. These requirements for the distributed and parallel environments must be satisfied at the same time. If the distributed control system using EPICS makes a connection with the high speed parallel processing of FPGA, it is possible to improve the performance and efficiency of the control system. Zynq SoC can be considered as an ideal device to satisfy with the distributed and high-speed parallel control system at the same time. More and more, the control environment of devices used in the big science experiment of the future will be used the distributed processing environment combined with the parallel processing environment. Therefore, it expect to be increased the requirements for the unified software abstraction layer to operate the heterogenous parallel proccessing hardwares."FPGA-based heterogeneous system (CPU + FPGA) using the OpenCL standard has a significant time-to-market advantage compared to traditional FPGA development using lower level hardware description languages (HDLs) such as Verilog or VHDL"\cite{opencl_on_altera}.  As a result, utilizing the OpenCL standard on the heterogeneous parallel processing hardwares may offer significantly higher performance and the unified abastract layer at much lower power. 
-
-
+Timing system is one of the important control systems for the pulse operation of beam in accelerator facility.The prototye of the RAON timing system has been developed very successfully in cooperation with RISP and Korean company for one and a half year. It was improved the performance, increased the flexibility, and become a cost saving compared to existing products. As a result of the final product test, it met all the requirements of the RAON timing system (event generation and transmission synchronized to 81.25 MHz, timestamp less than 1 us,  configurable delayed pulse width, and full integration with EPICS). In the future, it will be continously applied by adding functions such as tens of ns time-stamp synchronization, and waveform for the EVR's signal verification.
 
 \begin{figure}[!htb]
 	\centering
 	\includegraphics*[width=90mm, height=70mm]{img03.png}
 	\includegraphics*[width=90mm, height=70mm]{img04.png}
-	\includegraphics*[width=60mm, height=50mm]{img17.png}
+	\includegraphics*[width=90mm, height=70mm]{img25.png}
 \end{figure}
 
 % use section* for acknowledgement
