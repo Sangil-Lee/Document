@@ -314,6 +314,7 @@ The timing data generated from the EVG is distributed by the EVF. The FMC1 and F
 To protect the superconducting accelerating module, the machine protection system (MPS) should operate within 50μs from the detection of the abnormal signal of the beam to the transmission of the beam shut-off signal. This beam shut-off signal is called a post-mortem signal in terms of the timing system. Each diagnostic and local device that receives the post-mortem signal generates a log of some data area before and after the signal. The first port of the EVG's external inputs and a specific event number (0x??) defines this as a post-mortem signal and pass it to each system.
 
 \subsection{Software}
+The software block diagram in which the RAON timing sytem operates is shown in Fig.~\ref{timing_sw_block}.
 
 
 \begin{figure}[!htb]
@@ -323,7 +324,7 @@ To protect the superconducting accelerating module, the machine protection syste
 	\label{timing_sw_block}
 \end{figure}
 
-TABLE \ref{sw-conf} shows the software modules that used to incorporate a distributed process control system and a parallel processing control system.
+TABLE \ref{sw-conf} shows the software modules needed to develop the RAON timing system.
 
 \begin{table}[h!t]
 	%	\setlength\tabcolsep{3.8pt}
