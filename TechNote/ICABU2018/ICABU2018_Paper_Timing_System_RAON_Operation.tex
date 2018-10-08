@@ -13,11 +13,9 @@
 
 \pagestyle{empty}
 \usepackage{graphicx}
-
 \usepackage{booktabs}
 \usepackage{verbatim}
 \usepackage{framed}
-
 \usepackage{xcolor}
 \usepackage[utf]{kotex}
 \usepackage{ifpdf}
@@ -33,6 +31,7 @@
 %\parindent0em
 
 \newcommand\SEC[1]{\textbf{\uppercase{#1}}}
+
 \begin{document}
 \title{
 	\textbf{Timing System Development for RAON Operation} %\\ 
@@ -99,23 +98,40 @@ The requirements for developing the RAON timing system are as follows:
 	\item EVF of the timing system measures the compensation delay time between each node.
 \end{itemize}
 
+%\cleardoublepage
+\section{Development}
+A rough overview of the RAON timing system is shown in Fig.~\ref{timing_system_overview}. Before the RF signal is amplified, the clock signal from the RF master oscillator (RF reference clock, 81.25 MHz) is synchronized with the 1PPS signal of GPS.
+
+The RAON timing system was developed using Xilinx’s programmable SoC (Zynq) with built-in ARM processor and FPGA logic. Zynq of Xilinx FPGA series is divided into Programmable Logic (PL) and Processing System (PS). PS with the dual-core ARM CortexA9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level Field Programmable Gate Array (FPGA) is connecting with a lot of I/O peripherals for real-time control system. In order to set up the timing parameters connected with the higher control system, EPICS (Experimental Physics and Industrial Control System) middleware is equipped on the linux operating system of the Zynq PS. EPICS is a set of open-source-based software tools which supports for the Ethernet-based middleware layer. An interface between the Zynq PS and PL is interconnected with AMBA4 AXI. The event generator (EVG) of RAON timing system receives 16 TTL inputs, generates event codes and sends those to the specific timing optical network. The event fan-out (EVF) of the timing system provides the ability to distribute up to 24 ports (SFP fiber optical) on the timing network. The event receiver (EVR) should be synchronized with the event generator and provides the capability to generate up to 32 TTL pulses. 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.5\textwidth, height=0.4\textwidth]{img25.png}
+	\caption{RAON Timing System Overview}
+	\label{timing_system_overview}
+\end{figure}
+
+\subsection{Timing System Hardware}
+As shown in Fig.~\ref{timng_hardware}, the RAON timing system of 1U size is made of LCD, fan, power, and backplane. It can be divided into EVG-EVR module and EVF module according to the hardware configuration. The EVG-EVR module is built using a TTL I/O module shown in Fig.~\ref{timng_hardware}, and the EVF module is constructed by mountig an SFP module instead of it. The EVG-EVR module is divided into EVG, EVR, and EVS mode as software definitions at hardware initialization. The front LCD panel displays the link status of the optical timing network, the EPICS IOC status, and the synchronized timestamp.
+
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.3\textwidth]{img03.png}
+	\caption{RAON Timing Hardware}
+	\label{timng_hardware}
+\end{figure}
+
 \begin{figure*}[!htb]
 	\centering
-	%	\captionsetup{justifcation=centering}
-	%	\includegraphics*[width=1\textwidth, height=0.6\textwidth]{img01.png}
-	%	\caption{RAON Integrated Control System Overview}
 	\includegraphics*[width=1\textwidth, height=0.5\textwidth]{img1-1.png}
 	%	\includegraphics*[width=0.7\textwidth, height=1\textwidth, angle=90]{img1-2.png}
 	\caption{Timing Data Structure}
 	\label{timing_data_structure}
 \end{figure*}
 
-%\cleardoublepage
-\section{Development}
-The RAON timing system was developed using Xilinx’s programmable SoC (Zynq) with built-in ARM processor and FPGA logic. Zynq of Xilinx FPGA series is divided into Programmable Logic (PL) and Processing System (PS). PS with the dual-core ARM CortexA9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level Field Programmable Gate Array (FPGA) is connecting with a lot of I/O peripherals for real-time control system. In order to set up the timing parameters connected with the higher control system, EPICS (Experimental Physics and Industrial Control System) middleware is equipped on the linux operating system of the Zynq PS. EPICS is a set of open-source-based software tools which supports for the Ethernet-based middleware layer. An interface between the Zynq PS and PL is interconnected with AMBA4 AXI. The event generator (EVG) of RAON timing system receives 16 TTL inputs, generates event codes and sends those to the specific timing optical network. The event fan-out (EVF) of the timing system provides the ability to distribute up to 24 ports (SFP fiber optical) on the timing network. The event receiver (EVR) should be synchronized with the event generator and provides the capability to generate up to 32 TTL pulses. 
-
 \subsection{Timing Structure Design}
 The timing data (32bit) is transmitted with an external clock of 81.25 MHz (RF reference clock). The timing data consists of Stream data (8bit), DBus (Distributed Bus 8bit), evCodeA (Event Code A 5bit), and evCodeB (Event Code B 11 bit). In Fig. 1, the timing operating clock of all equipment connected to the timing network is synchronized with the EVG external reference clock. A total signal sources (evSrc 31ea) generating in EVG are composed of external inputs (exIn 16ea), MXCs (Multiplexed Counter 14ea) and user trigger. Stream data of 8 bits includes the header, K-code, timestamp, event status, and tail. DBus data of 8 bits is 8 signals selected from inputs of EVG. Event code A of 5 bits is an event from 1 to 32 generated by selected 32 inputs from EVG. Event code B of 11 bits is an event generated in sequence A and B by the signals combining inputs of EVG. Event code A can also be mapped to event code B of 11 bits.
+
 
 \begin{figure}[!htb]
 	\centering
@@ -131,7 +147,7 @@ As shown Fig.~\ref{timing_data_structure}, evgWatch operates by receiving an ext
 
 \subsubsection{Stream Data Generator}\hspace*{\fill} \\
 The stream data generator the timestamp and the count information of the EVG transmits in a 1 KHz cycle.
-Table ~\ref{stream_data_packet} shows the sending data packet.
+Table ~\ref{stream_data_packet} shows the sending data packet.\newline
 
 \begin{table}[h!t]
 	%	\setlength\tabcolsep{3.8pt}
@@ -167,7 +183,7 @@ Table ~\ref{stream_data_packet} shows the sending data packet.
 \end{table}
 
 \subsubsection{Event Trigger Source, evSrc}\hspace*{\fill} \\
-The signals of DBus, evCodeA or evCodeB in the EVG are the SW user trigger, MXC 14EA, and the external inputs (TTL I/O module - low floor) 16EA. The bundle of these signals is defined as the event source (evSrc).
+The signals of DBus, evCodeA or evCodeB in the EVG are the SW user trigger, MXC 14EA, and the external inputs (TTL I/O module - low floor) 16EA. The bundle of these signals is defined as the event source (evSrc).\newline
 
 \begin{table}[h!t]
 	\centering
@@ -401,13 +417,6 @@ The right screen of Fig.~\ref{timing_result} shows whether the events registered
 
 \section{Conclusion}
 Timing system is one of the important control systems for the pulse operation of beam in accelerator facility.The prototye of the RAON timing system has been developed very successfully in cooperation with RISP and Korean company for one and a half year. It was improved the performance, increased the flexibility, and become a cost saving compared to existing products. As a result of the final product test, it met all the requirements of the RAON timing system (event generation and transmission synchronized to 81.25 MHz, timestamp less than 1 us,  configurable delayed pulse width, and full integration with EPICS). In the future, it will be continously applied by adding functions such as tens of ns time-stamp synchronization, and waveform for the EVR's signal verification.
-
-\begin{figure}[!htb]
-	\centering
-	\includegraphics*[width=90mm, height=70mm]{img03.png}
-	\includegraphics*[width=90mm, height=70mm]{img04.png}
-	\includegraphics*[width=90mm, height=70mm]{img25.png}
-\end{figure}
 
 % use section* for acknowledgement
 \section*{Acknowledgment}
