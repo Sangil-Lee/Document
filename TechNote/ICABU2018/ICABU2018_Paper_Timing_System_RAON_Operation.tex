@@ -84,7 +84,7 @@ The requirements for developing the RAON timing system are as follows:
 
 \begin{itemize}
 	\item Sub-modules (EVG, EVR, EVF) of the RAON timing system must be fully integrated on the EPICS middleware for interoperation with higher control systems.
-	\item Sub-modules have to provide for the health status with themselves.
+%	\item Sub-modules have to provide for the health status with themselves.
 	\item Clock jitter must be less than 1ns and timing jitter must be less than 50ps.
 	\item EVG of the timing system must be able to take a sequence of events as input from control system. Time of occurrence for each event in sequence is pre-defined.
 	\item Granularity of EVG event emission in a timing sequence Tevent (1/Fevent) = 12.31ns. Fevent is equal to fundamental RF reference clock of 81.25MHz.
@@ -98,21 +98,17 @@ The requirements for developing the RAON timing system are as follows:
 	\item EVF of the timing system measures the compensation delay time between each node.
 \end{itemize}
 
-%\cleardoublepage
-\section{Development}
-A rough overview of the RAON timing system is shown in Fig.~\ref{timing_system_overview}. Before the RF signal is amplified, the clock signal from the RF master oscillator (RF reference clock, 81.25 MHz) is synchronized with the 1PPS signal of GPS.
-
-The RAON timing system was developed using Xilinx’s programmable SoC (Zynq) with built-in ARM processor and FPGA logic. Zynq of Xilinx FPGA series is divided into Programmable Logic (PL) and Processing System (PS). PS with the dual-core ARM CortexA9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level Field Programmable Gate Array (FPGA) is connecting with a lot of I/O peripherals for real-time control system. In order to set up the timing parameters connected with the higher control system, EPICS (Experimental Physics and Industrial Control System) middleware is equipped on the linux operating system of the Zynq PS. EPICS is a set of open-source-based software tools which supports for the Ethernet-based middleware layer. An interface between the Zynq PS and PL is interconnected with AMBA4 AXI. The event generator (EVG) of RAON timing system receives 16 TTL inputs, generates event codes and sends those to the specific timing optical network. The event fan-out (EVF) of the timing system provides the ability to distribute up to 24 ports (SFP fiber optical) on the timing network. The event receiver (EVR) should be synchronized with the event generator and provides the capability to generate up to 32 TTL pulses. 
-\begin{figure}[!htb]
+\begin{figure*}[!htb]
 	\centering
-	\includegraphics*[width=0.5\textwidth, height=0.4\textwidth]{img25.png}
+	\includegraphics*[width=0.8\textwidth, height=0.45\textwidth]{img25.png}
 	\caption{RAON Timing System Overview}
-	\label{timing_system_overview}
-\end{figure}
+	\label{timing_overview}
+\end{figure*}
 
+\section{Development}
+Fig.~\ref{timing_overview} shows a overview of the RAON timing system. Before the RF signal is amplified, the clock signal from the RF master oscillator is synchronized with the 1PPS signal of GPS. The EVG module receives the reference clock and the 1 PPS IRIG-B signal from the 2 port of RTM board. The timing stream data of EVG module is transmited at the optical speed of 3.25 Gbps data link (40bits * 81.25 MHz), and the time accuracy for the timestamp sychronization is less than 1 micro-second. The EVG provides the events with timestamp to Chopper, LLRF, beam diagnostics equipments, and any other devices needed the timing event. The parameters of three sub-modules of the timing system are integrated with EPICS middleware over ethernet. Each IOC server is synchronized its time with the time server within 1 milli-second using NTP over ethernet. The RAON timing system was developed using Xilinx’s programmable SoC (Zynq) with built-in ARM processor and FPGA logic. Zynq of Xilinx FPGA series is divided into Programmable Logic (PL) and Processing System (PS). PS with the dual-core ARM CortexA9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level Field Programmable Gate Array (FPGA) is connecting with a lot of I/O peripherals for real-time control system. In order to set up the timing parameters connected with the higher control system, EPICS (Experimental Physics and Industrial Control System) middleware is equipped on the linux operating system of the Zynq PS. EPICS is a set of open-source-based software tools which supports for the Ethernet-based middleware layer. An interface between the Zynq PS and PL is interconnected with AMBA4 AXI. The event generator (EVG) of RAON timing system receives 16 TTL inputs, generates event codes and sends those to the specific timing optical network. The event fan-out (EVF) of the timing system provides the ability to distribute up to 24 ports (SFP fiber optical) on the timing network. The event receiver (EVR) should be synchronized with the event generator and provides the capability to generate up to 32 TTL pulses. 
 \subsection{Timing System Hardware}
-As shown in Fig.~\ref{timng_hardware}, the RAON timing system of 1U size is made of LCD, fan, power, and backplane. It can be divided into EVG-EVR module and EVF module according to the hardware configuration. The EVG-EVR module is built using a TTL I/O module shown in Fig.~\ref{timng_hardware}, and the EVF module is constructed by mountig an SFP module instead of it. The EVG-EVR module is divided into EVG, EVR, and EVS mode as software definitions at hardware initialization. The front LCD panel displays the link status of the optical timing network, the EPICS IOC status, and the synchronized timestamp.
-
+As shown in Fig.~\ref{timng_hardware} the RAON timing system of 1U size is made of LCD, fan, power supply, backplane, FPGA Zynq SoC (with FMC SFP 2 port), RTM board, and TTL I/O module or SFP module. It can be divided into EVG-EVR module and EVF module according to the hardware configuration. The EVG-EVR module is built using a TTL I/O module shown in Fig.~\ref{timng_hardware}, and the EVF module is constructed by mountig an SFP module instead of it. The mode of the EVG-EVR module has EVG, EVR, or EVS mode by software definitions at hardware initialization. The front LCD panel displays the link status of the optical timing network, the EPICS IOC status, and the synchronized timestamp.
 
 \begin{figure}[!htb]
 	\centering
@@ -120,6 +116,10 @@ As shown in Fig.~\ref{timng_hardware}, the RAON timing system of 1U size is made
 	\caption{RAON Timing Hardware}
 	\label{timng_hardware}
 \end{figure}
+
+
+\subsection{Timing Structure Design}
+The timing data (32bit) is transmitted with an external clock of 81.25 MHz (RF reference clock). The timing data consists of Stream data (8bit), DBus (Distributed Bus 8bit), evCodeA (Event Code A 5bit), and evCodeB (Event Code B 11 bit). In Fig. 1, the timing operating clock of all equipment connected to the timing network is synchronized with the EVG external reference clock. A total signal sources (evSrc 31ea) generating in EVG are composed of external inputs (exIn 16ea), MXCs (Multiplexed Counter 14ea) and user trigger. Stream data of 8 bits includes the header, K-code, timestamp, event status, and tail. DBus data of 8 bits is 8 signals selected from inputs of EVG. Event code A of 5 bits is an event from 1 to 32 generated by selected 32 inputs from EVG. Event code B of 11 bits is an event generated in sequence A and B by the signals combining inputs of EVG. Event code A can also be mapped to event code B of 11 bits.
 
 \begin{figure*}[!htb]
 	\centering
@@ -129,17 +129,12 @@ As shown in Fig.~\ref{timng_hardware}, the RAON timing system of 1U size is made
 	\label{timing_data_structure}
 \end{figure*}
 
-\subsection{Timing Structure Design}
-The timing data (32bit) is transmitted with an external clock of 81.25 MHz (RF reference clock). The timing data consists of Stream data (8bit), DBus (Distributed Bus 8bit), evCodeA (Event Code A 5bit), and evCodeB (Event Code B 11 bit). In Fig. 1, the timing operating clock of all equipment connected to the timing network is synchronized with the EVG external reference clock. A total signal sources (evSrc 31ea) generating in EVG are composed of external inputs (exIn 16ea), MXCs (Multiplexed Counter 14ea) and user trigger. Stream data of 8 bits includes the header, K-code, timestamp, event status, and tail. DBus data of 8 bits is 8 signals selected from inputs of EVG. Event code A of 5 bits is an event from 1 to 32 generated by selected 32 inputs from EVG. Event code B of 11 bits is an event generated in sequence A and B by the signals combining inputs of EVG. Event code A can also be mapped to event code B of 11 bits.
-
-
-\begin{figure}[!htb]
-	\centering
-	\includegraphics*[width=0.5\textwidth, height=0.4\textwidth]{img02.png}
-	\caption{Timing System Configuration}
-	\label{timing_system_configuration}
-\end{figure}
-
+%\begin{figure}[!htb]
+%	\centering
+%	\includegraphics*[width=0.5\textwidth, height=0.4\textwidth]{img02.png}
+%	\caption{Timing System Configuration}
+%	\label{timing_system_configuration}
+%\end{figure}
 
 \subsection{Event Generator}
 \subsubsection{Event Generator Watch, evgWatch}\hspace*{\fill} \\
@@ -225,7 +220,7 @@ The evCodeA is a number code from 1 to 31 expressed in 5 bits. An input signal c
 The evCodeB of 11 bits has a value of 0x001 to 0x7FF. The range of 0x7F0 to 0x7FF (128 codes) is used to the predefined functions. The evCodeB with the priority-based consists of seqA, seqB, mevCodeA, and evUser ($seqA > seqB > mevCodeA > evUser$). \newline
 
 \subsubsection{Sequence A, B, seqA,B}\hspace*{\fill} \\
-The sequence of the timing system is a function to transmit a sequence of the predefined evCodeB according to the preset time by the sequence trigger signal. The timing system provides two sequence procedures which are seqA and seqB. The sequence trigger signal can be generated with a combination of the input signals (evSrc). The sequence trigger mapped to each input signal is masked  by bitwise operation in the 31-bit register. A total of six sequence trigger combinations can be selected by masking the sequence trigger bit. The sequence A and sequence B sends the event code preset in the FPGA BRAM to the timing network according to the timestamp. 
+The sequence of the timing system is a function to transmit a sequence of the predefined evCodeB according to the preset time by the sequence trigger signal. The timing system provides two sequence procedures which are seqA and seqB. The sequence trigger signal can be generated with a combination of the input signals (evSrc). The sequence trigger mapped to each input signal is masked  by bitwise operation in the 31-bit register. A total of six sequence trigger combinations can be selected by masking the sequence trigger bit. The sequence A and sequence B sends the event code preset in the FPGA BRAM to the timing network according to the timestamp. The Fig. ~\ref*{sequence_fsm} shows the finite state machine implemented for the sequence A and B. The register set of the set\_evg\_enable transits the stop state to the standby state. By the sequence trigger signal, it enters the run state and reads data from the BRAM to generate the event code. If the register of the stop\_bit is 1, the run state terminates and the predefined seq\_repeatReg register value decreases. When the seq\_repeatReg register is 0, it becomes the pending state and transits to the standby state by the register value of the set\_evSeq\_Resume. If the seq\_repeatReg register value is set to 0, the sequence will be pended once. If it is set to 0xFFFF, the sequence will repeat indefinitely. It should be set the register of the set\_evg\_enable to disable the infinite loop. The maximum number of the event code B that can be set in Sequence is 2048. The data structure of a single record field has offset (0$\sim$2047), event code (0x1$\sim$0x7FF), stop bit (0,1), and timestamp (0x1$\sim$0xFFFFFFFF).
 
 \begin{figure}[!htb]
 	\centering
@@ -233,8 +228,6 @@ The sequence of the timing system is a function to transmit a sequence of the pr
 	\caption{Sequence Finite State Machine}
 	\label{sequence_fsm}
 \end{figure}
-
-The Fig. ~\ref*{sequence_fsm} shows the finite state machine implemented for the sequence A and B. The register set of the set\_evg\_enable transits the stop state to the standby state. By the sequence trigger signal, it enters the run state and reads data from the BRAM to generate the event code. If the register of the stop\_bit is 1, the run state terminates and the predefined seq\_repeatReg register value decreases. When the seq\_repeatReg register is 0, it becomes the pending state and transits to the standby state by the register value of the set\_evSeq\_Resume. If the seq\_repeatReg register value is set to 0, the sequence will be pended once. If it is set to 0xFFFF, the sequence will repeat indefinitely. It should be set the register of the set\_evg\_enable to disable the infinite loop. The maximum number of the event code B that can be set in Sequence is 2048. The data structure of a single record field has offset (0$\sim$2047), event code (0x1$\sim$0x7FF), stop bit (0,1), and timestamp (0x1$\sim$0xFFFFFFFF).
 
 \subsection{Event Receiver}
 \subsubsection{Event Receiver Watch, evrWatch}\hspace*{\fill} \\
