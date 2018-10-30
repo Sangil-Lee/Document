@@ -106,7 +106,7 @@ The requirements for developing the RAON timing system are as follows:
 \end{figure*}
 
 \section{Development}
-Fig.~\ref{timing_overview} shows a overview of the RAON timing system. Before the RF signal is amplified, the clock signal from the RF master oscillator is synchronized with the 1PPS signal of GPS. The EVG module receives the reference clock and the 1 PPS IRIG-B signal from the 2 port of RTM board. The timing stream data of EVG module is transmited at the optical speed of 3.25 Gbps data link (40bits * 81.25 MHz), and the time accuracy for the timestamp sychronization is less than 1 micro-second. The EVG provides the events with timestamp to Chopper, LLRF, beam diagnostics equipments, and any other devices needed the timing event. The parameters of three sub-modules of the timing system are integrated with EPICS middleware over ethernet. Each IOC server is synchronized its time with the time server within 1 milli-second using NTP over ethernet. The RAON timing system was developed using Xilinx’s programmable SoC (Zynq) with built-in ARM processor and FPGA logic. Zynq of Xilinx FPGA series is divided into Programmable Logic (PL) and Processing System (PS). PS with the dual-core ARM CortexA9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level Field Programmable Gate Array (FPGA) is connecting with a lot of I/O peripherals for real-time control system. In order to set up the timing parameters connected with the higher control system, EPICS (Experimental Physics and Industrial Control System) middleware is equipped on the linux operating system of the Zynq PS. EPICS is a set of open-source-based software tools which supports for the Ethernet-based middleware layer. An interface between the Zynq PS and PL is interconnected with AMBA4 AXI. The event generator (EVG) of RAON timing system receives 16 TTL inputs, generates event codes and sends those to the specific timing optical network. The event fan-out (EVF) of the timing system provides the ability to distribute up to 24 ports (SFP fiber optical) on the timing network. The event receiver (EVR) should be synchronized with the event generator and provides the capability to generate up to 32 TTL pulses. 
+Fig.~\ref{timing_overview} shows a overview of the RAON timing system. Before the RF signal is amplified, the clock signal from the RF master oscillator is synchronized with the 1PPS signal of GPS. The EVG module receives the RF reference clock and the 1 PPS IRIG-B signal from the 2 port of RTM board. The timing stream data of EVG module is transmited at the optical speed of 3.25 Gbps data link (40bits * 81.25 MHz), and the time accuracy for the timestamp synchronization is less than 1 micro-second. The EVG provides the events with timestamp to Chopper, LLRF, beam diagnostics equipments, and any other devices needed the timing event. The parameters of three sub-modules of the timing system are integrated with EPICS middleware over ethernet. Each IOC server is synchronized its time with the time server within 1 milli-second using NTP over ethernet. The RAON timing system was developed using Xilinx’s programmable SoC (Zynq) with built-in ARM processor and FPGA logic. Zynq of Xilinx FPGA series is divided into Programmable Logic (PL) and Processing System (PS). PS with the dual-core ARM CortexA9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level Field Programmable Gate Array (FPGA) is connecting with a lot of I/O peripherals for real-time control system. In order to set up the timing parameters connected with the higher control system, EPICS (Experimental Physics and Industrial Control System) middleware is equipped on the linux operating system of the Zynq PS. EPICS is a set of open-source-based software tools which supports for the Ethernet-based middleware layer. An interface between the Zynq PS and PL is interconnected with AMBA4 AXI. The event generator (EVG) of RAON timing system receives 16 TTL inputs, generates event codes and sends those to the specific timing optical network. The event fan-out (EVF) of the timing system provides the ability to distribute up to 24 ports (SFP fiber optical) on the timing network. The event receiver (EVR) should be synchronized with the event generator and provides the capability to generate up to 32 TTL pulses. 
 \subsection{Timing System Hardware}
 As shown in Fig.~\ref{timng_hardware} the RAON timing system of 1U size is made of LCD, fan, power supply, backplane, FPGA Zynq SoC (with FMC SFP 2 port), RTM board, and TTL I/O module or SFP module. It can be divided into EVG-EVR module and EVF module according to the hardware configuration. The EVG-EVR module is built using a TTL I/O module shown in Fig.~\ref{timng_hardware}, and the EVF module is constructed by mountig an SFP module instead of it. The mode of the EVG-EVR module has EVG, EVR, or EVS mode by software definitions at hardware initialization. The front LCD panel displays the link status of the optical timing network, the EPICS IOC status, and the synchronized timestamp.
 
@@ -125,7 +125,7 @@ The timing data (32bit) is transmitted with an external clock of 81.25 MHz (RF r
 	\centering
 	\includegraphics*[width=1\textwidth, height=0.5\textwidth]{img1-1.png}
 	%	\includegraphics*[width=0.7\textwidth, height=1\textwidth, angle=90]{img1-2.png}
-	\caption{Timing Data Structure}
+	\caption{Timing System Logic Flow}
 	\label{timing_data_structure}
 \end{figure*}
 
@@ -254,7 +254,7 @@ The signal outputs (exOut32) of the event receiver is the final output sent to t
 		\textbf{Output}	& \textbf{Source 1}				& \textbf{Source 2}\\
 		\hline
 		0 $\sim$ 7			& DBus 0 $\sim$ 7			& pdbOutput 0 $\sim$ 7\\
-		8 $\sim$ 30			& pdpOutput 8 $\sim$ 30     \\
+		8 $\sim$ 30			& pdpOutput 8 $\sim$ 30     & pdpOutput 8 $\sim$ 30 \\
 		31				& 1PPS evrOut					& pdbOutput 31\\        								
 		\hline
 	\end{tabular}
@@ -323,12 +323,12 @@ The timing data generated from the EVG is distributed by the EVF. The FMC1 and F
 To protect the superconducting accelerating module, the machine protection system (MPS) should operate within 50μs from the detection of the abnormal signal of the beam to the transmission of the beam shut-off signal. This beam shut-off signal is called a post-mortem signal in terms of the timing system. Each diagnostic and local device that receives the post-mortem signal generates a log of some data area before and after the signal. The first port of the EVG's external inputs and a specific event number (0x??) defines this as a post-mortem signal and pass it to each system.
 
 \subsection{Software}
-The software block diagram in which the RAON timing sytem operates is shown in Fig.~\ref{timing_sw_block}.
+The software block diagram in which the RAON timing sytem operates is shown in Fig.~\ref{timing_sw_block}. In Fig. ~\ref{timing_sw_block}, the ts2gtp FPGA logic block, which is connected to the timing network, sends and receives the timing stream data. The ts2ev logic block generates and decodes the stream data. The configurable parameters and waveform parameters to perform the logic store in BRAM and DDR memory.  The memory area is connected with the user space through the linux kernel device driver using AXI interface. It is linked with EPICS middleware through the layered modules of the user space of linux.
 
 
 \begin{figure}[!htb]
 	\centering
-	\includegraphics*[width=0.42\textwidth, height=0.35\textwidth]{img24.png}
+	\includegraphics*[width=0.4\textwidth, height=0.25\textwidth]{img24.png}
 	\caption{Timing System Software Block Diagram}
 	\label{timing_sw_block}
 \end{figure}
@@ -366,12 +366,17 @@ TABLE \ref{sw-conf} shows the software modules needed to develop the RAON timing
 	\end{tabular}
 \end{table}
 
-\subsection{Timestamp Synchronization}
+
+\section{Timing Structure Scenario}
+The beam commissioning of the RAON accelerator proceeds to the pulse mode. For safe commissioning of the RAON, the timing system distributes the control signal in single event mode. After that, a repetitive signal of 1 Hz is distributed to each system as shown Fig. timing structure. Fig. [] shows a possible timing structure scenario for the SCL3 beam commissioning. The timing system can be configurable 1 Hz repetition rate with 1 \% duty factor and the time accuracy is 12.3ns (=81.25MHz, minimum pulse length) satisfying requirement ( $\sim$ 1s).
 
 
-\hfill\break
-
-\section{Timing Structure for RAON Operation}
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.35\textwidth]{schedule.png}
+	\caption{1Hz Timing Schedule Scenario for SCL3 Beam Commissioning}
+	\label{schedule}
+\end{figure}
 
 \section{Results}
 The test bench configuration for the performance and result test of the developed RAON timing system is shown in Fig.~\ref{timing_testbench} below. The EVG connected with the RF signal generator and the GPS server generates the events cofigurable by an operator and delivers them to the three EVRs through EVF.
@@ -381,6 +386,23 @@ The test bench configuration for the performance and result test of the develope
 	\includegraphics*[width=0.45\textwidth, height=0.12\textwidth]{img18.png}
 	\caption{Timing Testbench Configuration}
 	\label{timing_testbench}
+\end{figure}
+
+\subsection{Timing Accuracy Test}
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.35\textwidth, height=0.15\textwidth]{accuracy.png}
+	\caption{Time Accuracy}
+	\label{accuracy}
+\end{figure}
+
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.35\textwidth]{1hz_scenario.png}
+	\caption{Time Scenario}
+	\label{scenario}
 \end{figure}
 
 \subsection{Multiplexed Counter Generation and Distributed Bus Transmission Test}
@@ -438,40 +460,8 @@ Overview of the Rare Isotope Science Project of the Institute for Basic Science,
 \bibitem{risp} Y.~K.~Kwon, {\it et. al},``Status of Rare Isotope Science Project in Korea'',
 Few-Body Syst 54, 961-966, (2013).
 
-
-\bibitem{opencl}
-OpenCL, https://www.khronos.org/opencl/
-
-\bibitem{analog}
-Analog Devices website, http://www.analog.com
-
-\bibitem{linaro}
-Linaro Document website, https://en.wikipedia.org/wiki/Linaro
-
-\bibitem{u-boot}
-U-Boot Document website, http://www.denx.de/wiki/U-Boot
-
-\bibitem{busybox}
-Busybox Document website, http://www.busybox.net/
-
-
-\bibitem{iio}
-Industrial I/O Document website, https://wiki.analog.com/resources/tools-software/linux-software/libiio
-
 \bibitem{sdsoc}
 SDSoC Document,\\ http://www.xilinx.com/support/documentation/sw\_manuals/xilinx2016\_1/ug1146-sdsoc-platforms-and-libraries.pdf
-
-\bibitem{opencl_wiki}
-OpenCL Definition, https://en.wikipedia.org/wiki/OpenCL
-
-\bibitem{epics_v4}
-EPICS Version 4, http://epics-pvdata.sourceforge.net/
-
-\bibitem{epics_v4_normative}
-EPICS Version 4 Normative Types,\\ http://epics-pvdata.sourceforge.net/docbuild/normativeTypesCPP/tip/\\documentation/ntCPP.html
-
-\bibitem{opencl_on_altera}
-OpenCL on Altera, https://www.altera.com/en\_US/pdfs/literature/wp/wp-01173-opencl.pdf
 
 \end{thebibliography}
 
