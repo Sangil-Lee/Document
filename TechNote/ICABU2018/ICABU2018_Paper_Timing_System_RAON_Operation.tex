@@ -76,14 +76,14 @@ This paper describes the results of the design and development for the RAON spec
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
 
-\IEEEPARstart{R}{AON} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications\cite{risp}. The RAON is the important facility of IBS and aims to realize the core infrastructure of the next generation basic science research. To control the large-scaled facility like RAON, the timing system plays a role as one of the important control systems. There are two ways of RAON operation. One is a continuous wave operation and the other is a pulse width modulation operation. The RAON timing system is related to the pulse mode operation. The RAON timing system is a system that precisely synchronizes the local devices (LLRF, Chopper, MPS, Beam Diagnostics and so on) of the whole accelerator. Hardware event signals of the timing system synchronized from GPS must be distributed to each local control system according to various operation and beam mode for RAON operation. It also provides accurate time information through all the site as a time source.
+\IEEEPARstart{R}{AON} is a new heavy ion accelerator under construction in South Korea, which is to produce a variety of stable ion and rare isotope beams to support various researches for the basic science and applied research applications\cite{risp_overview,risp}. The RAON is the important facility of IBS and aims to realize the core infrastructure of the next generation basic science research. To control the large-scaled facility like RAON, the timing system plays a role as one of the important control systems. There are two ways of RAON operation. One is a continuous wave operation and the other is a pulse width modulation operation. The RAON timing system is related to the pulse mode operation. The RAON timing system is a system that precisely synchronizes the local devices (LLRF, Chopper, MPS, Beam Diagnostics and so on) of the whole accelerator. Hardware event signals of the timing system synchronized from GPS must be distributed to each local control system according to various operation and beam mode for RAON operation. It also provides accurate time information through all the site as a time source.
 
 \section{Requirements}
-The timing system consists of three sub-modules. One is the event generator (EVG) module, another is the event fan-out (EVF) module and the other is the event receiver (EVR) module.
+The timing system consists of three sub-modules. One is the event generator (EVG) module, another is the event fan-out (EVF) module and the other is the event receiver (EVR) module \cite{white_rabbit,gis_timing}.
 The requirements for developing the RAON timing system are as follows:
 
 \begin{itemize}
-	\item Sub-modules (EVG, EVR, EVF) of the RAON timing system must be fully integrated on the EPICS middleware for interoperation with higher control systems.
+	\item Sub-modules (EVG, EVR, EVF) of the RAON timing system must be fully integrated on the EPICS middleware for interoperation with higher control systems \cite{epics}.
 %	\item Sub-modules have to provide for the health status with themselves.
 	\item Clock jitter must be less than 1ns and timing jitter must be less than 50ps.
 	\item EVG of the timing system must be able to take a sequence of events as input from control system. Time of occurrence for each event in sequence is pre-defined.
@@ -106,7 +106,7 @@ The requirements for developing the RAON timing system are as follows:
 \end{figure*}
 
 \section{Development}
-Fig.~\ref{timing_overview} shows a overview of the RAON timing system. Before the RF signal is amplified, the clock signal from the RF master oscillator is synchronized with the 1PPS signal of GPS. The EVG module receives the RF reference clock and the 1 PPS IRIG-B signal from the 2 port of RTM board. The timing stream data of EVG module is transmited at the optical speed of 3.25 Gbps data link (40bits * 81.25 MHz), and the time accuracy for the timestamp synchronization is less than 1 micro-second. The EVG provides the events with timestamp to Chopper, LLRF, beam diagnostics equipments, and any other devices needed the timing event. The parameters of three sub-modules of the timing system are integrated with EPICS middleware over ethernet. Each IOC server is synchronized its time with the time server within 1 milli-second using NTP over ethernet. The RAON timing system was developed using Xilinx’s programmable SoC (Zynq) with built-in ARM processor and FPGA logic. Zynq of Xilinx FPGA series is divided into Programmable Logic (PL) and Processing System (PS). PS with the dual-core ARM CortexA9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level Field Programmable Gate Array (FPGA) is connecting with a lot of I/O peripherals for real-time control system. In order to set up the timing parameters connected with the higher control system, EPICS (Experimental Physics and Industrial Control System) middleware is equipped on the linux operating system of the Zynq PS. EPICS is a set of open-source-based software tools which supports for the Ethernet-based middleware layer. An interface between the Zynq PS and PL is interconnected with AMBA4 AXI. The event generator (EVG) of RAON timing system receives 16 TTL inputs, generates event codes and sends those to the specific timing optical network. The event fan-out (EVF) of the timing system provides the ability to distribute up to 24 ports (SFP fiber optical) on the timing network. The event receiver (EVR) should be synchronized with the event generator and provides the capability to generate up to 32 TTL pulses. 
+Fig.~\ref{timing_overview} shows a overview of the RAON timing system. Before the RF signal is amplified, the clock signal from the RF master oscillator is synchronized with the 1PPS signal of GPS\cite{frib_timing,taiwan_timing}. The EVG module receives the RF reference clock and the 1 PPS IRIG-B signal from the 2 port of RTM board. The timing stream data of EVG module is transmited at the optical speed of 3.25 Gbps data link (40bits * 81.25 MHz), and the time accuracy for the timestamp synchronization is less than 1 micro-second. The EVG provides the events with timestamp to Chopper, LLRF, beam diagnostics equipments, and any other devices needed the timing event\cite{frib_timing,taiwan_timing}. The parameters of three sub-modules of the timing system are integrated with EPICS middleware over ethernet. Each IOC server is synchronized its time with the time server within 1 milli-second using NTP over ethernet. The RAON timing system was developed using Xilinx’s programmable SoC (Zynq) with built-in ARM processor and FPGA logic. Zynq of Xilinx FPGA series is divided into Programmable Logic (PL) and Processing System (PS). PS with the dual-core ARM CortexA9 processor is performing the high-level control logic at run-time on linux operating system. PL with the low-level Field Programmable Gate Array (FPGA) is connecting with a lot of I/O peripherals for real-time control system\cite{parallel}. In order to set up the timing parameters connected with the higher control system, EPICS (Experimental Physics and Industrial Control System) middleware is equipped on the linux operating system of the Zynq PS. EPICS is a set of open-source-based software tools which supports for the Ethernet-based middleware layer. An interface between the Zynq PS and PL is interconnected with AMBA4 AXI. The event generator (EVG) of RAON timing system receives 16 TTL inputs, generates event codes and sends those to the specific timing optical network. The event fan-out (EVF) of the timing system provides the ability to distribute up to 24 ports (SFP fiber optical) on the timing network. The event receiver (EVR) should be synchronized with the event generator and provides the capability to generate up to 32 TTL pulses. 
 \subsection{Timing System Hardware}
 As shown in Fig.~\ref{timng_hardware} the RAON timing system of 1U size is made of LCD, fan, power supply, backplane, FPGA Zynq SoC (with FMC SFP 2 port), RTM board, and TTL I/O module or SFP module. It can be divided into EVG-EVR module and EVF module according to the hardware configuration. The EVG-EVR module is built using a TTL I/O module shown in Fig.~\ref{timng_hardware}, and the EVF module is constructed by mountig an SFP module instead of it. The mode of the EVG-EVR module has EVG, EVR, or EVS mode by software definitions at hardware initialization. The front LCD panel displays the link status of the optical timing network, the EPICS IOC status, and the synchronized timestamp.
 
@@ -388,7 +388,8 @@ The test bench configuration for the performance and result test of the develope
 	\label{timing_testbench}
 \end{figure}
 
-\subsection{Timing Accuracy Test}
+\subsection{Timing Accuracy (Minimum Increment Pulse Length)}
+The minimum pulse length of the timing system with 81.25 MHz reference clock is theoretically 12.3ns. In Fig.~\ref{accuracy} , it shows that the minimum pulse length of one clock is satisfactory at 12.3 ns. This means that a signal can be generated at an interval of 1 clock (=12.3ns) when successive events are sent without setting of delay.
 
 \begin{figure}[!htb]
 	\centering
@@ -397,6 +398,18 @@ The test bench configuration for the performance and result test of the develope
 	\label{accuracy}
 \end{figure}
 
+\subsection{Event Trigger, Multiplexed Counter Generation and Pulse Delayed Output Test}
+Fig. 12 shows the result tested by setting event signal, MXC clock signal and configurable pulse delay and width on 3 channels respectively. The three channels of the left screenshot have been verified for event assignment and polarity changes. Each signal of the EVR can output with the value (Delay, Width) set by an operator. However, the polarity setting can be switched by hardware. The multiplexed counter generation of the EVG is a function that can generate the various user-defined clock synchronized with the reference clock (81.25 MHz). By using this function, it can be simultaneously provided to SCL2 and SCL3 with the each different pulse operation modes. User-defined clock signals (1,2,3KHz) of the EVG transmitted on the DBus using multiplexed counter can verify the result on each EVR. The middle screenshot could have been checked the result for it. The right screenshot shows that pulse width and delay time can be configurable for each signal by sequence setup.
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics*[width=0.45\textwidth, height=0.20\textwidth]{img22.png}
+	\caption{Test Result}
+	\label{timing_result}
+\end{figure}
+ 
+\subsection{1Hz Commissioning Scenario Test}
+Fig.~\ref{schedule} shows an example of 1 Hz repetition mode for RAON commissioning scenario. In the result of Fig.~\ref{scenario}, the timing system could have verified that it can distribute the sequence event signal according to such the time schedule.
 
 \begin{figure}[!htb]
 	\centering
@@ -405,23 +418,8 @@ The test bench configuration for the performance and result test of the develope
 	\label{scenario}
 \end{figure}
 
-\subsection{Multiplexed Counter Generation and Distributed Bus Transmission Test}
-The multiplexed counter generation of the EVG is a function that can generate the variout user-defined clock synchronized with the reference clock (81.25 MHz). By using this function, it can be simultaneously provided to SCL2 and SCL3 with the each different pulse operation modes.
-As shown the left screen of Fig.~\ref{timing_result}, the user-defined clock (1,2,3KHz) of the EVG transmitted on the DBus can verify the result on each EVR.
-
-\subsection{Event Trigger and Polority Test}
-As shown the center screen of Fig.~\ref{timing_result}, each signal of the EVR can output with the value (Delay, Width) set by an operator.
-However, the polarity setting can be switched by hardware.
- 
-\begin{figure}[!htb]
-	\centering
-	\includegraphics*[width=0.45\textwidth, height=0.15\textwidth]{img22.png}
-	\caption{Test Result}
-	\label{timing_result}
-\end{figure}
-
-\subsection{Event Sequence and Timestamp Test}
-The right screen of Fig.~\ref{timing_result} shows whether the events registered in the sequence table are sequentially transmitted and the Fig.~\ref*{event_log} shows whether the timestamp of the output is normally recorded.
+\subsection{Timestamped Event Sequence Log Test}
+The right screen of Fig.~\ref{timing_result} shows whether the events registered in the sequence table are sequentially transmitted and the Fig.~\ref*{event_log} shows whether the timestamp of the output is normally recorded as a log data.
 
 \begin{figure}[!htb]
 	\centering
@@ -460,8 +458,24 @@ Overview of the Rare Isotope Science Project of the Institute for Basic Science,
 \bibitem{risp} Y.~K.~Kwon, {\it et. al},``Status of Rare Isotope Science Project in Korea'',
 Few-Body Syst 54, 961-966, (2013).
 
-\bibitem{sdsoc}
-SDSoC Document,\\ http://www.xilinx.com/support/documentation/sw\_manuals/xilinx2016\_1/ug1146-sdsoc-platforms-and-libraries.pdf
+\bibitem{white_rabbit}
+Alexander Aulin Söderqvist Niklas Claesson (2014). “A Timing System Application using White Rabbit”. (Master thesis, Lund University), https://www.eit.lth.se/sprapport.php?uid=732
+
+\bibitem{gis_timing}
+T. Fleck.(2009) "FAIR Accelerator Control System Baseline Technical Report". GSI. Germany. Retrieved from https://www-acc.gsi.de/wiki/pub/Timing/TimingSystemDocuments/12\_Timing-System.pdf
+
+\bibitem{epics}
+EPICS website, http://www.aps.anl.gov/epics, https://wiki-ext.aps.anl.gov/epics/index.php
+
+\bibitem{frib_timing}
+M.Konnard.(2016) “ TIMING AND SYNCRONIZATION AT FRIB”. Proceedings of PCaPAC2016, Brazil. THPOPRPO10, p105-107
+
+\bibitem{taiwan_timing}
+K.H.Hu.(2011) “RF REFERENCE DISTRIBUTION FOR THE TAIWAN PHOTON SOURCE”. Proceedings of IPAC2011, Spain. MOPO040, p571-573
+
+\bibitem{parallel}
+S.Lee, et. a1.“Distributed and parallel real-time control system equipped FPGA-Zynq and EPICS middleware”, Proceedings of the 20th IEEE-NPSS Real Time Conference, June, 2016 
+
 
 \end{thebibliography}
 
