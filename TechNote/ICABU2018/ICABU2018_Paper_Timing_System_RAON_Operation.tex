@@ -343,32 +343,33 @@ TABLE \ref{sw-conf} shows the software modules needed to develop the RAON timing
 	\begin{tabular}{@{}lll@{}}
 		%\begin{tabular}{clc}}
 		\hline
-		\textbf{Software} & \textbf{Contents}                 & \textbf{Module}     \\
+		\textbf{Software} & \textbf{Contents}  & \textbf{Area}     \\
 		\hline
-		EPICS        & Base R3.14.15.2                       & PS of Zynq            \\
-		Libiio       & Industrial I/O library                &                       \\
-		& supplied Analog Devices               &                       \\         
-		Kernel       & Linaro kernel source                  &                       \\
-		& including iio device driver           &                       \\         
-		Bootloader   & U-Boot for zynq                       &                       \\
-		IOC          & In-house using Libiio                 &                       \\
+		Hardware			& Xilinx Zynq XC7Z035 & PL of Zynq     \\
+					    	& ARM Cortex-A8 MPCore &               \\
+							& DDR (4G)/Flash(256M) Memory &        \\         
+							& Cross Point Switch(16:16) &          \\
+							& TTL I/O(LVTTL, LVDS) &               \\         
+							& SFP+ Module (1310nm LC Type) &       \\
+							& On-board Clock, PL(50MHz), PS(33.33MHz)&\\
 		
 		\hline
-		FPGA         & Analog Devices and                    & PL of Zynq            \\
-		& In-house code                         &                       \\
-		
+		Software			& Linux Kernel 4.6.0	& PS of Zynq   \\
+							& Boot loader (U-Boot)	&				\\
+							& EPICS Base (13.14.12.5)	& 			\\        
+							& Asyn/AsynDriverPort/timingAsynPort	&\\            
+							& Control System Studio (CSS)			&\\
 		\hline
-		Vivado       & Vivado14.4 including SDK              & Tool                  \\        
-		& with node lock license                &                       \\            
-		Busybox      & for rootfs system (free)              &                       \\
-		Toolchain    & for ARM cross-compile (GNU)           &                       \\        
+		Tool	 			& Vivado 14.16 with Xilinx SDK 			&\\ 
+							&  Cross Compile Tool Chain (PetaLinx)  & \\ 
+							& GNU Compiler 							& \\               
 		\hline
 	\end{tabular}
 \end{table}
 
 
 \section{Timing Structure Scenario}
-The beam commissioning of the RAON accelerator proceeds to the pulse mode. For safe commissioning of the RAON, the timing system distributes the control signal in single event mode. After that, a repetitive signal of 1 Hz is distributed to each system as shown Fig. timing structure. Fig. [] shows a possible timing structure scenario for the SCL3 beam commissioning. The timing system can be configurable 1 Hz repetition rate with 1 \% duty factor and the time accuracy is 12.3ns (=81.25MHz, minimum pulse length) satisfying requirement ( $\sim$ 1s).
+The beam commissioning of the RAON accelerator proceeds to the pulse mode. For safe commissioning of the RAON, the timing system distributes the control signal in single event mode. After that, a repetitive signal of 1 Hz is distributed to each system as shown Fig.~\ref{schedule}. timing structure. Fig.~\ref{schedule} shows a possible timing structure scenario for the SCL3 beam commissioning. The timing system can be configurable 1 Hz repetition rate with 1 \% duty factor and the time accuracy is 12.3ns (=81.25MHz, minimum pulse length) satisfying requirement ( $\sim$ 1s).
 
 
 \begin{figure}[!htb]
